@@ -114,4 +114,7 @@ yarn dev
 ![](./image/3.png)
 ![](./image/4.png)
 
+## 欢迎加入微信交流群
+<img src="./image/wechat.png" width="200" height="200" alt="WeChat QR Code">
+
 **FutuerDrive** - 加速自动驾驶开发 

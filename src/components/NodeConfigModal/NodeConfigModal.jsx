@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './NodeConfigModal.css';
+import { Switch } from 'antd';
 
 const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   const [form, setForm] = useState({});
@@ -9,8 +10,11 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
       // 初始化表单为当前配置值
       const initial = {};
       node.data.config.forEach(item => {
-        // 使用当前值，如果没有则使用默认值
-        initial[item.name] = item.default_value ?? (item.type === 'number' ? 0 : '');
+        if (item.type === 'bool') {
+          initial[item.name] = item.default_value === 1 ? true : false;
+        } else {
+          initial[item.name] = item.default_value ?? (item.type === 'number' ? 0 : '');
+        }
       });
       setForm(initial);
     }
@@ -60,6 +64,15 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
               </option>
             ))}
           </select>
+        );
+      case 'bool':
+        return (
+          <div style={{ margin: '8px 0' }}>
+            <Switch
+              checked={!!form[item.name]}
+              onChange={checked => handleChange(item.name, checked)}
+            />
+          </div>
         );
       default:
         return (
