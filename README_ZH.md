@@ -1,5 +1,7 @@
 # FutuerDrive
 
+中文 | [English](README.md)
+
 FutuerDrive 是一个模块化自动驾驶框架，提供实用工具、即用型解决方案和简化的工作流程，用于快速开发和部署。
 
 ## 🎯 项目目标
