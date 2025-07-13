@@ -86,7 +86,6 @@ yarn dev
 ## 📚 文档
 
 - [用户指南](https://futuer.automoves.cn/docs)
-- [API文档](https://futuer.automoves.cn/docs/api)
 
 ## 🤝 贡献
 
