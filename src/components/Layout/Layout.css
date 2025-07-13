@@ -1,0 +1,248 @@
+/* 基础样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 主布局容器 */
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1e1e1e;
+  color: #cccccc;
+  user-select: none; /* 防止拖动时选中文本 */
+}
+
+/* 顶部菜单栏 */
+.menu-bar {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  background-color: #333333;
+  border-bottom: 1px solid #252525;
+  padding: 0 10px;
+}
+
+.menu-item {
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.menu-item:hover {
+  background-color: #404040;
+}
+
+/* 主容器布局 */
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background-color: #1e1e1e;
+  position: relative;
+}
+
+/* 左侧项目管理器 */
+.project-explorer {
+  position: relative;
+  background-color: #252526;
+  overflow: hidden;
+}
+
+/* 中间内容区域 */
+.center-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: #1e1e1e;
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+  background-color: #1e1e1e;
+  border-radius: 4px;
+}
+
+.debug-console {
+  position: relative;
+  background-color: #1e1e1e;
+  border-top: 1px solid #333333;
+  overflow: hidden;
+}
+
+/* 右侧硬件管理器 */
+.hardware-manager {
+  position: relative;
+  background-color: #252526;
+  overflow: hidden;
+}
+
+/* 调整大小的手柄 */
+.resize-handle {
+  position: absolute;
+  z-index: 2;
+  transition: background-color 0.2s;
+}
+
+.resize-handle-left,
+.resize-handle-right {
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.resize-handle-left {
+  left: 0;
+}
+
+.resize-handle-right {
+  right: 0;
+}
+
+.resize-handle-top {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+.resize-handle:hover {
+  background-color: #0e639c;
+}
+
+/* 拖动时的遮罩层 */
+.resize-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  cursor: inherit;
+}
+
+/* 通用标题样式 */
+.section-title {
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+/* 树状视图容器 */
+.tree-view {
+  padding: 10px;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}
+
+/* 覆盖 antd 默认样式 */
+.layout {
+  height: 100vh;
+}
+
+.header {
+  height: 30px !important;
+  line-height: 30px !important;
+  padding: 0 !important;
+  background: #333333 !important;
+}
+
+.header .ant-menu {
+  background: transparent;
+  border-bottom: none;
+}
+
+.main-container {
+  height: calc(100vh - 30px);
+}
+
+.sider {
+  background: #252526 !important;
+}
+
+.section-title {
+  padding: 8px 16px;
+  color: #cccccc;
+  font-size: 13px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.content-container {
+  display: grid;
+  grid-template-rows: 7fr 4fr;
+  background: #1e1e1e;
+  padding: 0;
+  position: relative;
+}
+
+.main-content {
+  background: #1e1e1e;
+  overflow: auto;
+}
+
+.debug-console {
+  background: #1e1e1e;
+  overflow: auto;
+}
+
+/* 自定义树组件样式 */
+.custom-tree {
+  background: transparent;
+  color: #cccccc;
+  padding: 8px;
+}
+
+.ant-tree-node-content-wrapper:hover {
+  background-color: #37373d !important;
+}
+
+/* re-resizable 样式覆盖 */
+.re-resizable-handle {
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.re-resizable-handle:hover {
+  background-color: #0e639c;
+}
+
+.re-resizable-handle.re-resizable-handle-right {
+  right: -4px;
+  width: 8px;
+}
+
+.re-resizable-handle.re-resizable-handle-left {
+  left: -4px;
+  width: 8px;
+}
+
+.re-resizable-handle.re-resizable-handle-top {
+  top: -4px;
+  height: 8px;
+} 

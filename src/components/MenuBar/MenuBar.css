@@ -1,0 +1,163 @@
+.menu-bar {
+  width: 100%;
+  background: #333333;
+  /* 可选：加阴影或分割线 */
+  /* box-shadow: 0 1px 4px rgba(0,0,0,0.08); */
+}
+
+.menu-bar .ant-menu {
+  background: #333333 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.menu-bar .ant-menu:focus,
+.menu-bar .ant-menu:active,
+.menu-bar .ant-menu *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.menu-bar .ant-menu-item {
+  color: #e0e0e0;
+  font-size: 15px;
+  background: transparent !important;
+  border: none !important;
+}
+
+.menu-bar .ant-menu-item-selected {
+  background: #333333 !important;
+  color: #4ea1ff !important;
+}
+
+.menu-bar .ant-menu-item:hover {
+  background: #333333 !important;
+  color: #4ea1ff !important;
+}
+
+.menu-bar .ant-menu-submenu-title {
+  color: #e0e0e0;
+  background: transparent !important;
+}
+
+.menu-bar .ant-menu-submenu {
+  color: #cccccc;
+  font-size: 13px;
+  padding: 0 10px;
+  margin: 0 4px;
+  height: 30px;
+  line-height: 30px;
+}
+
+.menu-bar .ant-menu-submenu:hover {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+.menu-bar .ant-menu-submenu-popup {
+  background-color: #333333;
+}
+
+.menu-bar .ant-menu-sub {
+  background-color: #333333;
+}
+
+.menu-bar .ant-modal-wrap {
+  overflow: hidden;
+}
+
+/* Modal.confirm 暗色系样式 */
+.menu-bar-modal .ant-modal-confirm {
+  background-color: #333333 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.menu-bar-modal .ant-modal-confirm * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-title {
+  color: #e0e0e0 !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-content {
+  color: #cccccc !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-btns {
+  padding-top:10px;
+  border-top: 1px solid #444444 !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-btns .ant-btn {
+  background-color: #444444 !important;
+  border-color: #555555 !important;
+  color: #e0e0e0 !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-btns .ant-btn:hover {
+  background-color: #555555 !important;
+  border-color: #666666 !important;
+  color: #ffffff !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-btns .ant-btn-primary {
+  background-color: #1890ff !important;
+  border-color: #1890ff !important;
+  color: #ffffff !important;
+}
+
+.menu-bar-modal .ant-modal-confirm-btns .ant-btn-primary:hover {
+  background-color: #40a9ff !important;
+  border-color: #40a9ff !important;
+}
+
+/* 确保 Modal 背景也是暗色的 */
+.menu-bar-modal .ant-modal-mask {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.menu-bar-modal .ant-modal-content {
+  background-color: #333333 !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 地图编辑器模态框样式 */
+.map-editor-modal .ant-modal-content {
+  background: #1a1a1a !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.map-editor-modal .ant-modal-header {
+  background: #232323 !important;
+  border-bottom: 1px solid #333 !important;
+  padding: 16px 24px !important;
+}
+
+.map-editor-modal .ant-modal-title {
+  color: #fff !important;
+  font-size: 18px !important;
+}
+
+.map-editor-modal .ant-modal-close {
+  color: #e0e0e0 !important;
+}
+
+.map-editor-modal .ant-modal-close:hover {
+  color: #fff !important;
+  background: #333 !important;
+}
+
+.map-editor-modal .ant-modal-body {
+  padding: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+} 

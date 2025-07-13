@@ -1,0 +1,118 @@
+.project-modal,
+.project-modal * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.project-modal .ant-modal-content {
+  background: #2d2d2d;
+  border-radius: 8px;
+}
+
+.project-modal .ant-modal-header {
+  background: #2d2d2d;
+  border-bottom: 1px solid #444;
+  padding: 16px 24px;
+}
+
+.project-modal .ant-modal-title {
+  color: #e0e0e0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.project-modal .ant-modal-close {
+  color: #888;
+}
+
+.project-modal .ant-modal-close:hover {
+  color: #fff;
+}
+
+.project-form {
+  padding: 24px;
+}
+
+.project-form .ant-form-item-label > label {
+  color: #e0e0e0;
+  font-size: 13px;
+}
+
+.project-form .ant-input,
+.project-form .ant-input-textarea {
+  background: #1e1e1e !important;
+  border: 1px solid #444 !important;
+  color: #e0e0e0 !important;
+  border-radius: 4px;
+}
+
+.project-form .ant-input:hover,
+.project-form .ant-input-textarea:hover {
+  border-color: #666 !important;
+}
+
+.project-form .ant-input:focus,
+.project-form .ant-input-textarea:focus {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
+
+.project-form .ant-input::placeholder,
+.project-form .ant-input-textarea::placeholder {
+  color: #666 !important;
+}
+
+.path-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.path-input-wrapper .ant-input {
+  flex: 1;
+}
+
+.select-path-button {
+  background: #1976d2;
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.select-path-button:hover {
+  background: #1565c0;
+}
+
+.form-footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.form-footer .ant-btn {
+  min-width: 80px;
+}
+
+.form-footer .ant-btn-default {
+  background: #3d3d3d;
+  border: none;
+  color: #e0e0e0;
+}
+
+.form-footer .ant-btn-default:hover {
+  background: #4d4d4d;
+  color: #fff;
+}
+
+.form-footer .ant-btn-primary {
+  background: #1976d2;
+  border: none;
+}
+
+.form-footer .ant-btn-primary:hover {
+  background: #1565c0;
+} 

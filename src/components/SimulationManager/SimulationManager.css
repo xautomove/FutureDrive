@@ -1,0 +1,218 @@
+.simulation-manager-modal .ant-modal-content {
+  background-color: #333333;
+  color: #e0e0e0;
+}
+
+.simulation-manager-modal .ant-modal-header {
+  background-color: #333333;
+  border-bottom: 1px solid #444444;
+}
+
+.simulation-manager-modal .ant-modal-title {
+  color: #e0e0e0;
+}
+
+.simulation-manager-modal .ant-tabs-nav {
+  background-color: #333333;
+  margin-bottom: 20px;
+}
+
+.simulation-manager-modal .ant-tabs-tab {
+  color: #e0e0e0;
+}
+
+.simulation-manager-modal .ant-tabs-tab-active {
+  color: #1890ff;
+}
+
+.simulation-manager-modal .ant-tabs-ink-bar {
+  background-color: #1890ff;
+}
+
+.simulation-section {
+  padding: 20px;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.status-item,
+.path-item,
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  min-width: 80px;
+  color: #cccccc;
+}
+
+.status {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.status.success {
+  background-color: #52c41a;
+  color: #ffffff;
+}
+
+.status.warning {
+  background-color: #faad14;
+  color: #ffffff;
+}
+
+.path-item .ant-input {
+  flex: 1;
+  background-color: #444444;
+  border-color: #555555;
+  color: #e0e0e0;
+}
+
+.path-item .ant-input:hover,
+.path-item .ant-input:focus {
+  border-color: #1890ff;
+}
+
+.config-item .ant-input,
+.config-item .ant-select {
+  background-color: #444444;
+  border-color: #555555;
+  color: #e0e0e0;
+}
+
+.config-item .ant-select-selector {
+  background-color: #444444 !important;
+  border-color: #555555 !important;
+}
+
+.config-item .ant-select-selection-item {
+  color: #e0e0e0 !important;
+}
+
+.modal-footer {
+  margin-top: 20px;
+  text-align: right;
+  border-top: 1px solid #444444;
+  padding-top: 20px;
+}
+
+/* 自定义下拉框样式 */
+.ant-select-dropdown {
+  background-color: #333333 !important;
+}
+
+.ant-select-item {
+  color: #e0e0e0 !important;
+}
+
+.ant-select-item-option-selected {
+  background-color: #1890ff !important;
+  color: #ffffff !important;
+}
+
+.ant-select-item-option-active {
+  background-color: #444444 !important;
+}
+
+/* 按钮样式 */
+.simulation-manager-modal .ant-btn-primary {
+  color: #ffffff;
+}
+
+.simulation-manager-modal .ant-modal-header{
+  padding-bottom: 10px !important;
+  margin-bottom: 5px !important;
+}
+
+.simulation-manager-modal .ant-btn-primary[disabled] {
+  color: #a5a3a3 !important;
+  background-color: #444444 !important;
+  border-color: #555555 !important;
+}
+
+.simulation-manager-modal .ant-btn-primary[disabled]:hover {
+  color: #a5a3a3 !important;
+  background-color: #444444 !important;
+  border-color: #555555 !important;
+}
+
+/* 暗色系模态框样式 */
+.dark-modal .ant-modal-content {
+  background-color: #1f1f1f;
+  border: 1px solid #333;
+}
+
+.dark-modal .ant-modal-header {
+  background-color: #1f1f1f;
+  border-bottom: 1px solid #333;
+}
+
+.dark-modal .ant-modal-title {
+  color: #fff;
+}
+
+.dark-modal .ant-modal-body {
+  color: #fff;
+}
+
+.dark-modal .ant-modal-footer {
+  border-top: 1px solid #333;
+}
+
+.dark-modal .ant-btn {
+  background-color: #2f2f2f;
+  border-color: #444;
+  color: #fff;
+}
+
+.dark-modal .ant-btn:hover {
+  background-color: #3f3f3f;
+  border-color: #555;
+}
+
+.dark-modal .ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.dark-modal .ant-btn-primary:hover {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.dark-modal .ant-btn-dangerous {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.dark-modal .ant-btn-dangerous:hover {
+  background-color: #ff7875;
+  border-color: #ff7875;
+}
+
+.simulation-manager-modal .ant-modal-close,
+.simulation-manager-modal .ant-modal-close-x {
+  color: #fff !important;
+}
+.simulation-manager-modal .ant-modal-close:hover,
+.simulation-manager-modal .ant-modal-close:focus {
+  color: #fff !important;
+} 
+
+.simulation-manager-modal,
+.simulation-manager-modal * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

@@ -1,0 +1,134 @@
+.about-modal .ant-modal-content {
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .ant-modal-header {
+  background-color: #1f1f1f;
+  border-bottom: 1px solid #303030;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .ant-modal-title {
+  color: #ffffff;
+  margin-bottom: 6px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .ant-modal-close {
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background: none;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-modal .ant-modal-close-x {
+  color: #f5f5f5;
+  font-size: 24px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.about-modal .ant-modal-close:hover {
+  background: #444;
+}
+
+.about-modal .ant-modal-close:hover .ant-modal-close-x {
+  color: #1976d2;
+}
+
+.about-modal .about-content {
+  padding: 20px 0;
+  color: #ffffff;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .version-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.about-modal .version-section .ant-typography {
+  color: #ffffff;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .company-info {
+  margin: 20px 0;
+}
+
+.about-modal .company-info .ant-typography {
+  color: #d9d9d9;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .legal-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #303030;
+}
+
+.about-modal .clickable-text {
+  color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.about-modal .clickable-text:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.about-modal .ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.about-modal .ant-btn-primary:hover {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.about-modal .ant-tooltip .ant-tooltip-inner {
+  background-color: #141414;
+  color: #ffffff;
+}
+
+.about-modal .ant-tooltip .ant-tooltip-arrow-content {
+  background-color: #141414;
+}
+
+.about-modal .ant-btn {
+  height: 30px !important;
+  padding: 0 10px !important;
+  margin-left: 10px !important;
+}

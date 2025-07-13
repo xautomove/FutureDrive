@@ -1,0 +1,773 @@
+.main-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #1e1e1e;
+}
+
+.react-flow {
+  background: #1e1e1e !important;
+  padding: 0 !important;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+.react-flow__minimap {
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  border: 1px solid #444;
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.1);
+}
+
+.react-flow__minimap-node {
+  fill: #2d2d2d;
+  stroke: #555;
+}
+
+.react-flow__node {
+  border-radius: 3px;
+  border: 1px solid #555;
+  padding: 10px;
+  color: #fff;
+  font-size: 12px;
+  background-color: #2d2d2d;
+}
+
+.react-flow__node-input {
+  background-color: #2d2d2d;
+}
+
+.react-flow__controls {
+  background: #2d2d2d;
+  border-radius: 4px;
+  border: 1px solid #444;
+}
+
+.react-flow__controls button {
+  background: #2d2d2d;
+  border: none;
+  border-bottom: 1px solid #444;
+  color: #fff;
+}
+
+.react-flow__controls button:hover {
+  background: #3d3d3d;
+}
+
+.react-flow__background {
+  background-color: #1e1e1e;
+}
+
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: #666 !important;
+  border: 2px solid #444 !important;
+  transition: all 0.2s ease !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  z-index: 10 !important;
+}
+
+.react-flow__handle:hover {
+  background: #888;
+}
+
+/* 自定义按钮样式 */
+.custom-button {
+  background: #2d2d2d;
+  border: none;
+  border-bottom: 1px solid #444;
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.custom-button:hover {
+  background: #3d3d3d;
+}
+
+/* 确保按钮在panel中的位置正确 */
+.react-flow__panel .custom-button {
+  margin-left: 4px;
+}
+
+.react-flow__container {
+  width: 100%;
+  height: 100%;
+}
+
+/* 节点列表模态框样式 */
+.node-list-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.node-list-content {
+  background: #2d2d2d;
+  border-radius: 4px;
+  padding: 20px;
+  min-width: 300px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.node-list-content h3 {
+  margin: 0 0 20px 0;
+  color: #fff;
+}
+
+.node-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.node-item {
+  background: #3d3d3d;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+.node-item:hover {
+  background: #4d4d4d;
+}
+
+.node-list-content button {
+  background: #3d3d3d;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px 16px;
+  color: #fff;
+  cursor: pointer;
+  width: 100%;
+}
+
+.node-list-content button:hover {
+  background: #4d4d4d;
+}
+
+.toolbar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  background: #2d2d2d;
+  border-radius: 4px;
+  padding: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.add-node-button {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.add-node-button:hover {
+  background: #3d3d3d;
+  border-color: #555;
+}
+
+.node-type {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 自定义节点样式 */
+.custom-node {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 10px;
+  color: #fff;
+  position: relative;
+  display: inline-block;
+  min-width: 180px;
+  width: auto;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.custom-node.running {
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 255, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+  }
+}
+
+.node-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #444;
+  text-align: center;
+}
+
+.node-content {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.node-inputs, .node-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 5px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.divider {
+  width: 1px;
+  background: #444;
+  margin: 0 8px;
+}
+
+.port {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+  position: relative;
+}
+
+.port-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.port-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.port-label:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.port-name {
+  max-width: none;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-all;
+  display: inline-block;
+}
+
+.port-type {
+  font-size: 11px;
+  color: #888;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.port-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.port-default-value {
+  font-size: 11px;
+  color: #4caf50;
+  padding: 2px 6px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 3px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* 输入端口样式 */
+.node-inputs .port-label::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #666;
+  margin-right: 4px;
+}
+
+/* 输出端口样式 */
+.node-outputs .port-label::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #666;
+  margin-left: 4px;
+}
+
+.node-inputs .react-flow__handle{
+  left: -4px !important;
+}
+
+.node-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(30,30,30,0.9);
+  border: none;
+  border-radius: 4px;
+  padding: 2px 2px 0 2px;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-delete-btn:hover {
+  background: #d32f2f;
+}
+
+.node-delete-btn svg {
+  display: block;
+}
+
+.custom-node-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.node-toolbar-floating {
+  position: absolute;
+  left: 50%;
+  top: -30px;
+  transform: translateX(-50%);
+  background: #474847;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  padding: 4px 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.node-toolbar-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-toolbar-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+}
+
+.node-toolbar-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.node-toolbar-btn:hover {
+  background: #222;
+}
+
+.node-toolbar-btn:last-child:hover {
+  background: #d32f2f;
+}
+
+.node-description-tip {
+  position: absolute;
+  left: 50%;
+  top: 100%;          /* 改为 100%，使其显示在标题下方 */
+  transform: translateX(-50%);
+  background: #232323;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: pre-line;
+  z-index: 20;
+  pointer-events: none;
+  width: 100%;
+  opacity: 0.96;
+  transition: opacity 0.2s;
+  margin-top: 8px;     /* 添加顶部间距 */
+}
+
+.node-description-tip::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -8px;          /* 添加小三角形指示器 */
+  transform: translateX(-50%);
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent #232323 transparent;
+}
+
+.port-tip {
+  background: #232323;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: pre-line;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.96;
+  transition: opacity 0.2s;
+  position: fixed;
+}
+.port-tip-left {
+  margin-left: -16px;
+}
+.port-tip-right {
+  margin-left: 16px;
+}
+.port-tip-left::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px 0 6px 8px;
+  border-style: solid;
+  border-color: transparent transparent transparent #232323;
+}
+.port-tip-right::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px 8px 6px 0;
+  border-style: solid;
+  border-color: transparent #232323 transparent transparent;
+}
+
+.port-tip-inline {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  min-width: 120px;
+}
+.port-tip-left.port-tip-inline {
+  right: 100%;
+  margin-right: 10px;
+}
+.port-tip-right.port-tip-inline {
+  left: 100%;
+  margin-left: 10px;
+}
+
+.port-tip-title {
+  min-width: 120px;
+  text-align: center;
+}
+.port-tip-title::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%) translateY(-100%);
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent #232323 transparent;
+}
+
+.execute-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  z-index: 1000;
+}
+
+.execute-button:hover {
+  background-color: #357abd;
+}
+
+.execute-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 右键菜单和边的样式 */
+.main-content .ant-menu {
+  background: #2d2d2d !important;
+  border: 1px solid #444 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.main-content .ant-menu-item {
+  color: #fff !important;
+  background: #2d2d2d !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  padding: 0 12px !important;
+}
+
+.main-content .ant-menu-item:hover {
+  background: #3d3d3d !important;
+}
+
+.react-flow__edge {
+  cursor: pointer;
+}
+
+.react-flow__edge:hover {
+  stroke: #888;
+}
+
+/* 顶部工具栏样式 */
+.top-toolbar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2d2d2d;
+  border-radius: 0 0 8px 8px;
+  padding: 5px 10px 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  flex-direction: column;
+}
+
+.top-toolbar.collapsed {
+  padding: 6px;
+  height: 30px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.toolbar-toggle {
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 24px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+
+.toolbar-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.toolbar-button {
+  background: #3d3d3d;
+  border: 1px solid #555;
+  color: #fff;
+  width: 25px;
+  height: 23px;
+  padding: 3px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.toolbar-button:hover {
+  background: #4d4d4d;
+}
+
+.toolbar-button.primary {
+  background: #1976d2;
+  border-color: #1976d2;
+}
+
+.toolbar-button.primary:hover {
+  background: #1565c0;
+}
+
+.toolbar-button.danger {
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.toolbar-button.danger:hover {
+  background: #c62828;
+}
+
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 暗色主题 Modal 样式 */
+.dark-modal .ant-modal-content {
+  background-color: #2d2d2d !important;
+  border: 1px solid #444 !important;
+}
+
+.dark-modal .ant-modal-header {
+  background-color: #2d2d2d !important;
+  border-bottom: 1px solid #444 !important;
+}
+
+.dark-modal .ant-modal-title {
+  color: #fff !important;
+}
+
+.dark-modal .ant-modal-close {
+  color: #888 !important;
+}
+
+.dark-modal .ant-modal-close:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-modal .ant-modal-body {
+  color: #fff !important;
+}
+
+.dark-modal .ant-modal-footer {
+  background-color: #2d2d2d !important;
+  border-top: 1px solid #444 !important;
+}
+
+.dark-modal .ant-btn {
+  background-color: #363636 !important;
+  border: 1px solid #444 !important;
+  color: #fff !important;
+}
+
+.dark-modal .ant-btn:hover {
+  background-color: #404040 !important;
+  border-color: #555 !important;
+}
+
+.dark-modal .ant-btn-primary {
+  background-color: #1976d2 !important;
+  border-color: #1976d2 !important;
+}
+
+.dark-modal .ant-btn-primary:hover {
+  background-color: #1565c0 !important;
+  border-color: #1565c0 !important;
+}
+
+.dark-modal .ant-input {
+  background-color: #363636 !important;
+  border: 1px solid #444 !important;
+  color: #fff !important;
+}
+
+.dark-modal .ant-input:hover {
+  border-color: #555 !important;
+}
+
+.dark-modal .ant-input:focus {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
+
+.dark-modal .ant-input::placeholder {
+  color: #888 !important;
+}
+
+.dark-modal .ant-modal-confirm-title {
+  color: #fff !important;
+}
+
+.dark-modal .ant-modal-confirm-content {
+  color: #ccc !important;
+}
+
+.dark-modal .ant-modal-confirm-btns {
+  margin-top: 24px !important;
+}
+
+.dark-modal .ant-modal-confirm-btns .ant-btn {
+  margin-left: 8px !important;
+} 
+

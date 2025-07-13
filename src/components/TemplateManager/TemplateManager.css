@@ -1,0 +1,127 @@
+.template-manager-modal {
+    .ant-modal-content {
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+
+    .ant-modal-header {
+      background-color: #1e1e1e;
+      border-bottom: 1px solid #333;
+    }
+
+    .ant-modal-title {
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .ant-modal-footer {
+      background-color: #1e1e1e;
+    }
+
+    .ant-btn {
+      background-color: #1890ff;
+      border-color: #1890ff;
+      color: #fff;
+    }
+
+    .ant-btn:hover {
+      background-color: #40a9ff;
+      border-color: #40a9ff;
+    }
+
+    .ant-btn-default {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    .ant-btn-default:hover {
+      background-color: #3d3d3d;
+      border-color: #555;
+      color: #fff;
+    }
+
+    .ant-modal-close {
+      color: #888;
+    }
+
+    .ant-modal-close:hover {
+      color: #fff;
+    }
+
+    /* 列表样式 */
+    .template-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .template-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background-color: #363636;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      user-select: none;
+    }
+
+    .template-item:hover {
+      background-color: #404040;
+    }
+
+    .template-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .template-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .template-name {
+      color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .template-version {
+      color: #1890ff;
+      font-size: 12px;
+      padding: 2px 8px;
+      background-color: rgba(24, 144, 255, 0.1);
+      border: 1px solid rgba(24, 144, 255, 0.2);
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .template-description {
+      color: #aaa;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .template-date {
+      color: #666;
+      font-size: 12px;
+    }
+
+    *{
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+    }
+} 

@@ -1,0 +1,316 @@
+/* 弹窗基础样式 */
+.ros-topic-manager-modal {
+  z-index: 2000 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.ros-topic-manager-modal .ant-modal-content {
+  background: #232323;
+  border-radius: 10px;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+
+.ros-topic-manager-modal .ant-modal-body {
+  padding: 0;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ros-topic-manager-modal .ant-modal-header {
+  background: #232323;
+  border-bottom: 1px solid #444;
+  border-radius: 10px 10px 0 0;
+  padding-bottom: 10px;
+  margin-bottom: 0px !important;
+}
+
+.ros-topic-manager-modal .ant-modal-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ros-topic-manager-modal .ant-empty-description {
+  color: #fff;
+}
+
+.ros-topic-manager-modal .ant-modal-close {
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: none;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ros-topic-manager-modal .ant-modal-close-x {
+  color: #f5f5f5;
+  font-size: 24px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.ros-topic-manager-modal .ant-modal-close:hover {
+  background: #444;
+}
+
+.ros-topic-manager-modal .ant-modal-close:hover .ant-modal-close-x {
+  color: #1976d2;
+}
+
+/* 允许输入框内容可选 */
+.ros-topic-manager-modal input,
+.ros-topic-manager-modal textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* 主体内容区域 */
+.ros-topic-manager {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #2d2d2d;
+  color: #fff;
+}
+
+/* 工具栏 */
+.ros-topic-manager-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #363636;
+  border-bottom: 1px solid #444;
+  height: 48px;
+}
+
+.ros-topic-manager-toolbar-btn {
+  background: #232323;
+  color: #e0e0e0;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  font-size: 16px;
+  padding: 0;
+}
+
+.ros-topic-manager-toolbar-btn:hover {
+  background: #444;
+  color: #fff;
+}
+
+.ros-topic-manager-toolbar-btn.recording {
+  background: #d32f2f !important;
+  color: #fff !important;
+}
+
+/* 搜索框 */
+.ros-topic-manager-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  width: 36px;
+  transition: width 0.3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+
+.ros-topic-manager-search-wrapper.open {
+  width: 180px;
+}
+
+.ros-topic-manager-search-icon {
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.ros-topic-manager-search-icon:hover {
+  color: #fff;
+}
+
+.ros-topic-manager-search-input {
+  width: 100%;
+  padding: 4px 10px;
+  background: #232323;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #e0e0e0 !important;
+  font-size: 12px;
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.ros-topic-manager-search-input::placeholder {
+  color: #888;
+}
+
+.ros-topic-manager-search-input:focus {
+  border: 1.5px solid #1976d2;
+  background: #222b3a;
+  color: #fff !important;
+}
+
+/* 列表区域 */
+.ros-topic-manager-list-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ros-topic-manager-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  background: #2d2d2d;
+}
+
+.ros-topic-manager-list-item {
+  padding: 6px 12px 6px 16px !important;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #f5f5f5 !important;
+  font-size: 15px;
+}
+
+.ros-topic-manager-list-item:hover {
+  background: #404040;
+}
+
+.ros-topic-manager-list-item .ant-checkbox-wrapper {
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+/* 滚动条样式 */
+.ros-topic-manager-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ros-topic-manager-list::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.ros-topic-manager-list::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.ros-topic-manager-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 录制面板 */
+.ros-topic-manager-inline-record {
+  background: #232323;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 12px 12px 0 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border: 1px solid #444;
+  gap: 12px;
+}
+
+.ros-topic-manager-inline-record-path {
+  margin-bottom: 0;
+}
+
+.ros-topic-manager-inline-record-actions {
+  margin-top: 0;
+  gap: 8px;
+}
+
+.ros-topic-manager-record-path-input,
+.ros-topic-manager-record-path-input:focus,
+.ros-topic-manager-record-path-input:active {
+  background: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #333 !important;
+  box-shadow: none !important;
+}
+
+.ros-topic-manager-record-path-input::placeholder {
+  color: #888;
+}
+
+/* 右键菜单 */
+.ros-topic-manager .ant-menu-item,
+.ros-topic-manager .ant-menu-item-only-child {
+  color: #e0e0e0;
+  background: #2d2d2d;
+}
+
+.ros-topic-manager .ant-menu-item:hover,
+.ros-topic-manager .ant-menu-item-active,
+.ros-topic-manager .ant-menu-item-selected {
+  background: #3d3d3d !important;
+  color: #fff !important;
+}
+
+.ros-topic-manager-record-panel {
+  position: absolute;
+  top: 60px;
+  right: 24px;
+  width: 340px;
+  background: #232323;
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  z-index: 3001;
+  padding: 20px 20px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ros-topic-manager-record-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.ros-topic-manager-record-path {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ros-topic-manager-record-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  max-height: 120px;
+  overflow-y: auto;
+  background: #232323;
+  border-radius: 4px;
+  padding: 6px 0 6px 8px;
+  margin-bottom: 10px;
+}
+
+.ros-topic-manager-record-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

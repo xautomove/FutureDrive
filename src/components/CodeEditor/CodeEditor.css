@@ -1,0 +1,43 @@
+.code-editor {
+  height: 100%;
+  width: 100%;
+  background-color: #1e1e1e;
+}
+
+/* CodeMirror 样式覆盖 */
+.code-editor .cm-editor {
+  height: 100%;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+}
+
+.code-editor .cm-editor .cm-scroller {
+  font-family: inherit;
+}
+
+.code-editor .cm-editor .cm-content {
+  padding: 10px 0;
+}
+
+/* 自定义滚动条样式 */
+.code-editor .cm-scroller::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.code-editor .cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-editor .cm-scroller::-webkit-scrollbar-thumb {
+  background: rgba(121, 121, 121, 0.4);
+  border-radius: 5px;
+}
+
+.code-editor .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(121, 121, 121, 0.6);
+}
+
+.code-editor .cm-scroller::-webkit-scrollbar-thumb:active {
+  background: rgba(121, 121, 121, 0.8);
+} 

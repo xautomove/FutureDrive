@@ -1,0 +1,246 @@
+.debug-console {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px 8px 18px;
+  background-color: #232323;
+  border-bottom: 1px solid #292929;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.console-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+}
+
+.console-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 5px 3px 5px 0px;
+  position: relative;
+  font-size: 12px;
+  z-index: 1;
+}
+
+.console-line {
+  display: flex;
+  align-items: flex-start;
+  padding: 5px 0 5px 0;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: normal;
+  overflow: visible;
+  transition: background 0.2s;
+  min-height: 20px;
+}
+
+.console-line:hover {
+  background: #232323;
+}
+
+.line-number {
+  color: #444;
+  padding-right: 8px;
+  user-select: none;
+  flex-shrink: 0;
+  width: 28px;
+  text-align: right;
+  font-size: 12px;
+}
+
+.line-content {
+  flex: 1;
+  white-space: pre-wrap;
+  overflow: visible;
+  display: flex;
+  align-items: flex-start;
+}
+
+.timestamp {
+  color: #888;
+  margin-right: 8px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.log-type {
+  padding: 0 4px;
+  border-radius: 3px;
+  margin-right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  background: #232f3e;
+  color: #1976d2;
+  letter-spacing: 0.5px;
+}
+
+.log-info .log-type {
+  background: #232f3e;
+  color: #1976d2;
+}
+
+.log-warning .log-type {
+  background: #3a2e1a;
+  color: #f57c00;
+}
+
+.log-error .log-type {
+  background: #3a2323;
+  color: #d32f2f;
+}
+
+.message {
+  white-space: pre-wrap;
+  overflow: visible;
+  color: #ababab;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.console-clear,
+.console-filter,
+.console-scroll-lock {
+  cursor: pointer;
+  padding: 4px 8px;
+  color: #888;
+  transition: color 0.2s;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 12px;
+}
+
+.console-clear:hover,
+.console-filter:hover,
+.console-scroll-lock:hover {
+  color: #fff;
+}
+
+.console-scroll-lock {
+  display: flex;
+  align-items: center;
+}
+
+.console-scroll-lock.locked {
+  color: #1976d2;
+}
+
+.console-scroll-lock svg {
+  width: 16px;
+  height: 16px;
+  color: #888;
+  fill: currentColor;
+  vertical-align: middle;
+  display: inline-block;
+  transition: color 0.2s;
+}
+
+.console-scroll-lock.locked svg {
+  color: #1976d2;
+}
+
+.console-scroll-lock:hover svg {
+  color: #fff;
+}
+
+/* 自定义滚动条样式 */
+.console-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.console-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.console-content::-webkit-scrollbar-thumb {
+  background: #292929;
+  border-radius: 4px;
+}
+
+.console-content::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+input,
+input.console-search,
+input[type="text"] {
+  font-size: 12px !important;
+}
+
+.console-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 32px;
+  transition: width 0.3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.console-search-wrapper.open {
+  width: 180px;
+}
+.console-search-icon {
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.console-search-icon:hover {
+  color: #fff;
+}
+.console-search-input {
+  width: 100%;
+  padding: 4px 10px;
+  background: #232323;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #e0e0e0;
+  font-size: 12px;
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+.console-search-input:focus {
+  border: 1.5px solid #1976d2;
+  background: #222b3a;
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  background: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  min-width: 120px;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  color: #e0e0e0;
+  font-size: 13px;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.context-menu-item:hover {
+  background: #3d3d3d;
+}
+
+.context-menu-item:not(:last-child) {
+  border-bottom: 1px solid #444;
+} 

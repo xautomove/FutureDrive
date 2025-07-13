@@ -1,0 +1,107 @@
+.settings-modal .ant-modal-content {
+  background-color: #23272e;
+  color: #e0e0e0;
+}
+.settings-modal .ant-modal-header {
+  background-color: #23272e;
+  border-bottom: 1px solid #333;
+}
+.settings-modal .ant-modal-title {
+  color: #fff;
+}
+.settings-modal-content {
+  display: flex;
+  flex-direction: row;
+  min-height: 400px;
+}
+.settings-menu {
+  width: 200px;
+  background: #1a1d23 !important;
+  border-right: 1px solid #333;
+  color: #e0e0e0;
+}
+.settings-menu .ant-menu-item {
+  color: #e0e0e0 !important;
+}
+.settings-menu .ant-menu-item-selected {
+  background: #23272e !important;
+  color: #1890ff !important;
+}
+.settings-form-container {
+  flex: 1;
+  padding: 32px 24px;
+  background: #23272e;
+  display: flex;
+  flex-direction: column;
+}
+.settings-form .ant-form-item-label > label {
+  color: #cccccc;
+}
+.settings-form .ant-input,
+.settings-form .ant-input-number,
+.settings-form .ant-input-number-input {
+  background: #23272e !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+.settings-form .ant-input:focus,
+.settings-form .ant-input-number:focus,
+.settings-form .ant-input-number-input:focus {
+  border-color: #1890ff !important;
+  box-shadow: none !important;
+}
+.settings-form .ant-input[disabled],
+.settings-form .ant-input-number[disabled],
+.settings-form .ant-input-number-input[disabled] {
+  color: #888 !important;
+  background: #23272e !important;
+}
+.settings-form .ant-switch {
+  background: #444 !important;
+}
+.settings-form .ant-switch-checked {
+  background: #1890ff !important;
+}
+.settings-modal .ant-modal-close,
+.settings-modal .ant-modal-close-x {
+  color: #fff !important;
+}
+.settings-modal .ant-modal-close:hover,
+.settings-modal .ant-modal-close:focus {
+  color: #fff !important;
+}
+.settings-form .ant-input::placeholder,
+.settings-form .ant-input-number-input::placeholder {
+  color: #b0b0b0 !important;
+  opacity: 1;
+} 
+
+.settings-modal .ant-modal-header{
+    padding-bottom: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+.settings-modal,
+.settings-modal * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.settings-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-footer .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.settings-footer .ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}

@@ -1,0 +1,188 @@
+.hardware-manager {
+  height: 100%;
+  background-color: #252526;
+  padding-top: 10px;
+  /* padding-left: 10px; */
+  position: relative;
+}
+
+.hardware-manager .ant-space {
+  width: 100%;
+  margin-left: 10px;
+}
+
+.hardware-manager .ant-btn {
+  background-color: #333333;
+  border-color: #424242;
+  color: #cccccc;
+  margin-right: 8px;
+}
+
+.hardware-manager .ant-btn:hover {
+  background-color: #404040;
+  border-color: #505050;
+  color: #ffffff;
+}
+
+.hardware-manager .ant-btn-primary {
+  background-color: #0e639c;
+  border-color: #0e639c;
+  color: #ffffff;
+}
+
+.hardware-manager .ant-btn-primary:hover {
+  background-color: #1177bb;
+  border-color: #1177bb;
+}
+
+.hardware-manager .ant-tree {
+  margin-top: 8px;
+  background: transparent;
+  color: #cccccc;
+  border: none;
+  padding-left: 8px;
+}
+
+/* 修改选中效果为整个树节点 */
+.hardware-manager .ant-tree-treenode {
+  width: 100%;
+  padding: 0 !important;
+  height: 22px;
+  line-height: 22px;
+  position: relative;
+}
+
+.hardware-manager .ant-tree-treenode:hover::after,
+.hardware-manager .ant-tree-treenode-selected::after {
+  content: '';
+  position: absolute;
+  left: -20px;  /* 抵消父容器的 padding-left */
+  right: 0px; /* 延伸到右侧 */
+  height: 100%;
+  background-color: #37373d;
+  z-index: 0;
+  width: calc(100% + 20px); /* 确保宽度覆盖整个区域 */
+}
+
+.hardware-manager .ant-tree-indent,
+.hardware-manager .ant-tree-switcher,
+.hardware-manager .ant-tree-node-content-wrapper {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+/* 覆盖 Ant Design 的默认选中效果 */
+.hardware-manager .ant-tree-node-content-wrapper.ant-tree-node-selected,
+.hardware-manager .ant-tree-node-content-wrapper:hover {
+  background: transparent !important;
+  color: #cccccc !important;
+}
+
+.hardware-manager .ant-tree-node-content-wrapper {
+  color: #cccccc;
+  transition: none;
+}
+
+.hardware-manager .ant-tree-switcher {
+  color: #cccccc;
+}
+
+.hardware-manager .ant-tree-title {
+  font-size: 13px;
+  color: inherit;
+}
+
+.add-device-modal .ant-modal-content {
+  background: #252526;
+  color: #e0e0e0;
+}
+.add-device-modal .ant-modal-header {
+  background: #252526;
+  border-bottom: 1px solid #444;
+}
+.add-device-modal .ant-modal-title {
+  color: #e0e0e0;
+  height: 40px;
+}
+.add-device-modal .ant-modal-close {
+  color: #888;
+}
+.add-device-modal .ant-modal-close:hover {
+  color: #fff;
+}
+.add-device-modal .ant-form-item-label {
+  padding-right: 8px;
+  text-align: right;
+}
+.add-device-modal .ant-form-item {
+  margin-bottom: 18px;
+}
+.add-device-modal .ant-input,
+.add-device-modal .ant-select-selector,
+.add-device-modal .ant-input-textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  min-width: 180px;
+  background: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #444 !important;
+}
+.add-device-modal .ant-input:focus,
+.add-device-modal .ant-select-focused .ant-select-selector {
+  border-color: #1976d2 !important;
+  box-shadow: none !important;
+}
+.add-device-modal .ant-btn-primary {
+  background: #1976d2;
+  border: none;
+  color: #fff;
+}
+.add-device-modal .ant-btn-primary:hover {
+  background: #1565c0;
+  color: #fff;
+}
+.add-device-modal .ant-btn-default {
+  background: #3d3d3d;
+  border: none;
+  color: #e0e0e0;
+}
+.add-device-modal .ant-btn-default:hover {
+  background: #4d4d4d;
+  color: #fff;
+}
+.add-device-modal .ant-tabs-nav {
+  background: #252526;
+}
+.add-device-modal .ant-tabs-tab {
+  color: #e0e0e0;
+}
+.add-device-modal .ant-tabs-tab-active {
+  color: #1976d2 !important;
+}
+
+.add-device-modal .ant-modal-content,
+.add-device-modal .ant-modal-title,
+.add-device-modal .ant-form-item-label > label,
+.add-device-modal .ant-input,
+.add-device-modal .ant-select-selector,
+.add-device-modal .ant-input-textarea {
+  color: #e0e0e0 !important;
+}
+
+/* 只影响添加设备弹窗里的输入框 placeholder */
+.add-device-modal .ant-input::placeholder {
+  color: #888 !important;
+  opacity: 1 !important;
+}
+
+/* 添加设备弹窗文本不可选 */
+.add-device-modal,
+.add-device-modal * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+

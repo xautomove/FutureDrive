@@ -1,0 +1,203 @@
+/* 全局样式 */
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.map-editor {
+  display: flex;
+  height: 100vh;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  position: relative;
+}
+
+/* 左侧工具栏 */
+.map-editor-toolbar-wrapper {
+  width: 60px;
+  background: #232323;
+  border-right: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-editor-toolbar {
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.map-editor-toolbar .ant-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2d2d2d;
+  border: none;
+  color: #e0e0e0;
+}
+
+.map-editor-toolbar .ant-btn:hover {
+  background: #3d3d3d;
+}
+
+.map-editor-toolbar .ant-btn-primary {
+  background: #1976d2;
+  color: #fff;
+}
+
+/* 中间画布区域 */
+.map-editor-canvas {
+  flex: 1;
+  position: relative;
+  background: #1a1a1a;
+  overflow: hidden;
+}
+
+.map-editor-canvas canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 图层控制按钮 */
+.map-editor-layers-toggle {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 0;
+}
+
+/* 右侧属性面板 */
+.map-editor-properties-wrapper {
+  background: #232323;
+  border-left: 1px solid #333;
+}
+
+.map-editor-properties {
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.map-editor-properties h3 {
+  margin-bottom: 16px;
+  color: #fff;
+  font-size: 16px;
+}
+
+.map-editor-properties .ant-form-item-label > label {
+  color: #e0e0e0;
+}
+
+.map-editor-properties .ant-input,
+.map-editor-properties .ant-select-selector {
+  background: #2d2d2d !important;
+  border: 1px solid #444 !important;
+  color: #e0e0e0 !important;
+}
+
+.map-editor-properties .ant-input:focus,
+.map-editor-properties .ant-select-focused .ant-select-selector {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
+
+/* 图层面板 */
+.map-editor-layers-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 300px;
+  background: #232323;
+  border: 1px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.map-editor-layers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #333;
+  margin: -16px -16px 16px -16px;
+}
+
+.map-editor-layers-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+}
+
+.map-editor-layers-content {
+  padding: 0;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.layer-item:hover {
+  background: #2d2d2d;
+}
+
+/* 滚动条样式 */
+.map-editor-properties::-webkit-scrollbar,
+.map-editor-layers-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.map-editor-properties::-webkit-scrollbar-track,
+.map-editor-layers-content::-webkit-scrollbar-track {
+  background: #232323;
+}
+
+.map-editor-properties::-webkit-scrollbar-thumb,
+.map-editor-layers-content::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.map-editor-properties::-webkit-scrollbar-thumb:hover,
+.map-editor-layers-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Resizable 手柄样式 */
+.re-resizable-handle {
+  background: #333;
+  transition: background-color 0.2s;
+}
+
+.re-resizable-handle:hover {
+  background: #444;
+}
+
+.re-resizable-handle-left {
+  width: 4px;
+  left: -2px;
+} 

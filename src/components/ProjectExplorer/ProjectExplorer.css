@@ -1,0 +1,323 @@
+.project-explorer {
+  height: 100%;
+  background-color: #252526;
+  padding-top: 2px;
+}
+
+.project-explorer .ant-tree {
+  background: transparent;
+  color: #cccccc;
+  border: none;
+  width: 100%;
+  padding-left: 16px;
+  overflow-x: hidden;
+}
+
+/* 修改选中效果为整个树节点 */
+.project-explorer .ant-tree-treenode {
+  width: 100%;
+  padding: 0 !important;
+  height: 22px;
+  line-height: 22px;
+  position: relative;
+}
+
+.project-explorer .ant-tree-treenode:hover::after,
+.project-explorer .ant-tree-treenode-selected::after {
+  content: '';
+  position: absolute;
+  left: -16px;
+  right: 0;
+  height: 100%;
+  background-color: #37373d;
+  z-index: 0;
+}
+
+.project-explorer .ant-tree-indent,
+.project-explorer .ant-tree-switcher,
+.project-explorer .ant-tree-node-content-wrapper {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+/* 覆盖 Ant Design 的默认选中效果 */
+.project-explorer .ant-tree-node-content-wrapper.ant-tree-node-selected,
+.project-explorer .ant-tree-node-content-wrapper:hover {
+  background: transparent !important;
+  color: #cccccc !important;
+}
+
+.project-explorer .ant-tree-node-content-wrapper {
+  color: #cccccc;
+  transition: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.project-explorer .ant-tree-switcher {
+  color: #cccccc;
+  width: 8px !important;
+  margin-right: -4px !important;
+  z-index: 3;
+}
+
+.project-explorer .ant-tree-title {
+  font-size: 13px;
+  color: inherit;
+  flex: 1;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 树节点输入框样式 */
+.tree-node-input {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  height: 22px;
+}
+
+.tree-node-input .ant-input {
+  width: 120px;
+  height: 20px;
+  padding: 0 4px;
+  font-size: 13px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.tree-node-input .ant-input:hover {
+  border-color: #444;
+  background: #252526;
+}
+
+.tree-node-input .ant-input:focus {
+  border-color: #1976d2;
+  background: #252526;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.tree-node-input .ant-input::placeholder {
+  color: #666;
+}
+
+/* 控制台样式 */
+.console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+  user-select: none;
+}
+
+.project-explorer .console-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #cccccc;
+}
+
+.project-explorer .console-content {
+  height: calc(100% - 37px);
+  overflow: auto;
+  background: #252526;
+  width: 100%;
+  padding: unset !important;
+}
+
+/*
+ .project-explorer .ant-tree-indent {
+  width: 12px !important;
+} */
+
+.project-explorer .ant-tree-indent-unit {
+  display: inline-block;
+  width: 8px !important;
+}
+
+.project-header {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #bfc4cc;
+  background: #232526;
+  padding: 12px 18px 12px 16px;
+  border-bottom: 1px solid #333;
+  border-radius: 8px 8px 0 0;
+  margin: 0 6px 6px 6px;
+  letter-spacing: 0.5px;
+  position: relative;
+  user-select: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.project-header::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: #444;
+  border-radius: 2px;
+  margin-right: 10px;
+}
+
+.project-explorer :where(.ant-card) {
+  margin: 0 !important;
+}
+
+.project-explorer :where(.ant-card-head) {
+  min-height: 20px !important;
+  background: #333333 !important;
+  border-radius: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding-left: 16px !important;
+  padding-right: 0 !important;
+  box-sizing: border-box;
+}
+
+.project-explorer :where(.ant-card-head) .ant-card-head-wrapper {
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+
+.ant-tree-switcher{
+  width:8px !important;
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  min-width: 120px;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  color: #e0e0e0;
+  font-size: 13px;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.context-menu-item:hover {
+  background: #3d3d3d;
+}
+
+.context-menu-item:not(:last-child) {
+  border-bottom: 1px solid #444;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: #444;
+  margin: 4px 0;
+}
+
+/* 重命名输入框样式 */
+.project-explorer .ant-input {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  font-size: 13px;
+  height: 22px;
+  padding: 0 8px;
+}
+
+.project-explorer .ant-input:focus {
+  border-color: #1976d2;
+  box-shadow: none;
+}
+
+/* 新建项目输入框样式 */
+.new-item-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-item-input .ant-input {
+  flex: 1;
+  min-width: 100px;
+}
+
+.custom-modal .ant-modal-content {
+  background: #2d2d2d;
+  border-radius: 8px;
+}
+
+.custom-modal .ant-modal-header {
+  background: #2d2d2d;
+  border-bottom: 1px solid #444;
+  padding: 16px 24px;
+}
+
+.custom-modal .ant-modal-confirm-title {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.custom-modal .ant-modal-confirm-content {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.custom-modal .ant-modal-close {
+  color: #888;
+}
+
+.custom-modal .ant-modal-close:hover {
+  color: #fff;
+}
+
+.custom-modal .ant-modal-body {
+  color: #ffffff;
+  padding: 24px;
+  font-size: 14px;
+}
+
+.custom-modal .ant-modal-footer {
+  border-top: 1px solid #444;
+  padding: 16px 24px;
+}
+
+.custom-modal .ant-btn {
+  border-radius: 4px;
+  font-size: 14px;
+  height: 32px;
+  padding: 0 16px;
+}
+
+.custom-modal .ant-btn-primary {
+  background: #1976d2;
+  border-color: #1976d2;
+  color: #ffffff;
+}
+
+.custom-modal .ant-btn-primary:hover {
+  background: #1565c0;
+  border-color: #1565c0;
+  color: #ffffff;
+}
+
+.custom-modal .ant-btn-default {
+  background: #3d3d3d;
+  border-color: #444;
+  color: #ffffff;
+} 

@@ -1,0 +1,233 @@
+.node-list-modal-wrapper {
+  :global(.ant-message) {
+    z-index: 3100 !important;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+  }
+
+  .modal-content {
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    width: 600px;
+    max-width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    user-select: none;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem 5px 1rem;
+    user-select: none;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    user-select: none;
+  }
+
+  .header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background-color: #363636;
+    color: #888;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .icon-button:hover {
+    background-color: #404040;
+    border-color: #555;
+    color: #fff;
+  }
+
+  .icon-button .anticon {
+    font-size: 16px;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.25rem;
+    user-select: none;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+
+  .close-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-body {
+    padding: 0px 16px 16px 16px;
+    overflow-y: auto;
+  }
+
+  .modal-body .ant-tabs {
+    color: #fff;
+  }
+
+  .modal-body .ant-tabs-tab {
+    color: #888 !important;
+  }
+
+  .modal-body .ant-tabs-tab-active {
+    color: #fff !important;
+  }
+
+  .modal-body .ant-tabs-ink-bar {
+    background: #4a90e2 !important;
+  }
+
+  .modal-body .ant-tabs-content {
+    margin-top: 16px;
+  }
+
+  /* 搜索框样式 */
+  .search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 32px;
+    transition: width 0.3s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+    margin-left: 16px;
+  }
+
+  .search-wrapper.open {
+    width: 180px;
+  }
+
+  .search-icon {
+    font-size: 18px;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .search-icon:hover {
+    color: #fff;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 4px 10px;
+    background: #363636;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 12px;
+    outline: none;
+    transition: border 0.2s, background 0.2s;
+    box-sizing: border-box;
+  }
+
+  .search-input:focus {
+    border: 1.5px solid #4a90e2;
+    background: #404040;
+  }
+
+  .search-input::placeholder {
+    color: #888;
+  }
+
+  /* 确保搜索框在标签栏右侧正确显示 */
+  .ant-tabs-extra-content {
+    display: flex;
+    align-items: center;
+  }
+
+  .node-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    user-select: none;
+  }
+
+  .node-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: #363636;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    user-select: none;
+  }
+
+  .node-item:hover {
+    background-color: #404040;
+  }
+
+  .node-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    user-select: none;
+  }
+
+  .node-name {
+    color: #fff;
+    font-weight: 500;
+    text-align: left;
+    user-select: none;
+  }
+
+  .node-path {
+    color: #888;
+    font-size: 0.75rem;
+    user-select: none;
+  }
+
+  .node-type {
+    color: #888;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    background-color: #444;
+    border-radius: 4px;
+    user-select: none;
+  }
+} 

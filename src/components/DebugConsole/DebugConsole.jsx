@@ -1,0 +1,332 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Space, Dropdown, message } from 'antd';
+import { addLogListener, removeLogListener, LOG_TYPES } from '../../assets/js/utils';
+import './DebugConsole.css';
+import { SearchOutlined } from '@ant-design/icons';
+import IpcController from '../../controller/gui/IpcController';
+
+const MAX_LOGS = 1000; // 最大日志数量
+
+const DebugConsole = () => {
+  const [debugLogs, setDebugLogs] = useState([]);
+  const [filterType, setFilterType] = useState('all');
+  const [searchText, setSearchText] = useState('');
+  const [isScrollLocked, setIsScrollLocked] = useState(true);
+  const [scrollTop, setScrollTop] = useState(0);
+  const consoleContentRef = useRef(null);
+  const containerHeight = useRef(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef(null);
+  const ipcListenerSetRef = useRef(false);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, selectedLog: null });
+
+  // 自动滚动到底部
+  const scrollToBottom = useCallback(() => {
+    if (consoleContentRef.current && isScrollLocked) {
+      const scrollHeight = consoleContentRef.current.scrollHeight;
+      consoleContentRef.current.scrollTop = scrollHeight;
+      setScrollTop(scrollHeight);
+    }
+  }, [isScrollLocked]);
+
+  // 处理滚动事件
+  const handleScroll = useCallback((e) => {
+    if (!isScrollLocked) {
+      setScrollTop(e.target.scrollTop);
+    }
+  }, [isScrollLocked]);
+
+  // 更新容器高度
+  const updateContainerHeight = useCallback(() => {
+    if (consoleContentRef.current) {
+      containerHeight.current = consoleContentRef.current.clientHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    updateContainerHeight();
+    window.addEventListener('resize', updateContainerHeight);
+    return () => window.removeEventListener('resize', updateContainerHeight);
+  }, [updateContainerHeight]);
+
+  // 将日志处理函数移到组件顶层
+  const handleNewLog = useCallback((logEntry) => {
+    setDebugLogs(prevLogs => {
+      const newLogs = [...prevLogs, logEntry];
+      // 如果超过最大数量，删除最旧的日志
+      if (newLogs.length > MAX_LOGS) {
+        return newLogs.slice(-MAX_LOGS);
+      }
+      return newLogs;
+    });
+  }, []);
+
+      const handleNewLogFromIpc = useCallback((event, logEntry) => {
+        handleNewLog(logEntry);
+      }, [handleNewLog]);
+
+  useEffect(() => {
+    // 只在主窗口中设置监听器
+    if(window.isMainWindow == 1) {
+      addLogListener(handleNewLog);
+
+      // 使用ref确保只设置一次IPC监听器
+      if (!ipcListenerSetRef.current) {
+        IpcController.on('log-message', handleNewLogFromIpc);
+        ipcListenerSetRef.current = true;
+      }
+    }
+    
+    // 清理函数
+    return () => {
+      if(window.isMainWindow == 1) {
+        removeLogListener(handleNewLog);
+        
+        // 只有在确实设置了监听器的情况下才移除
+        if (ipcListenerSetRef.current) {
+          IpcController.off('log-message', handleNewLogFromIpc);
+          ipcListenerSetRef.current = false;
+        }
+      }
+    };
+  }, [handleNewLog, handleNewLogFromIpc]);
+
+  // 当日志更新时，自动滚动到底部
+  useEffect(() => {
+    scrollToBottom();
+  }, [debugLogs, scrollToBottom]);
+
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  const getLogClass = (type) => {
+    switch (type) {
+      case LOG_TYPES.INFO:
+        return 'log-info';
+      case LOG_TYPES.WARNING:
+        return 'log-warning';
+      case LOG_TYPES.ERROR:
+        return 'log-error';
+      default:
+        return '';
+    }
+  };
+
+  const handleClear = () => {
+    setDebugLogs([]);
+  };
+
+  const handleScrollLock = () => {
+    setIsScrollLocked(!isScrollLocked);
+    if (!isScrollLocked && consoleContentRef.current) {
+      // 锁定时主动滚动到底部并同步 scrollTop
+      const scrollHeight = consoleContentRef.current.scrollHeight;
+      consoleContentRef.current.scrollTop = scrollHeight;
+      setScrollTop(scrollHeight);
+    }
+  };
+
+  const filterItems = [
+    { key: 'all', label: '全部' },
+    { key: LOG_TYPES.INFO, label: '信息' },
+    { key: LOG_TYPES.WARNING, label: '警告' },
+    { key: LOG_TYPES.ERROR, label: '错误' },
+  ];
+
+  const handleFilterClick = ({ key }) => {
+    setFilterType(key);
+  };
+
+  // 根据类型和搜索文本过滤日志
+  const filteredLogs = debugLogs.filter(log => {
+    const typeMatch = filterType === 'all' || log.type === filterType;
+    const textMatch = !searchText || 
+      log.message.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.timestamp.includes(searchText);
+    return typeMatch && textMatch;
+  });
+
+  // 处理右键菜单
+  const handleContextMenu = (e, log) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      selectedLog: log
+    });
+  };
+
+  // 关闭右键菜单
+  const closeContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0, selectedLog: null });
+  };
+
+  // 复制日志内容
+  const copyLogContent = () => {
+    if (contextMenu.selectedLog) {
+      const logText = `[${contextMenu.selectedLog.timestamp}] ${contextMenu.selectedLog.type.toUpperCase()}: ${contextMenu.selectedLog.message}`;
+      navigator.clipboard.writeText(logText).then(() => {
+        message.success('日志已复制到剪贴板');
+      }).catch(() => {
+        message.error('复制失败');
+      });
+    }
+    closeContextMenu();
+  };
+
+  // 导出所有日志
+  const exportLogs = () => {
+    const logsText = filteredLogs.map(log => 
+      `[${log.timestamp}] ${log.type.toUpperCase()}: ${log.message}`
+    ).join('\n');
+    
+    const blob = new Blob([logsText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `debug_logs_${new Date().toISOString().slice(0, 19).replace(/[:]/g, '-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    closeContextMenu();
+  };
+
+  // 点击其他地方时关闭右键菜单
+  useEffect(() => {
+    const handleClick = () => closeContextMenu();
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
+  return (
+    <div className="debug-console">
+      <div className="console-header">
+        <div className="console-title">输出控制台</div>
+        <Space>
+          <div className={`console-search-wrapper${searchOpen ? ' open' : ''}`}> 
+            {!searchOpen && (
+              <SearchOutlined className="console-search-icon" onClick={() => setSearchOpen(true)} />
+            )}
+            {searchOpen && (
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="console-search-input"
+                placeholder="搜索日志..."
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                onBlur={() => setSearchOpen(false)}
+              />
+            )}
+          </div>
+          <span 
+            className={`console-scroll-lock ${isScrollLocked ? 'locked' : ''}`}
+            onClick={handleScrollLock}
+            title={isScrollLocked ? '取消锁定滚动' : '锁定滚动'}
+          >
+            {isScrollLocked ? (
+              // 锁定（闭锁）图标
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              // 解锁（开锁）图标
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9 2.35-5.25 5.25-5.25Z" />
+              </svg>
+            )}
+          </span>
+          <span className="console-clear" onClick={handleClear}>清除</span>
+          <Dropdown
+            menu={{
+              items: filterItems,
+              onClick: handleFilterClick,
+              selectedKeys: [filterType],
+            }}
+            trigger={['click']}
+          >
+            <span className="console-filter">
+              筛选 {filterType === 'all' ? '全部' : 
+                filterType === LOG_TYPES.INFO ? '信息' :
+                filterType === LOG_TYPES.WARNING ? '警告' : '错误'}
+            </span>
+          </Dropdown>
+        </Space>
+      </div>
+      <div 
+        className="console-content" 
+        ref={consoleContentRef}
+        onScroll={handleScroll}
+      >
+        {filteredLogs.map((log, index) => (
+          <div 
+            key={index} 
+            className={`console-line ${getLogClass(log.type)}`}
+            onContextMenu={(e) => handleContextMenu(e, log)}
+          >
+            <span className="line-number">{index + 1}</span>
+            <span className="line-content">
+              <span className="timestamp">[{log.timestamp}]</span>
+              <span className={`log-type ${log.type}`}>{log.type.toUpperCase()}</span>
+              <span className="message">{log.message}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      {contextMenu.visible && (
+        <div 
+          className="context-menu"
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            zIndex: 1000,
+            background: '#2d2d2d',
+            border: '1px solid #444',
+            borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          }}
+        >
+          <div 
+            className="context-menu-item"
+            onClick={copyLogContent}
+            style={{
+              padding: '8px 16px',
+              cursor: 'pointer',
+              color: '#e0e0e0',
+              fontSize: '13px',
+              transition: 'background 0.2s',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#3d3d3d'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            复制
+          </div>
+          <div 
+            className="context-menu-item"
+            onClick={exportLogs}
+            style={{
+              padding: '8px 16px',
+              cursor: 'pointer',
+              color: '#e0e0e0',
+              fontSize: '13px',
+              transition: 'background 0.2s',
+              borderTop: '1px solid #444',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#3d3d3d'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            导出所有日志
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DebugConsole;

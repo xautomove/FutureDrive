@@ -1,0 +1,177 @@
+.node-config-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.node-config-modal {
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  padding: 15px 14px 5px 15px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #fff;
+}
+
+.node-config-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.node-config-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+.node-config-modal-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.node-config-modal-close:hover {
+  color: #fff;
+}
+
+.node-config-modal-body {
+  margin-bottom: 20px;
+}
+
+.node-config-form-item {
+  margin-bottom: 15px;
+}
+
+.node-config-form-item label {
+  display: block;
+  margin-bottom: 5px;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.node-config-form-item input,
+.node-config-form-item select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.node-config-form-item input:focus,
+.node-config-form-item select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.node-config-form-item input:hover,
+.node-config-form-item select:hover {
+  border-color: #666;
+}
+
+/* Select 特定样式 */
+.node-config-form-item select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.node-config-form-item select option {
+  background-color: #2d2d2d;
+  color: #fff;
+  padding: 8px;
+}
+
+.node-config-form-item select:focus {
+  background-color: #1e1e1e;
+}
+
+.node-config-form-description {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #888;
+}
+
+.node-config-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #444;
+}
+
+.node-config-modal-footer button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.node-config-modal-footer button[type="button"] {
+  background-color: transparent;
+  color: #888;
+  border: 1px solid #444;
+}
+
+.node-config-modal-footer button[type="button"]:hover {
+  background-color: #444;
+  color: #fff;
+}
+
+.node-config-modal-footer button[type="submit"] {
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.node-config-modal-footer button[type="submit"]:hover {
+  background-color: #1565c0;
+}
+
+/* 禁用状态样式 */
+.node-config-form-item input:disabled,
+.node-config-form-item select:disabled {
+  background-color: #333;
+  color: #666;
+  cursor: not-allowed;
+  border-color: #444;
+}
+
+/* 错误状态样式 */
+.node-config-form-item input.error,
+.node-config-form-item select.error {
+  border-color: #d32f2f;
+}
+
+.node-config-form-item .error-message {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+} 

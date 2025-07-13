@@ -1,0 +1,56 @@
+name: Build App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Initialize project
+      run: |
+        cd ${{ github.workspace }}
+        rm -f yarn.lock package-lock.json
+        yarn init -y
+        yarn config set registry https://registry.npmmirror.com
+        yarn add @electron/remote @emotion/react @emotion/styled @mui/icons-material @mui/material antd electron-store re-resizable react react-dom react-resizable react-router-dom reactflow
+        yarn add --dev @babel/core @babel/preset-env @babel/preset-react babel-loader concurrently cross-env css-loader electron electron-packager style-loader wait-on webpack webpack-cli webpack-dev-server
+    
+    - name: Build webpack
+      run: yarn build
+    
+    - name: Package app
+      run: yarn package
+    
+    - name: Get version
+      id: get_version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FutuerDrive-Linux-${{ env.VERSION }}
+        path: dist/*.AppImage
+        if-no-files-found: error 
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ env.VERSION }}
+        name: Release v${{ env.VERSION }}
+        draft: false
+        prerelease: false
+        files: |
+          dist/*.AppImage
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

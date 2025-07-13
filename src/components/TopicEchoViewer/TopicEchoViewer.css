@@ -1,0 +1,240 @@
+.topic-echo-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.topic-echo-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #444;
+}
+
+.topic-echo-viewer-search {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.topic-echo-viewer-search-input {
+  background-color: #1a1a1a !important;
+  border: 1px solid #444 !important;
+  color: #fff !important;
+}
+
+.topic-echo-viewer-search-input:hover,
+.topic-echo-viewer-search-input:focus {
+  border-color: #666 !important;
+  box-shadow: none !important;
+}
+
+.topic-echo-viewer-search-input::placeholder {
+  color: #888 !important;
+}
+
+.topic-echo-viewer-search-input .anticon {
+  color: #888;
+}
+
+.topic-echo-viewer-options {
+  display: flex;
+  align-items: center;
+}
+
+.topic-echo-viewer-options .ant-checkbox-wrapper {
+  color: #fff;
+}
+
+.topic-echo-viewer-options .ant-checkbox-inner {
+  background-color: #1a1a1a;
+  border-color: #444;
+}
+
+.topic-echo-viewer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.topic-echo-viewer-message {
+  margin-bottom: 8px;
+  font-family: monospace;
+}
+
+.topic-echo-viewer-timestamp {
+  color: #888;
+  margin-right: 8px;
+}
+
+.topic-echo-viewer-text {
+  color: #fff;
+}
+
+.topic-echo-viewer-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.topic-echo-viewer-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  margin-right: 16px;
+}
+
+.topic-echo-viewer-filter {
+  background: #232323 !important;
+  border: 1px solid #333 !important;
+  color: #e0e0e0 !important;
+  font-size: 12px !important;
+}
+
+.topic-echo-viewer-filter:focus {
+  background: #222b3a !important;
+}
+
+.topic-echo-viewer-filter input{
+  background-color: unset !important;
+  &::placeholder{
+    color: #888 !important;
+  }
+}
+
+.topic-echo-viewer-output-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  padding: 10px;
+}
+
+.topic-echo-viewer-output {
+  width: 100%;
+  height: 100%;
+  background: #1e1e1e;
+  border: none;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.topic-echo-viewer-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.topic-echo-viewer-output::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.topic-echo-viewer-output::-webkit-scrollbar-thumb {
+  background: #292929;
+  border-radius: 4px;
+}
+
+.topic-echo-viewer-output::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+.topic-echo-viewer-toolbar .ant-btn {
+  background: #232323;
+  border: 1px solid #333;
+  color: #e0e0e0;
+}
+
+.topic-echo-viewer-toolbar .ant-btn:hover {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #fff;
+}
+
+.topic-echo-viewer-toolbar .ant-btn-primary {
+  background: #1976d2;
+  border-color: #1976d2;
+  color: #fff;
+}
+
+.topic-echo-viewer-toolbar .ant-btn-primary:hover {
+  background: #1565c0;
+  border-color: #1565c0;
+}
+
+.topic-echo-viewer-toolbar .ant-checkbox-wrapper {
+  color: #e0e0e0;
+}
+
+.topic-echo-viewer-toolbar .ant-checkbox-inner {
+  background: #232323;
+  border-color: #444;
+}
+
+.topic-echo-viewer-toolbar .ant-checkbox-checked .ant-checkbox-inner {
+  background: #1976d2;
+  border-color: #1976d2;
+}
+
+.topic-echo-viewer-toolbar .ant-input {
+  background: #232323;
+  border: 1px solid #333;
+  color: #e0e0e0;
+}
+
+.topic-echo-viewer-toolbar .ant-input:hover,
+.topic-echo-viewer-toolbar .ant-input:focus {
+  border-color: #1976d2;
+  background: #222b3a;
+}
+
+.topic-echo-viewer-toolbar .ant-input-clear-icon {
+  color: #888;
+}
+
+.topic-echo-viewer-toolbar .ant-input-clear-icon:hover {
+  color: #e0e0e0;
+} 
+
+/* 让下拉框和输入框风格一致 */
+.topic-echo-viewer-toolbar .ant-select-selector {
+  background: #232323 !important;
+  border: 1px solid #333 !important;
+  color: #e0e0e0 !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  align-items: center;
+}
+
+.topic-echo-viewer-toolbar .ant-select-selection-item {
+  color: #e0e0e0 !important;
+}
+
+.topic-echo-viewer-toolbar .ant-select-arrow {
+  color: #888 !important;
+}
+
+.topic-echo-viewer-toolbar .ant-select-dropdown {
+  background: #232323 !important;
+  color: #e0e0e0 !important;
+}
+
+.topic-echo-viewer-toolbar .ant-select-item-option {
+  background: #232323 !important;
+  color: #e0e0e0 !important;
+}
+
+.topic-echo-viewer-toolbar .ant-select-item-option-active,
+.topic-echo-viewer-toolbar .ant-select-item-option-selected {
+  background: #1976d2 !important;
+  color: #fff !important;
+} 
