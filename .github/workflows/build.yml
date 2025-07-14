@@ -42,7 +42,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: FutuerDrive-Linux-${{ env.VERSION }}
+        name: FutureDrive-Linux-${{ env.VERSION }}
         path: dist/*.AppImage
         if-no-files-found: error 
 

@@ -6,8 +6,8 @@ import './AboutModal.css';
 
 const { Text, Title, Paragraph } = Typography;
 
-const LICENSE_URL = 'https://futuer.automoves.cn/license';
-const LEGAL_URL = 'https://futuer.automoves.cn/legal';
+const LICENSE_URL = 'https://Future.automoves.cn/license';
+const LEGAL_URL = 'https://Future.automoves.cn/legal';
 
 const AboutModal = ({ visible, onClose }) => {
   const handleOpenUrl = async (url) => {

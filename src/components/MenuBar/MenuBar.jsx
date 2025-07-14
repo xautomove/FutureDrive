@@ -11,7 +11,7 @@ import SettingsModal from '../SettingsModal/SettingsModal';
 import windowController from '../../controller/gui/WindowController';
 const { shell } = require('electron');
 
-const DOCUMENTATION_URL = 'https://docs.futuredrive.com';
+const DOCUMENTATION_URL = 'https://futuer.automoves.cn/docs/';
 
 const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
   const [isRosTopicManagerVisible, setIsRosTopicManagerVisible] = useState(false);

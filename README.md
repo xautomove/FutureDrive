@@ -1,12 +1,12 @@
-# FutuerDrive
+# FutureDrive
 
 [中文版](README_ZH.md) | English
 
-FutuerDrive is a modular autonomous driving framework offering practical tools, ready-to-use solutions, and a streamlined workflow for fast development and deployment.
+FutureDrive is a modular autonomous driving framework offering practical tools, ready-to-use solutions, and a streamlined workflow for fast development and deployment.
 
 ## 🎯 Project Goals
 
-FutuerDrive aims to simplify and accelerate autonomous driving development by providing a comprehensive, integrated platform that combines essential tools and workflows into a single, user-friendly environment. Our goal is to reduce development time and complexity while maintaining the flexibility needed for cutting-edge autonomous driving research and deployment.
+FutureDrive aims to simplify and accelerate autonomous driving development by providing a comprehensive, integrated platform that combines essential tools and workflows into a single, user-friendly environment. Our goal is to reduce development time and complexity while maintaining the flexibility needed for cutting-edge autonomous driving research and deployment.
 
 ## 🚀 Core Features
 
@@ -76,7 +76,7 @@ yarn dev
 
 ## 🚀 Quick Start
 
-1. **Launch FutuerDrive**: Start the application and create a new project
+1. **Launch FutureDrive**: Start the application and create a new project
 2. **Environment Setup**: Use the visual environment manager to configure your development environment
 3. **Map Creation**: Create or import maps using the vector map editor
 4. **Topic Management**: Set up and monitor ROS topics for your autonomous driving system
@@ -85,7 +85,7 @@ yarn dev
 
 ## 📚 Documentation
 
-- [User Guide](https://futuer.automoves.cn/docs)
+- [User Guide](https://Future.automoves.cn/docs)
 
 ## 🤝 Contributing
 
@@ -99,7 +99,7 @@ This project is licensed under the Creative Commons Attribution-NonCommercial-No
 
 - ROS community for the robotics framework
 - Open source simulation platforms
-- Contributors and users of FutuerDrive
+- Contributors and users of FutureDrive
 
 ## 📞 Support
 
@@ -114,4 +114,4 @@ This project is licensed under the Creative Commons Attribution-NonCommercial-No
 ![](./image/3.png)
 ![](./image/4.png)
 
-**FutuerDrive** - Accelerating Autonomous Driving Development
+**FutureDrive** - Accelerating Autonomous Driving Development

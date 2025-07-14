@@ -240,7 +240,7 @@ pause`;
         "description": "机器人操作系统2代",
         "installUrl": {
           "windows": "xxx",
-          "ubuntu": "/media/bylike/6AA72AF22E95B698/Mycode/electron/FutuDrive_js/install_script/install_ros2_humble.py"
+          "ubuntu": "http://180.76.236.15:8777/install_ros2_humble.py"
         },
         "checkCommand": {
           "windows": "ros2",
@@ -254,7 +254,7 @@ pause`;
         "description": "Python编程语言",
         "installUrl": {
           "windows": "https://www.python.org/downloads/windows/",
-          "ubuntu": "https://docs.python.org/3/using/unix.html"
+          "ubuntu": "http://180.76.236.15:8777/install_py.py"
         },
         "checkCommand": {
           "windows": "python3 --version",
@@ -268,7 +268,7 @@ pause`;
         "description": "NVIDIA CUDA并行计算平台",
         "installUrl": {
           "windows": "http://180.76.236.15:8777/install_cuda.py",
-          "ubuntu": "/media/bylike/6AA72AF22E95B698/Mycode/electron/FutuDrive_js/install_script/install_cuda.py"
+          "ubuntu": "http://180.76.236.15:8777/install_cuda.py"
         },
         "checkCommand": {
           "windows": "nvcc --version",
