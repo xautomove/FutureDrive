@@ -12,33 +12,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
-    
-    - name: Initialize project
+        node-version: '22.16.0'
+
+    - name: Install dependencies
       run: |
-        cd ${{ github.workspace }}
-        rm -f yarn.lock package-lock.json
-        yarn init -y
         yarn config set registry https://registry.npmmirror.com
-        yarn add @electron/remote @emotion/react @emotion/styled @mui/icons-material @mui/material antd electron-store re-resizable react react-dom react-resizable react-router-dom reactflow
-        yarn add --dev @babel/core @babel/preset-env @babel/preset-react babel-loader concurrently cross-env css-loader electron electron-packager style-loader wait-on webpack webpack-cli webpack-dev-server
-    
+        yarn install --frozen-lockfile
+
     - name: Build webpack
       run: yarn build
-    
+
     - name: Package app
       run: yarn package
-    
+
     - name: Get version
       id: get_version
       run: |
         VERSION=$(node -p "require('./package.json').version")
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-    
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

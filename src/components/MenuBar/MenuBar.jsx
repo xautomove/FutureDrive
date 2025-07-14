@@ -38,6 +38,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         }
         break;
       case 'documentation':
+        console.log("open confirm")
         Modal.confirm({
           title: '打开文档',
           content: '是否在浏览器中打开文档？',
@@ -50,6 +51,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
             } catch (error) {
               log(`打开文档失败: ${error.message}`, LOG_TYPES.ERROR);
             }
+            return true
           }
         });
         break;
