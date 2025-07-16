@@ -2,7 +2,7 @@
 
 中文 | [English](README.md)
 
-FutureDrive 是一个模块化自动驾驶框架，提供实用工具、即用型解决方案和简化的工作流程，用于快速开发和部署。
+FutureDrive 是一个模块化自动驾驶解决方案，提供实用工具、即用型方案和简化的工作流程，用于快速开发和部署。
 
 ## 🎯 项目目标
 
@@ -86,6 +86,7 @@ yarn dev
 ## 📚 文档
 
 - [用户指南](https://Future.automoves.cn/docs)
+- [备用文档](https://xautomove.github.io/docs_future/)
 
 ## 🤝 贡献
 

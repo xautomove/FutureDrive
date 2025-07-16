@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Tabs } from 'antd';
-import { SearchOutlined, ReloadOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { SearchOutlined, ReloadOutlined, FolderOpenOutlined,ShoppingCartOutlined } from '@ant-design/icons';
 import './NodeListModal.css';
 import GLOBALS from '../../assets/js/globals';
 import NodeScanner from '../../controller/node/NodeScanner';
 import { message } from 'antd'; 
-const { shell } = window.require('@electron/remote');
+const { shell } = window.require ? window.require('electron') : require('electron');
 const path = window.require('path');
 
 const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
@@ -125,6 +125,13 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
                   title="刷新节点列表"
                 >
                   <ReloadOutlined />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => shell.openExternal('https://market.automoves.cn/')}
+                  title="市场"
+                >
+                   <ShoppingCartOutlined />
                 </button>
               </div>
             </div>

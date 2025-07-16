@@ -7,6 +7,8 @@ import path from 'path';
 import './TemplateManager.css';
 import { log } from 'console';
 
+const { shell } = window.require ? window.require('electron') : require('electron');
+
 const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -109,11 +111,22 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
     <div>
       <Modal
         className="template-manager-modal"
-        title="模板管理"
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>模板管理</span>
+          </div>
+        }
         open={visible}
         onCancel={onClose}
         width={800}
         footer={[
+          <Button
+              type="default"
+              onClick={() => shell.openExternal('https://market.automoves.cn/')}
+              style={{ marginLeft: 8 }}
+            >
+              市场
+            </Button>,
           <Button 
             key="import" 
             type="primary" 

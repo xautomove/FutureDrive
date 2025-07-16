@@ -107,10 +107,10 @@ function App() {
         }
       };
       // checkAppVersion();
-      ipcRenderer.invoke('get-sys-info').then(info => {
-        // 这里可以 setState 或显示在页面上
-        console.log(info);
-      });
+      // ipcRenderer.invoke('get-sys-info').then(info => {
+      //   // 这里可以 setState 或显示在页面上
+      //   console.log(info);
+      // });
     }
 
     // 初始化系统信息
@@ -122,8 +122,6 @@ function App() {
     const loadWindowParams = async () => {
       try {
         const { page, params } = await ipcRenderer.invoke('get-window-params');
-        console.log("获取到的 page:", page);
-        console.log("获取到的 params:", params);
 
         // 定义全局window变量，判断是否为主程序
         window.isMainWindow = page == "" ? 1 : 0;

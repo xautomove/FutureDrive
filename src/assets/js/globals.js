@@ -17,6 +17,7 @@ const GLOBALS = {
   // 活动进程列表
   activeProcesses,
   // 其它全局变量可在此添加
+  isDebug:false,
 
   // 获取运行状态
   get isRunning() {

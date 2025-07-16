@@ -73,7 +73,6 @@ const createWindow = (width = 1200, height = 800, page = '', params = []) => {
   // 监听 F12 按键
   win.webContents.on('before-input-event', (event, input) => {
     if (input.key === 'F12') {
-      console.log("F12 按键被按下");
       win.webContents.toggleDevTools();
       event.preventDefault();
     }

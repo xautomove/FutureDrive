@@ -3,6 +3,7 @@ import { log, LOG_TYPES } from './utils';
 import path from 'path';
 import fs from 'fs';
 import GLOBALS from './globals';
+import { Global } from '@emotion/react';
 
 class CommandExecutor {
     constructor() {
@@ -41,9 +42,21 @@ class CommandExecutor {
             const {
                 nodeId,
                 env = {},
-                onStdout = (text) => log(`Command stdout: ${text}`, LOG_TYPES.INFO),
-                onStderr = (text) => log(`Command stderr: ${text}`, LOG_TYPES.INFO),
-                onError = (error) => log(`Command error: ${error}`, LOG_TYPES.ERROR),
+                onStdout = (text) => {
+                    if(Global.isDebug){
+                        log(`Command stdout: ${text}`, LOG_TYPES.INFO)
+                    }
+                },
+                onStderr = (text) => {
+                    if(Global.isDebug){
+                        log(`Command stderr: ${text}`, LOG_TYPES.INFO)
+                    }
+                },
+                onError = (error) => {
+                    if(Global.isDebug){
+                        log(`Command error: ${error}`, LOG_TYPES.ERROR)
+                    }
+                },
                 isTaskNode = false, // 是否是任务节点
                 ...otherOptions
             } = options;
@@ -52,7 +65,9 @@ class CommandExecutor {
 
                 // 记录完整命令
                 const fullCommand = `${command} ${args.join(' ')}`;
-                log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
+                if(GLOBALS.isDebug){
+                    log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
+                }
 
                 // 创建子进程
                 const child = spawn(command, args, {
@@ -185,7 +200,9 @@ class CommandExecutor {
             
             // 记录完整命令
             const fullCommand = `${command} ${args.join(' ')}`;
-            log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
+            if(Global.isDebug){
+                log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
+            }
 
             const child = spawn(command, args, {
                 env: { ...process.env, ...env },
@@ -201,7 +218,9 @@ class CommandExecutor {
 
             // 统一处理错误
             const handleError = (error) => {
-                log(`命令执行错误: ${error.message}`, LOG_TYPES.ERROR);
+                if(Global.isDebug){
+                    log(`命令执行错误: ${error.message}`, LOG_TYPES.ERROR);
+                }
                 if (onError) {
                     onError(error);
                 }
@@ -213,13 +232,17 @@ class CommandExecutor {
             // 处理进程结束
             child.on('close', (code) => {
                 if (code !== 0) {
+                   if(Global.isDebug){
                     log(`命令执行结束，退出码: ${code}`, LOG_TYPES.WARNING);
+                   }
                 }
             });
 
             return child;
         } catch (error) {
-            log(`创建进程失败: ${error.message}`, LOG_TYPES.ERROR);
+            if(Global.isDebug){
+                log(`创建进程失败: ${error.message}`, LOG_TYPES.ERROR);
+            }
             if (options.onError) {
                 options.onError(error);
             }

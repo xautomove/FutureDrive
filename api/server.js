@@ -43,7 +43,6 @@ apiApp.get('/api/config', async (req, res) => {
     return res.status(500).json({ success: false, error: '配置请求函数未初始化' });
   }
   try {
-    console.log("key2", key);
     const value = await getConfigCallback(key);
     res.json({ success: true, key, value });
   } catch (error) {

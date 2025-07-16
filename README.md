@@ -2,7 +2,7 @@
 
 [中文版](README_ZH.md) | English
 
-FutureDrive is a modular autonomous driving framework offering practical tools, ready-to-use solutions, and a streamlined workflow for fast development and deployment.
+FutureDrive is a modular autonomous driving solution that provides practical tools, ready-to-use solutions, and streamlined workflows for rapid development and deployment.
 
 ## 🎯 Project Goals
 
@@ -86,6 +86,7 @@ yarn dev
 ## 📚 Documentation
 
 - [User Guide](https://Future.automoves.cn/docs)
+- [Backup Documentation](https://xautomove.github.io/docs_future/)
 
 ## 🤝 Contributing
 
