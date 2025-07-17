@@ -21,7 +21,6 @@ const InstallExtensionModal = ({ visible, onClose }) => {
   const [type, setType] = useState('node');
   const [loading, setLoading] = useState(false);
   const [log, setLog] = useState('');
-  const logRef = useRef('');
 
   const handleInstall = async () => {
     if (!repo) {
@@ -30,15 +29,30 @@ const InstallExtensionModal = ({ visible, onClose }) => {
     }
     setLoading(true);
     setLog('开始安装...\n');
-    logRef.current = '开始安装...\n';
     try {
-      const baseDir = path.join(process.cwd(), DIR_MAP[type]);
-      const repoName = repo.split('/').pop().replace(/\.git$/, '');
-      const destDir = path.join(baseDir, repoName);
-      setLog(prev => prev + `目标目录: ${destDir}\n`);
-      logRef.current += `目标目录: ${destDir}\n`;
-      // git clone
-      exec(`${repo} "${destDir}"`, (error, stdout, stderr) => {
+      const baseDir = DIR_MAP[type];
+      if (!baseDir) {
+        throw new Error(`未知类型: ${type}`);
+      }
+      if (!fs.existsSync(baseDir)) {
+        throw new Error(`目标路径不存在: ${baseDir}`);
+      }
+  
+      const parts = repo.trim().split(/\s+/);
+      const repoUrl = parts[0];
+      const sparsePath = parts[1];
+  
+      let cmd = `cd "${baseDir}" && `;
+  
+      if (sparsePath) {
+        const repoName = path.basename(repoUrl, '.git');
+        cmd +=
+          `git clone --depth=1 --filter=blob:none --sparse ${repoUrl} && cd ${repoName} && git sparse-checkout set ${sparsePath}`;
+      } else {
+        cmd += `git clone --depth=1 ${repoUrl}`;
+      }
+  
+      exec(cmd, (error, stdout, stderr) => {
         if (error) {
           setLog(prev => prev + `安装失败: ${stderr || error.message}\n`);
           setLoading(false);
@@ -52,6 +66,7 @@ const InstallExtensionModal = ({ visible, onClose }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <Modal
