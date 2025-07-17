@@ -2,13 +2,10 @@ const path = require('path');
 const fs = require('fs');
 
 class ProjectController {
-  // 选择目录
   handleSelectDirectory() {
-    // 这里可以用 Electron 的 dialog 或直接返回空，前端可用 window.require('electron').remote.dialog
     return null;
   }
 
-  // 创建项目
   handleCreateProject({ name, description, path: projectPath }) {
     try {
       const projectDir = path.join(projectPath, name);
@@ -52,10 +49,8 @@ class ProjectController {
     });
   }
 
-  // 打开项目
   openProject(projectPath) {
     try {
-      // 检查项目路径是否存在
       if (!fs.existsSync(projectPath)) {
         return { 
           success: false, 
@@ -63,7 +58,6 @@ class ProjectController {
         };
       }
 
-      // 检查是否是项目根目录
       const projectName = path.basename(projectPath);
       const projFile = path.join(projectPath, `${projectName}.proj`);
       
@@ -74,11 +68,9 @@ class ProjectController {
         };
       }
 
-      // 读取项目配置
       const projContent = fs.readFileSync(projFile, 'utf8');
       const projectConfig = JSON.parse(projContent);
 
-      // 验证项目配置
       if (!projectConfig.path || !fs.existsSync(projectConfig.path)) {
         return { 
           success: false, 
@@ -86,7 +78,6 @@ class ProjectController {
         };
       }
 
-      // 读取项目目录结构
       const tree = this.readDirRecursive(projectPath);
       return { 
         success: true, 
@@ -101,7 +92,6 @@ class ProjectController {
     }
   }
 
-  // 新增：选择proj文件并自动调用openProject
   async selectAndOpenProject(onOpenProject, log, LOG_TYPES) {
     const { dialog } = window.require('@electron/remote');
     const fs = window.require('fs');

@@ -8,6 +8,7 @@ import EnvManager from '../EnvManager/EnvManager';
 import AboutModal from '../AboutModal/AboutModal';
 import SimulationManager from '../SimulationManager/SimulationManager';
 import SettingsModal from '../SettingsModal/SettingsModal';
+import InstallExtensionModal from '../InstallExtensionModal/InstallExtensionModal';
 import windowController from '../../controller/gui/WindowController';
 const { shell } = require('electron');
 
@@ -19,6 +20,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isSimulationManagerVisible, setIsSimulationManagerVisible] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+  const [isInstallExtVisible, setIsInstallExtVisible] = useState(false);
 
   const handleMenuClick = async ({ key }) => {
     switch (key) {
@@ -106,6 +108,9 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
       case 'maptool':
         windowController.openViewer(1200, 800, 'map_editor', {});
         break;
+      case 'install_ext':
+        setIsInstallExtVisible(true);
+        break;
       default:
         break;
     }
@@ -139,6 +144,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         { key: 'env', label: '环境管理' },
         { key: 'simulation', label: '仿真管理' },
         { key: 'maptool', label: '地图工具' },
+        { key: 'install_ext', label: '安装扩展' },
       ],
     },
     {
@@ -184,6 +190,10 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
       <SettingsModal
         visible={isSettingsModalVisible}
         onClose={() => setIsSettingsModalVisible(false)}
+      />
+      <InstallExtensionModal
+        visible={isInstallExtVisible}
+        onClose={() => setIsInstallExtVisible(false)}
       />
     </div>
   );

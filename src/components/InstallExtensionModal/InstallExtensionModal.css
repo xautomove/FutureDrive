@@ -1,0 +1,69 @@
+.install-extension-modal .ant-modal-content {
+  background: #232323 !important;
+  color: #fff !important;
+  border-radius: 8px;
+}
+.install-extension-modal .ant-modal-header {
+  background: #232323 !important;
+  border-bottom: 1px solid #444 !important;
+}
+.install-extension-modal .ant-modal-title {
+  color: #fff !important;
+}
+.install-extension-modal .ant-modal-close {
+  color: #888 !important;
+}
+.install-extension-modal .ant-modal-close:hover {
+  color: #fff !important;
+  background: #333 !important;
+}
+.install-ext-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.install-ext-log-title {
+  color: #aaa;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+.install-ext-log-box {
+  background: #181818;
+  color: #4ea1ff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  min-height: 150px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', monospace;
+}
+.install-extension-modal .ant-input,
+.install-extension-modal .ant-select-selector {
+  background: #2d2d2d !important;
+  color: #fff !important;
+  border: 1px solid #444 !important;
+}
+
+.install-extension-modal .ant-input{
+  /* placeholder颜色 */
+  &::placeholder {
+    color: #e7e2e2 !important;
+    opacity: 1;
+  }
+}
+
+.install-extension-modal .ant-input:focus,
+.install-extension-modal .ant-select-focused .ant-select-selector {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
+.install-extension-modal .ant-btn-primary {
+  background: #1976d2 !important;
+  border-color: #1976d2 !important;
+}
+.install-extension-modal .ant-btn-primary:hover {
+  background: #1565c0 !important;
+  border-color: #1565c0 !important;
+} 

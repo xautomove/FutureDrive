@@ -5,7 +5,7 @@ import './DebugConsole.css';
 import { SearchOutlined } from '@ant-design/icons';
 import IpcController from '../../controller/gui/IpcController';
 
-const MAX_LOGS = 1000; // 最大日志数量
+const MAX_LOGS = 1000;
 
 const DebugConsole = () => {
   const [debugLogs, setDebugLogs] = useState([]);
@@ -20,7 +20,6 @@ const DebugConsole = () => {
   const ipcListenerSetRef = useRef(false);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, selectedLog: null });
 
-  // 自动滚动到底部
   const scrollToBottom = useCallback(() => {
     if (consoleContentRef.current && isScrollLocked) {
       const scrollHeight = consoleContentRef.current.scrollHeight;
@@ -29,14 +28,12 @@ const DebugConsole = () => {
     }
   }, [isScrollLocked]);
 
-  // 处理滚动事件
   const handleScroll = useCallback((e) => {
     if (!isScrollLocked) {
       setScrollTop(e.target.scrollTop);
     }
   }, [isScrollLocked]);
 
-  // 更新容器高度
   const updateContainerHeight = useCallback(() => {
     if (consoleContentRef.current) {
       containerHeight.current = consoleContentRef.current.clientHeight;
@@ -49,11 +46,9 @@ const DebugConsole = () => {
     return () => window.removeEventListener('resize', updateContainerHeight);
   }, [updateContainerHeight]);
 
-  // 将日志处理函数移到组件顶层
   const handleNewLog = useCallback((logEntry) => {
     setDebugLogs(prevLogs => {
       const newLogs = [...prevLogs, logEntry];
-      // 如果超过最大数量，删除最旧的日志
       if (newLogs.length > MAX_LOGS) {
         return newLogs.slice(-MAX_LOGS);
       }
@@ -66,23 +61,19 @@ const DebugConsole = () => {
       }, [handleNewLog]);
 
   useEffect(() => {
-    // 只在主窗口中设置监听器
     if(window.isMainWindow == 1) {
       addLogListener(handleNewLog);
 
-      // 使用ref确保只设置一次IPC监听器
       if (!ipcListenerSetRef.current) {
         IpcController.on('log-message', handleNewLogFromIpc);
         ipcListenerSetRef.current = true;
       }
     }
     
-    // 清理函数
     return () => {
       if(window.isMainWindow == 1) {
         removeLogListener(handleNewLog);
         
-        // 只有在确实设置了监听器的情况下才移除
         if (ipcListenerSetRef.current) {
           IpcController.off('log-message', handleNewLogFromIpc);
           ipcListenerSetRef.current = false;
@@ -91,7 +82,6 @@ const DebugConsole = () => {
     };
   }, [handleNewLog, handleNewLogFromIpc]);
 
-  // 当日志更新时，自动滚动到底部
   useEffect(() => {
     scrollToBottom();
   }, [debugLogs, scrollToBottom]);
@@ -122,7 +112,6 @@ const DebugConsole = () => {
   const handleScrollLock = () => {
     setIsScrollLocked(!isScrollLocked);
     if (!isScrollLocked && consoleContentRef.current) {
-      // 锁定时主动滚动到底部并同步 scrollTop
       const scrollHeight = consoleContentRef.current.scrollHeight;
       consoleContentRef.current.scrollTop = scrollHeight;
       setScrollTop(scrollHeight);
@@ -140,7 +129,6 @@ const DebugConsole = () => {
     setFilterType(key);
   };
 
-  // 根据类型和搜索文本过滤日志
   const filteredLogs = debugLogs.filter(log => {
     const typeMatch = filterType === 'all' || log.type === filterType;
     const textMatch = !searchText || 
@@ -149,7 +137,6 @@ const DebugConsole = () => {
     return typeMatch && textMatch;
   });
 
-  // 处理右键菜单
   const handleContextMenu = (e, log) => {
     e.preventDefault();
     setContextMenu({
@@ -160,12 +147,10 @@ const DebugConsole = () => {
     });
   };
 
-  // 关闭右键菜单
   const closeContextMenu = () => {
     setContextMenu({ visible: false, x: 0, y: 0, selectedLog: null });
   };
 
-  // 复制日志内容
   const copyLogContent = () => {
     if (contextMenu.selectedLog) {
       const logText = `[${contextMenu.selectedLog.timestamp}] ${contextMenu.selectedLog.type.toUpperCase()}: ${contextMenu.selectedLog.message}`;
@@ -178,7 +163,6 @@ const DebugConsole = () => {
     closeContextMenu();
   };
 
-  // 导出所有日志
   const exportLogs = () => {
     const logsText = filteredLogs.map(log => 
       `[${log.timestamp}] ${log.type.toUpperCase()}: ${log.message}`
@@ -196,7 +180,6 @@ const DebugConsole = () => {
     closeContextMenu();
   };
 
-  // 点击其他地方时关闭右键菜单
   useEffect(() => {
     const handleClick = () => closeContextMenu();
     document.addEventListener('click', handleClick);
@@ -230,12 +213,10 @@ const DebugConsole = () => {
             title={isScrollLocked ? '取消锁定滚动' : '锁定滚动'}
           >
             {isScrollLocked ? (
-              // 锁定（闭锁）图标
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd" />
               </svg>
             ) : (
-              // 解锁（开锁）图标
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9 2.35-5.25 5.25-5.25Z" />
               </svg>

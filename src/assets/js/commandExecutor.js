@@ -57,19 +57,17 @@ class CommandExecutor {
                         log(`Command error: ${error}`, LOG_TYPES.ERROR)
                     }
                 },
-                isTaskNode = false, // 是否是任务节点
+                isTaskNode = false,
                 ...otherOptions
             } = options;
 
             return new Promise((resolve, reject) => {
 
-                // 记录完整命令
                 const fullCommand = `${command} ${args.join(' ')}`;
                 if(GLOBALS.isDebug){
                     log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
                 }
 
-                // 创建子进程
                 const child = spawn(command, args, {
                     env: {
                         ...process.env,
@@ -78,7 +76,6 @@ class CommandExecutor {
                     ...otherOptions
                 });
 
-                // 添加到进程管理
                 if (nodeId) {
                     this.addProcess(nodeId, child);
                 }
@@ -86,23 +83,19 @@ class CommandExecutor {
                 let stdout = '';
                 let stderr = '';
 
-                // 收集标准输出
                 child.stdout.on('data', (data) => {
                     const text = data.toString('utf8');
                     stdout += text;
                     onStdout(text);
                 });
 
-                // 收集标准错误
                 child.stderr.on('data', (data) => {
                     const text = data.toString('utf8');
                     stderr += text;
                     onStderr(text);
                 });
 
-                // 处理进程结束
                 child.on('close', (code) => {
-                    // 如果是任务节点，只有在非正常退出时才移除进程
                     if (!isTaskNode || code !== 0) {
                         if (nodeId) {
                             this.removeProcess(nodeId);
@@ -122,9 +115,7 @@ class CommandExecutor {
                     }
                 });
 
-                // 处理错误
                 child.on('error', (error) => {
-                    // 从进程管理中移除
                     if (nodeId) {
                         this.removeProcess(nodeId);
                     }
@@ -173,7 +164,6 @@ class CommandExecutor {
      * 强制终止所有活动进程
      */
     killActiveProcess() {
-        // 遍历所有进程并终止
         for (const { nodeId, process } of GLOBALS.activeProcesses) {
             try {
                 if (process && typeof process.kill === 'function') {
@@ -198,7 +188,6 @@ class CommandExecutor {
         try {
             const { onStdout, onStderr, onError, env = {}, ...otherOptions } = options;
             
-            // 记录完整命令
             const fullCommand = `${command} ${args.join(' ')}`;
             if(Global.isDebug){
                 log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
@@ -215,8 +204,7 @@ class CommandExecutor {
             if (onStderr) {
                 child.stderr.on('data', (data) => onStderr(data.toString('utf8')));
             }
-
-            // 统一处理错误
+            
             const handleError = (error) => {
                 if(Global.isDebug){
                     log(`命令执行错误: ${error.message}`, LOG_TYPES.ERROR);
@@ -226,10 +214,8 @@ class CommandExecutor {
                 }
             };
 
-            // 监听错误事件
             child.on('error', handleError);
 
-            // 处理进程结束
             child.on('close', (code) => {
                 if (code !== 0) {
                    if(Global.isDebug){

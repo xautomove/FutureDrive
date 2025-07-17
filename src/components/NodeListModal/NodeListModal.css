@@ -188,8 +188,8 @@
 
   .node-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     padding: 12px;
     background-color: #363636;
     border-radius: 4px;
@@ -203,10 +203,11 @@
   }
 
   .node-info {
+    flex: 8;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    user-select: none;
+    justify-content: center;
   }
 
   .node-name {
@@ -220,9 +221,15 @@
     color: #888;
     font-size: 0.75rem;
     user-select: none;
+    word-break: break-all;
+    white-space: pre-line;
+    text-align: left;
   }
 
   .node-type {
+    flex: 0.6;
+    text-align: center;
+    cursor: pointer;
     color: #888;
     font-size: 0.875rem;
     padding: 4px 8px;

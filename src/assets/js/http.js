@@ -2,14 +2,11 @@
  * HTTP请求封装库
  */
 
-// 基础配置
-const BASE_URL = 'http://localhost:3000'; // 根据实际API地址修改
-const DEFAULT_TIMEOUT = 10000; // 默认超时时间10秒
+const BASE_URL = 'http://localhost:3000';
+const DEFAULT_TIMEOUT = 10000;
 const { ipcRenderer } = window.require('electron');
 
-// 请求拦截器
 const requestInterceptor = (config) => {
-  // 添加token等认证信息
   const token = localStorage.getItem('token');
   if (token) {
     config.headers = {
@@ -20,16 +17,13 @@ const requestInterceptor = (config) => {
   return config;
 };
 
-// 响应拦截器
 const responseInterceptor = (response) => {
-  // 处理响应数据
   if (response.statusCode === 200) {
     return response.data;
   }
   return Promise.reject(response);
 };
 
-// 错误处理
 const errorHandler = (error) => {
   if (error instanceof Error) {
     console.error('请求错误:', error.message);
@@ -61,7 +55,6 @@ export const get = async (url, params = {}, config = {}) => {
     }
     console.log(fullUrl);
 
-    // 使用ipcRenderer调用主进程的net请求
     const response = await ipcRenderer.invoke('net-request', {
       method: 'GET',
       url: fullUrl,
@@ -156,7 +149,6 @@ export const del = async (url, config = {}) => {
  */
 export const stopDownload = async () => {
   try {
-    // 通过ipcRenderer调用主进程的停止下载方法
     await ipcRenderer.invoke('stop-download');
     return { success: true };
   } catch (error) {
@@ -177,30 +169,24 @@ export const download = async (url, savePath, onProgress) => {
       throw new Error('下载地址不能为空');
     }
 
-    // 构建完整的URL
     const fullUrl = url.includes('http') ? url : `${BASE_URL}${url}`;
 
-    // 设置进度监听器
     const progressListener = (event, progress) => {
       if (typeof onProgress === 'function') {
         onProgress(progress);
       }
     };
 
-    // 移除可能存在的旧监听器
     ipcRenderer.removeAllListeners('download-progress');
-    // 添加新的监听器
     ipcRenderer.on('download-progress', progressListener);
 
     try {
-      // 通过ipcRenderer调用主进程的下载方法
       const response = await ipcRenderer.invoke('download-file', {
         url: fullUrl,
         savePath: savePath
       });
       return response;
     } finally {
-      // 清理进度监听器
       ipcRenderer.removeListener('download-progress', progressListener);
     }
   } catch (error) {

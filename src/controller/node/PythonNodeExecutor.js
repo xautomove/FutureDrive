@@ -3,6 +3,8 @@ import fs from 'fs';
 import GLOBALS from '../../assets/js/globals';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import commandExecutor from '../../assets/js/commandExecutor';
+import config from '../../assets/js/config';
+import { env } from 'process';
 
 class PythonNodeExecutor {
     constructor() {
@@ -14,12 +16,10 @@ class PythonNodeExecutor {
 
     async execute(node, inputData, configData) {
         try {
-            // 构建节点路径
             const nodePath = path.join(GLOBALS.USERDATA_DIR, 'node', node.path);
             const mainPath = path.join(nodePath, 'main.py');
             const configPath = path.join(nodePath, 'config.json');
 
-            // 读取 config.json，补全输入
             let nodeConfig = null;
             if (fs.existsSync(configPath)) {
                 nodeConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -38,64 +38,32 @@ class PythonNodeExecutor {
             log(`开始执行节点: ${node.data.label}`, LOG_TYPES.INFO);
             console.log('node', node);
 
-            // 创建Python包装脚本
-            const scriptContent = `
-import sys
-import json
-import importlib.util
-import os
-import locale
+            let scriptContent = 'aW1wb3J0IHN5cwppbXBvcnQganNvbgppbXBvcnQgaW1wb3J0bGliLnV0aWwKaW1wb3J0IG9zCmltcG9ydCBsb2NhbGUKCgpvcy5lbnZpcm9uWydQWVRIT05JT0VOQ09ESU5HJ10gPSAndXRmLTgnCmlmIHN5cy5wbGF0Zm9ybSA9PSAnd2luMzInOgogICAgdHJ5OgogICAgICAgIGxvY2FsZS5zZXRsb2NhbGUobG9jYWxlLkxDX0FMTCwgJ2VuX1VTLlVURi04JykKICAgIGV4Y2VwdCBsb2NhbGUuRXJyb3I6CiAgICAgICAgdHJ5OgogICAgICAgICAgICBsb2NhbGUuc2V0bG9jYWxlKGxvY2FsZS5MQ19BTEwsICdFbmdsaXNoX1VuaXRlZCBTdGF0ZXMuVVRGLTgnKQogICAgICAgIGV4Y2VwdCBsb2NhbGUuRXJyb3I6CiAgICAgICAgICAgIHBhc3MKCnN5cy5zdGRvdXQucmVjb25maWd1cmUoZW5jb2Rpbmc9J3V0Zi04JykKc3lzLnN0ZGVyci5yZWNvbmZpZ3VyZShlbmNvZGluZz0ndXRmLTgnKQoKc3BlYyA9IGltcG9ydGxpYi51dGlsLnNwZWNfZnJvbV9maWxlX2xvY2F0aW9uKCJtYWluIiwgInttYWluUGF0aH0iKQptYWluID0gaW1wb3J0bGliLnV0aWwubW9kdWxlX2Zyb21fc3BlYyhzcGVjKQpzcGVjLmxvYWRlci5leGVjX21vZHVsZShtYWluKQoKbm9kZSA9IG1haW4uTWFpbk5vZGUoKQoKaW5wdXRfZGF0YSA9IGpzb24ubG9hZHMoJ3tpbnB1dF9kYXRhfScpCmNvbmZpZ19kYXRhID0ganNvbi5sb2Fkcygne2NvbmZpZ19kYXRhfScpCm5vZGUuZ2V0X3VzZXJfaW5wdXQoY29uZmlnX2RhdGEpCnJlc3VsdCA9IG5vZGUuZXhlY3V0ZSgpCnByaW50KGpzb24uZHVtcHMocmVzdWx0LCBlbnN1cmVfYXNjaWk9RmFsc2UpLCBmaWxlPXN5cy5zdGRlcnIpCg==';
+            let pythonCode = Buffer.from(scriptContent, 'base64').toString('utf-8');
+            pythonCode = pythonCode
+                .replace('{mainPath}', mainPath.replace(/\\/g, '\\\\'))
+                .replace('{input_data}', JSON.stringify(realInputData))
+                .replace('{config_data}', JSON.stringify(configData));
+            const tempScriptPath = commandExecutor.createTempFile(pythonCode, '.py');
 
-# 设置环境变量和编码
-os.environ['PYTHONIOENCODING'] = 'utf-8'
-if sys.platform == 'win32':
-    try:
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-    except locale.Error:
-        try:
-            locale.setlocale(locale.LC_ALL, 'English_United States.UTF-8')
-        except locale.Error:
-            pass
-
-# 设置标准输出和错误输出的编码
-sys.stdout.reconfigure(encoding='utf-8')
-sys.stderr.reconfigure(encoding='utf-8')
-
-# 导入主程序
-spec = importlib.util.spec_from_file_location("main", "${mainPath.replace(/\\/g, '\\\\')}")
-main = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(main)
-
-# 创建节点实例
-node = main.MainNode()
-
-# 设置输入数据
-input_data = ${JSON.stringify(realInputData)}
-node.get_node_input(input_data)
-
-# 设置配置数据
-config_data = ${JSON.stringify(configData)}
-node.get_user_input(config_data)
-
-# 执行节点
-result = node.execute()
-
-# 输出结果
-print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
-`;
-
-            // 创建临时脚本文件
-            const tempScriptPath = commandExecutor.createTempFile(scriptContent, '.py');
+            let pythonPath = config.get('node')?.pythonPath;
+            if (!pythonPath) {
+                pythonPath = 'python3';
+            }
 
             try {
-                // 使用commandExecutor执行Python脚本
-                const { stderr } = await commandExecutor.execute('python3', ['-u', tempScriptPath], {
+
+                const cleanEnv = {
+                    ...process.env,
+                    PYTHONIOENCODING: 'utf-8',
+                    LANG: 'en_US.UTF-8',
+                    LC_ALL: 'en_US.UTF-8',
+                    LD_LIBRARY_PATH: '/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu',
+                    LD_PRELOAD: '/usr/lib/x86_64-linux-gnu/libstdc++.so.6'
+                };
+                const { stderr } = await commandExecutor.execute(pythonPath, ['-u', tempScriptPath], {
                     nodeId: node.id,
-                    env: {
-                        PYTHONIOENCODING: 'utf-8',
-                        LANG: 'en_US.UTF-8',
-                        LC_ALL: 'en_US.UTF-8'
-                    },
+                    env: cleanEnv,
                     onStdout: (text) => log(`Python stdout: ${text}`, LOG_TYPES.INFO),
                     onStderr: (text) => log(`Python stderr: ${text}`, LOG_TYPES.INFO),
                     onError: (error) => {
@@ -106,7 +74,6 @@ print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
                     }
                 });
 
-                // 解析结果
                 const resultMatch = stderr.match(/\{[\s\S]*\}/);
                 if (resultMatch) {
                     return JSON.parse(resultMatch[0]);
@@ -114,7 +81,6 @@ print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
                     throw new Error('无法解析 Python 输出结果');
                 }
             } finally {
-                // 清理临时文件
                 commandExecutor.deleteTempFile(tempScriptPath);
             }
 
@@ -124,9 +90,7 @@ print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
         }
     }
 
-    // 强制终止当前 Python 进程
     killActiveProcess() {
-        console.log('killActiveProcess2');
         commandExecutor.killActiveProcess();
     }
 }

@@ -7,6 +7,7 @@ import ReactFlow, {
   Handle,
   Position,
   NodeToolbar,
+  useReactFlow,
 } from 'reactflow';
 import { Menu, Modal, Input } from 'antd';
 import 'reactflow/dist/style.css';
@@ -25,20 +26,15 @@ import path from 'path';
 import { ChromePicker } from 'react-color';
 import ReactDOM from 'react-dom';
 
-/**
- * 自定义节点组件
- * 用于显示节点的输入输出端口和删除按钮
- */
+
 const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange }) => {
   const [showDescription, setShowDescription] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [colorPickerPos, setColorPickerPos] = useState({ left: 0, top: 0 });
 
-  // 监听节点运行状态
   useEffect(() => {
     const unsubscribe = GLOBALS.onRunningNodesChange((runningNodes) => {
-      // 检查当前节点是否在运行列表中
       setIsRunning(runningNodes.includes(id));
     });
     return () => unsubscribe();
@@ -59,14 +55,12 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
         align="center"
       >
         <div className="node-toolbar-floating">
-          {/* 设置图标 */}
           <button className="node-toolbar-btn" title="设置" onClick={() => onOpenConfig(id)}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="8" cy="8" r="7" stroke="#fff" strokeWidth="1.5" fill="none" />
               <path d="M8 5.5V8L10 9" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
           </button>
-          {/* 调色板图标 */}
           <button className="node-toolbar-btn" title="设置颜色" onClick={handleColorBtnClick}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="8" cy="8" r="7" stroke="#fff" strokeWidth="1.5" fill="none" />
@@ -89,7 +83,6 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
             </div>,
             document.body
           )}
-          {/* 删除图标 */}
           <button className="node-toolbar-btn" title="删除节点" onClick={() => onDelete(id)}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="3" y="6" width="10" height="7" rx="1" fill="#fff" fillOpacity="0.8" />
@@ -132,7 +125,7 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
                   <span className="port-name">{input.name}</span>
                   <div className="port-info">
                     <span className="port-type">{input.type}</span>
-                    {input.default_value !== undefined && (
+                    {input.default_value !== undefined && input.default_value !== '' && input.default_value !== null(
                       <span className="port-default-value" title={`默认值: ${input.default_value}`}>
                         {input.default_value}
                       </span>
@@ -175,23 +168,9 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
   );
 };
 
-/**
- * MainContent 组件
- * 功能：
- * 1. 渲染 ReactFlow 画布
- * 2. 管理节点和边的状态
- * 3. 处理节点添加和更新
- * 4. 提供画布控制功能（缩放、平移等）
- * 
- * 数据流：
- * 1. 用户点击节点列表按钮 -> 打开节点列表模态框
- * 2. 用户选择节点 -> 触发 handleNodeSelect
- * 3. 创建新节点 -> 添加到画布
- * 4. 用户操作节点/边 -> 触发 onNodesChange/onEdgesChange
- */
-const NODE_WIDTH = 220; // 估算节点宽度
-const NODE_HEIGHT = 120; // 估算节点高度
-const NODE_OFFSET = 40; // 每次偏移量
+const NODE_WIDTH = 220; 
+const NODE_HEIGHT = 120; 
+const NODE_OFFSET = 40; 
 
 const MainContent = ({ onTreeDataChange }) => {
   const [nodes, setNodes] = useState([]);
@@ -206,24 +185,22 @@ const MainContent = ({ onTreeDataChange }) => {
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isTemplateManagerVisible, setIsTemplateManagerVisible] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   const nodesRef = useRef(nodes);
+  const reactFlowInstance = useReactFlow();
 
   useEffect(() => {
     nodesRef.current = nodes;
-    // 将nodes和edges暴露到全局
     window.flowNodes = nodes;
     window.flowEdges = edges;
   }, [nodes, edges]);
 
-  // 监听运行状态
   useEffect(() => {
-    // 订阅状态变化
     const unsubscribe = GLOBALS.onRunningStateChange((newState) => {
       setIsRunning(newState);
     });
 
-    // 清理订阅
     return () => unsubscribe();
   }, []);
 
@@ -258,23 +235,18 @@ const MainContent = ({ onTreeDataChange }) => {
     }
   };
 
-  // 初始化GUI
   useEffect(() => {
     const initGui = async () => {
       try {
-        // 如果已经初始化或正在初始化，直接返回
         if (guiController.isInitialized() || guiController.isInitializing()) {
           return;
         }
 
-        // 确保状态重置
         setIsInitialized(false);
         setNodeList([]);
 
-        // 创建示例节点
         createExampleNode();
 
-        // 添加超时处理
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('GUI初始化超时')), 5000);
         });
@@ -288,7 +260,6 @@ const MainContent = ({ onTreeDataChange }) => {
         setIsInitialized(true);
       } catch (error) {
         log(`GUI初始化失败: ${error.message}`, LOG_TYPES.ERROR);
-        // 如果初始化失败，直接设置状态为已初始化，避免界面卡在加载状态
         setIsInitialized(true);
       }
     };
@@ -296,16 +267,7 @@ const MainContent = ({ onTreeDataChange }) => {
     initGui();
   }, []);
 
-  /**
-   * 处理节点变化（位置、大小等）
-   * 使用 useCallback 优化性能
-   * 
-   * @param {Array} changes - 节点变化数组，包含以下可能的操作：
-   *   - select: 选择/取消选择节点
-   *   - position: 节点位置变化
-   *   - dimensions: 节点尺寸变化
-   *   - remove: 删除节点
-   */
+
   const onNodesChange = useCallback(
     (changes) => {
       setNodes((nds) => applyNodeChanges(changes, nds));
@@ -313,10 +275,6 @@ const MainContent = ({ onTreeDataChange }) => {
     []
   );
 
-  /**
-   * 处理边的变化（连接、断开等）
-   * 使用 useCallback 优化性能
-   */
   const onEdgesChange = useCallback(
     (changes) => {
       setEdges((eds) => applyEdgeChanges(changes, eds));
@@ -324,10 +282,6 @@ const MainContent = ({ onTreeDataChange }) => {
     []
   );
 
-  /**
-   * 处理连接验证
-   * 确保只能从输出连接到输入
-   */
   const onConnect = useCallback((params) => {
     const sourceNode = nodes.find(node => node.id === params.source);
     const targetNode = nodes.find(node => node.id === params.target);
@@ -351,7 +305,6 @@ const MainContent = ({ onTreeDataChange }) => {
     setIsModalOpen(true);
   };
 
-  // 删除节点回调
   const handleDeleteNode = useCallback((id) => {
     setNodes((nds) => nds.filter((n) => n.id !== id));
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
@@ -381,7 +334,6 @@ const MainContent = ({ onTreeDataChange }) => {
     [handleDeleteNode, handleOpenConfig, handleColorChange]
   );
 
-  // 检查新节点是否与已有节点重叠
   function isOverlapping(x, y, nodes) {
     return nodes.some(n => {
       const nx = n.position.x;
@@ -393,12 +345,10 @@ const MainContent = ({ onTreeDataChange }) => {
     });
   }
 
-  // 修改 handleNodeSelect，自动寻找不重叠位置
   const handleNodeSelect = (node) => {
     const nodeType = node.data.type;
     if (nodeType === '流') {
       let x = 100, y = 100;
-      // 尝试找到不重叠的位置
       while (isOverlapping(x, y, nodes)) {
         x += NODE_OFFSET;
         y += NODE_OFFSET;
@@ -408,15 +358,15 @@ const MainContent = ({ onTreeDataChange }) => {
         config: node.data,
         type: 'custom',
         position: { x, y },
-        path: node.path, // 添加节点路径
+        path: node.path, 
         data: {
           type: node.data.type,
           label: node.data.name,
           description: node.data.description,
           inputs: node.data.parameters?.inputs || [],
           outputs: node.data.parameters?.outputs || [],
-          config: node.data.config || [], // 添加 config 数据
-          color: '#2d2d2d', // 默认色
+          config: node.data.config || [], 
+          color: '#2d2d2d', 
         },
       };
       setNodes((nds) => {
@@ -427,7 +377,6 @@ const MainContent = ({ onTreeDataChange }) => {
       log(`添加节点: ${node.data.name}`, LOG_TYPES.INFO);
     } else if (nodeType === '任务') {
       let x = 100, y = 100;
-      // 尝试找到不重叠的位置
       while (isOverlapping(x, y, nodes)) {
         x += NODE_OFFSET;
         y += NODE_OFFSET;
@@ -437,15 +386,15 @@ const MainContent = ({ onTreeDataChange }) => {
         config: node.data,
         type: 'custom',
         position: { x, y },
-        path: node.path, // 添加节点路径
+        path: node.path, 
         data: {
           type: node.data.type,
           label: node.data.name,
           description: node.data.description,
           inputs: node.data.parameters?.inputs || [],
           outputs: node.data.parameters?.outputs || [],
-          config: node.data.config || [], // 添加 config 数据
-          color: '#2d2d2d', // 默认色
+          config: node.data.config || [], 
+          color: '#2d2d2d', 
         },
       };
       setNodes((nds) => {
@@ -457,13 +406,10 @@ const MainContent = ({ onTreeDataChange }) => {
     }
   };
 
-  // 添加节点按钮点击事件
   useEffect(() => {
-    // 使用 setTimeout 确保 DOM 完全加载
     const timer = setTimeout(() => {
       const addButton = document.querySelector('.node-type');
       if (addButton) {
-        // 绑定点击事件：打开节点列表模态框
         addButton.onclick = handleAddNode;
       }
     }, 100);
@@ -473,11 +419,9 @@ const MainContent = ({ onTreeDataChange }) => {
     };
   }, []);
 
-  // 处理节点配置更新
   const handleConfigUpdate = useCallback((nodeId, newConfig) => {
     setNodes(nds => nds.map(node => {
       if (node.id === nodeId) {
-        // 更新节点的配置数据
         const updatedConfig = node.data.config.map(configItem => {
           const newValue = newConfig[configItem.name];
           if (newValue !== undefined) {
@@ -489,7 +433,6 @@ const MainContent = ({ onTreeDataChange }) => {
           return configItem;
         });
 
-        // 更新节点数据
         const updatedNode = {
           ...node,
           data: {
@@ -504,7 +447,6 @@ const MainContent = ({ onTreeDataChange }) => {
     }));
   }, []);
 
-  // 处理边的右键点击
   const onEdgeContextMenu = useCallback((event, edge) => {
     event.preventDefault();
     setSelectedEdge(edge);
@@ -514,7 +456,6 @@ const MainContent = ({ onTreeDataChange }) => {
     });
   }, []);
 
-  // 处理菜单点击
   const onContextMenuClick = useCallback(({ key }) => {
     if (key === 'delete' && selectedEdge) {
       setEdges((eds) => eds.filter((e) => e.id !== selectedEdge.id));
@@ -523,19 +464,73 @@ const MainContent = ({ onTreeDataChange }) => {
     setContextMenu(null);
   }, [selectedEdge]);
 
-  // 处理边的选择
   const onEdgeClick = useCallback((event, edge) => {
     event.stopPropagation();
     setSelectedEdge(edge);
   }, []);
 
-  // 处理画布点击，取消边的选择
   const onPaneClick = useCallback(() => {
     setSelectedEdge(null);
     setContextMenu(null);
   }, []);
 
-  // 处理导出模板
+  const onNodeClick = useCallback((event, node) => {
+    setSelectedNode(node);
+    setSelectedEdge(null);
+    setContextMenu(null);
+  }, []);
+
+  const onNodeContextMenu = useCallback((event, node) => {
+    event.preventDefault();
+    setSelectedNode(node);
+    setSelectedEdge(null);
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      type: 'pane', 
+    });
+  }, []);
+
+  const onPaneContextMenu = useCallback((event) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      type: 'pane',
+    });
+  }, []);
+
+  const onPaneMenuClick = useCallback(({ key }) => {
+    if (key === 'add') {
+      handleAddNode();
+    } else if (key === 'delete') {
+      if (selectedNode) {
+        handleDeleteNode(selectedNode.id);
+        setSelectedNode(null);
+      }
+    } else if (key === 'info') {
+      if (selectedNode) {
+        Modal.info({
+          title: '节点介绍',
+          content: selectedNode.data?.description || '无介绍',
+          okText: '确定',
+          className: 'dark-modal',
+        });
+      }
+    }
+    setContextMenu(null);
+  }, [selectedNode, handleAddNode, handleDeleteNode]);
+
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    if (contextMenu) {
+      window.addEventListener('click', handleClick);
+    }
+    return () => {
+      window.removeEventListener('click', handleClick);
+    };
+  }, [contextMenu]);
+
   const handleExportTemplate = () => {
     if (nodes.length === 0) {
       Modal.warning({
@@ -570,7 +565,6 @@ const MainContent = ({ onTreeDataChange }) => {
           const templateDir = templateManager.getTemplateDir();
           const templatePath = path.join(templateDir, `${templateName}.json`);
 
-          // 准备模板数据
           const templateData = {
             name: templateName,
             description: '自定义导出模板',
@@ -606,10 +600,8 @@ const MainContent = ({ onTreeDataChange }) => {
             }))
           };
 
-          // 检查文件是否存在
           const exists = FileController.fileExists(templatePath);
           if (exists) {
-            // 如果文件存在，显示覆盖确认对话框
             return new Promise((resolve) => {
               Modal.confirm({
                 title: '文件已存在',
@@ -644,7 +636,6 @@ const MainContent = ({ onTreeDataChange }) => {
               });
             });
           } else {
-            // 如果文件不存在，直接保存
             await templateManager.saveTemplate(templateName, templateData);
             Modal.success({
               title: '导出成功',
@@ -666,13 +657,9 @@ const MainContent = ({ onTreeDataChange }) => {
     });
   };
 
-  // 处理应用模板
   const handleApplyTemplate = useCallback((templateData) => {
-    // 清空当前画布
     setNodes([]);
     setEdges([]);
-
-    // 添加模板中的节点
     const newNodes = templateData.nodes.map(node => ({
       ...node,
       type: 'custom',
@@ -683,7 +670,6 @@ const MainContent = ({ onTreeDataChange }) => {
     }));
     setNodes(newNodes);
 
-    // 添加模板中的边，确保每条边都有唯一的 id
     const newEdges = templateData.edges.map(edge => ({
       ...edge,
       id: `edge-${edge.source}-${edge.sourceHandle}-${edge.target}-${edge.targetHandle}-${Date.now()}`,
@@ -694,13 +680,11 @@ const MainContent = ({ onTreeDataChange }) => {
     }));
     setEdges(newEdges);
 
-    // 刷新项目树
     if (onTreeDataChange) {
       onTreeDataChange();
     }
   }, [handleDeleteNode, onTreeDataChange]);
 
-  // 自动排版函数
   const handleAutoLayout = () => {
     Modal.confirm({
       title: '自动排版',
@@ -709,22 +693,20 @@ const MainContent = ({ onTreeDataChange }) => {
       cancelText: '取消',
       className: 'dark-modal',
       onOk: () => {
-        // 布局参数
         const LAYOUT_CONFIG = {
-          baseWidth: 220,    // 节点基础宽度
-          baseHeight: 120,   // 节点基础高度
-          portHeight: 50,    // 端口高度
-          portWidth: 20,     // 端口宽度
-          charWidth: 8,      // 字符宽度
-          hSpacing: 300,     // 水平间距
-          vSpacing: 50,     // 垂直间距（从200改为100）
-          leftMargin: 100,   // 左边距
-          topMargin: 100,    // 上边距
-          safetyMargin: 50,  // 安全边距
-          padding: 40        // 内边距
+          baseWidth: 220,   
+          baseHeight: 120,  
+          portHeight: 50,   
+          portWidth: 20,    
+          charWidth: 8,      
+          hSpacing: 300,     
+          vSpacing: 50,     
+          leftMargin: 100,  
+          topMargin: 100,    
+          safetyMargin: 50,  
+          padding: 40        
         };
 
-        // 计算节点尺寸
         const calculateNodeSize = (node) => {
           const { inputs = [], outputs = [] } = node.data;
           const portCount = Math.max(inputs.length, outputs.length);
@@ -738,12 +720,10 @@ const MainContent = ({ onTreeDataChange }) => {
           return { width, height };
         };
 
-        // 构建节点关系图
         const buildNodeGraph = () => {
           const nodeMap = new Map();
           const rootNodes = new Set();
 
-          // 初始化节点
           nodes.forEach(node => {
             const size = calculateNodeSize(node);
             nodeMap.set(node.id, {
@@ -757,7 +737,6 @@ const MainContent = ({ onTreeDataChange }) => {
             rootNodes.add(node.id);
           });
 
-          // 建立节点关系
           edges.forEach(edge => {
             const source = nodeMap.get(edge.source);
             const target = nodeMap.get(edge.target);
@@ -771,7 +750,6 @@ const MainContent = ({ onTreeDataChange }) => {
           return { nodeMap, rootNodes };
         };
 
-        // 检查位置是否可用
         const isPositionAvailable = (x, y, width, height, nodeMap, excludeId = null) => {
           for (const [nodeId, nodeInfo] of nodeMap) {
             if (nodeId === excludeId) continue;
@@ -789,7 +767,6 @@ const MainContent = ({ onTreeDataChange }) => {
           return true;
         };
 
-        // 寻找可用位置
         const findAvailablePosition = (startX, startY, width, height, nodeMap, excludeId = null) => {
           let x = startX;
           let y = startY;
@@ -808,17 +785,13 @@ const MainContent = ({ onTreeDataChange }) => {
           return { x, y };
         };
 
-        // 布局节点
         const layoutNodes = (nodeMap, rootNodes) => {
-          // 先处理根节点（没有输入的节点）
           let currentY = LAYOUT_CONFIG.topMargin;
           const rootNodeArray = Array.from(rootNodes);
-          const rootX = LAYOUT_CONFIG.leftMargin; // 所有根节点使用相同的X坐标
+          const rootX = LAYOUT_CONFIG.leftMargin; 
 
-          // 第一遍：垂直排列根节点
           rootNodeArray.forEach(rootId => {
             const nodeInfo = nodeMap.get(rootId);
-            // 只检查Y方向的重叠，因为X是固定的
             const position = findAvailablePosition(
               rootX,
               currentY,
@@ -827,12 +800,10 @@ const MainContent = ({ onTreeDataChange }) => {
               nodeMap,
               rootId
             );
-            // 保持X坐标不变，只更新Y坐标
             nodeInfo.position = { x: rootX, y: position.y };
             currentY = position.y + nodeInfo.size.height + LAYOUT_CONFIG.vSpacing;
           });
 
-          // 第二遍：处理每个根节点的子节点
           rootNodeArray.forEach(rootId => {
             const processChildren = (parentId, level) => {
               const parent = nodeMap.get(parentId);
@@ -855,7 +826,6 @@ const MainContent = ({ onTreeDataChange }) => {
                 child.position = position;
                 child.level = level;
                 
-                // 递归处理子节点的子节点
                 processChildren(childId, level + 1);
               });
             };
@@ -864,11 +834,9 @@ const MainContent = ({ onTreeDataChange }) => {
           });
         };
 
-        // 执行布局
         const { nodeMap, rootNodes } = buildNodeGraph();
         layoutNodes(nodeMap, rootNodes);
 
-        // 更新节点位置
         const newNodes = nodes.map(node => ({
           ...node,
           position: nodeMap.get(node.id).position
@@ -879,7 +847,6 @@ const MainContent = ({ onTreeDataChange }) => {
     });
   };
 
-  // 清空画布函数
   const handleClearCanvas = () => {
     Modal.confirm({
       title: '清空画布',
@@ -893,6 +860,19 @@ const MainContent = ({ onTreeDataChange }) => {
       }
     });
   };
+
+  useEffect(() => {
+    if (nodes.length === 1) {
+      const node = nodes[0];
+      reactFlowInstance.setCenter(
+        node.position.x + 110, 
+        node.position.y + 60,  
+        { zoom: 1, duration: 300 }
+      );
+    } else if (nodes.length > 1) {
+      reactFlowInstance.fitView({ padding: 0.05, minZoom: 0.01, maxZoom: 50, duration: 300 });
+    }
+  }, [nodes, reactFlowInstance]);
 
   return (
     <div className="main-content">
@@ -1007,19 +987,21 @@ const MainContent = ({ onTreeDataChange }) => {
             onEdgeClick={onEdgeClick}
             onEdgeContextMenu={onEdgeContextMenu}
             onPaneClick={onPaneClick}
-            fitView
+            onNodeClick={onNodeClick}
+            onPaneContextMenu={onPaneContextMenu}
+            onNodeContextMenu={onNodeContextMenu}
             fitViewOptions={{ minZoom: 0.01, maxZoom: 50, padding: 0.05 }}
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           >
             <Background />
             <NodeButton onNodeSelect={handleNodeSelect} />
             <MiniMap
               nodeColor={(node) => {
-                // 根据节点类型设置小地图中的节点颜色
                 switch (node.type) {
                   case 'input':
-                    return '#2d2d2d';  // 输入节点颜色
+                    return '#2d2d2d';  
                   default:
-                    return '#2d2d2d';  // 默认节点颜色
+                    return '#2d2d2d';  
                 }
               }}
               maskColor="rgba(0, 0, 0, 0.1)"
@@ -1032,7 +1014,7 @@ const MainContent = ({ onTreeDataChange }) => {
               }}
             />
           </ReactFlow>
-          {contextMenu && (
+          {contextMenu && contextMenu.type === 'pane' && (
             <Menu
               style={{
                 position: 'fixed',
@@ -1046,17 +1028,24 @@ const MainContent = ({ onTreeDataChange }) => {
               }}
               items={[
                 {
-                  key: 'delete',
-                  label: '断开',
+                  key: 'add',
+                  label: '添加节点',
                   style: { color: '#fff' },
                 },
                 {
-                  key: 'cancel',
-                  label: '取消',
-                  style: { color: '#fff' },
+                  key: 'delete',
+                  label: '删除节点',
+                  style: { color: selectedNode ? '#fff' : '#888' },
+                  disabled: !selectedNode,
+                },
+                {
+                  key: 'info',
+                  label: '查看介绍',
+                  style: { color: selectedNode ? '#fff' : '#888' },
+                  disabled: !selectedNode,
                 },
               ]}
-              onClick={onContextMenuClick}
+              onClick={onPaneMenuClick}
             />
           )}
           <TemplateManager
@@ -1085,5 +1074,4 @@ const MainContent = ({ onTreeDataChange }) => {
     </div>
   );
 };
-
 export default MainContent; 

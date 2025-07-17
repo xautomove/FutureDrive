@@ -12,13 +12,11 @@ async function createExampleNode() {
         return;
     };
 
-    // 创建计算节点
     const calcNodeDir = path.join(GLOBALS.USERDATA_DIR, 'node', 'calc_node');
     if (!fs.existsSync(calcNodeDir)) {
         fs.mkdirSync(calcNodeDir, { recursive: true });
     }
 
-    // 计算节点的 config.json
     const calcConfig = {
         "name": "数学计算节点",
         "description": "一个简单的数学计算节点，可以进行加减乘除运算",
@@ -78,7 +76,6 @@ async function createExampleNode() {
         JSON.stringify(calcConfig, null, 2)
     );
 
-    // 计算节点的 main.py
     const calcMainPy = `import sys
 
 class MainNode:

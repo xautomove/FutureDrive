@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Menu, Form, Input, Switch, InputNumber, Button } from 'antd';
 import './SettingsModal.css';
+import config from '../../assets/js/config';
 
 const settingsList = [
   { key: 'general', label: '通用' },
@@ -86,6 +87,7 @@ const SettingsModal = ({ visible, onClose }) => {
       };
       
       console.log('设置数据:', settings);
+      await config.set('node', nodeValues);
 
       await new Promise(resolve => setTimeout(resolve, 500));
       onClose();
@@ -113,6 +115,9 @@ const SettingsModal = ({ visible, onClose }) => {
             </Form.Item>
             <Form.Item name="reportUrl" label="节点上报地址 URL">
               <Input placeholder="请输入上报地址 URL" style={{ width: 400 }} />
+            </Form.Item>
+            <Form.Item name="pythonPath" label="Python路径">
+              <Input placeholder="自定义python路径" style={{ width: 400 }} />
             </Form.Item>
           </Form>
         );

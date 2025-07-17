@@ -17,7 +17,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
   const [editorVisible, setEditorVisible] = useState(false);
   const [expandedKeys, setExpandedKeys] = useState([]);
 
-  // 处理树形数据，只有文件夹显示图标
   const processTreeData = (data) => {
     return data.map(item => ({
       ...item,
@@ -28,7 +27,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
 
   const processedTreeData = processTreeData(treeData);
 
-  // 处理右键菜单
   const handleContextMenu = (e, node) => {
     e.preventDefault();
     setContextMenu({
@@ -39,12 +37,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     });
   };
 
-  // 关闭右键菜单
   const closeContextMenu = () => {
     setContextMenu({ visible: false, x: 0, y: 0, node: null });
   };
 
-  // 点击其他地方时关闭右键菜单
   useEffect(() => {
     const handleClick = () => {
       closeContextMenu();
@@ -56,12 +52,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     return () => document.removeEventListener('click', handleClick);
   }, [newItemInput.visible]);
 
-  // 处理展开/折叠
   const handleExpand = (expandedKeys) => {
     setExpandedKeys(expandedKeys);
   };
 
-  // 删除文件
   const handleDelete = (e) => {
     e.stopPropagation();
     if (contextMenu.node) {
@@ -98,7 +92,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     closeContextMenu();
   };
 
-  // 重命名文件
   const handleRename = (e) => {
     e.stopPropagation();
     if (contextMenu.node) {
@@ -133,7 +126,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     closeContextMenu();
   };
 
-  // 在资源管理器中打开
   const handleOpenInExplorer = (e) => {
     e.stopPropagation();
     if (contextMenu.node) {
@@ -145,7 +137,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     closeContextMenu();
   };
 
-  // 新建文件
   const handleNewFile = (e) => {
     e.stopPropagation();
     if (contextMenu.node) {
@@ -160,7 +151,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     closeContextMenu();
   };
 
-  // 新建文件夹
   const handleNewFolder = (e) => {
     e.stopPropagation();
     if (contextMenu.node) {
@@ -174,8 +164,7 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     }
     closeContextMenu();
   };
-
-  // 处理新建项目输入
+  
   const handleNewItemInputChange = (e) => {
     setNewItemInput(prev => ({
       ...prev,
@@ -183,7 +172,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     }));
   };
 
-  // 处理新建项目确认
   const handleNewItemConfirm = () => {
     if (newItemInput.value) {
       const newPath = path.join(newItemInput.parentPath, newItemInput.value);
@@ -201,12 +189,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     setNewItemInput({ visible: false, type: '', parentPath: '', value: '' });
   };
 
-  // 处理新建项目取消
   const handleNewItemCancel = () => {
     setNewItemInput({ visible: false, type: '', parentPath: '', value: '' });
   };
 
-  // 处理新建项目按键事件
   const handleNewItemKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleNewItemConfirm();
@@ -215,7 +201,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     }
   };
 
-  // 处理重命名输入
   const handleRenameInputChange = (e) => {
     setRenameInput(prev => ({
       ...prev,
@@ -223,7 +208,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     }));
   };
 
-  // 处理重命名确认
   const handleRenameConfirm = () => {
     if (renameInput.node && renameInput.value !== renameInput.node.title) {
       const oldPath = renameInput.node.key;
@@ -239,12 +223,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     setRenameInput({ visible: false, node: null, value: '' });
   };
 
-  // 处理重命名取消
   const handleRenameCancel = () => {
     setRenameInput({ visible: false, node: null, value: '' });
   };
 
-  // 处理重命名按键事件
   const handleRenameKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleRenameConfirm();
@@ -253,12 +235,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     }
   };
 
-  // 处理双击事件
   const handleDoubleClick = (node) => {
     try {
       const stats = fs.statSync(node.key);
       if (stats.isDirectory()) {
-        // 如果是文件夹，切换展开/折叠状态
         const key = node.key;
         setExpandedKeys(prev => {
           if (prev.includes(key)) {
@@ -268,7 +248,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
           }
         });
       } else {
-        // 如果是文件，检查是否支持编辑
         const fileType = getFileType(node.key);
         if (fileType === 'code' || fileType === 'document') {
           setSelectedFile(node.key);
@@ -280,7 +259,6 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     }
   };
 
-  // 自定义渲染树节点
   const renderTreeNode = (node) => {
     if (renameInput.visible && renameInput.node?.key === node.key) {
       return (

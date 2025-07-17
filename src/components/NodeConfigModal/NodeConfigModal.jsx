@@ -7,7 +7,6 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
 
   useEffect(() => {
     if (node && node.data && node.data.config) {
-      // 初始化表单为当前配置值
       const initial = {};
       node.data.config.forEach(item => {
         if (item.type === 'bool') {
@@ -23,7 +22,6 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   if (!open || !node) return null;
 
   const handleChange = (name, value) => {
-    // 确保值始终是字符串或数字
     const processedValue = value === '' ? (node.data.config.find(item => item.name === name)?.type === 'number' ? 0 : '') : value;
     setForm(f => ({ ...f, [name]: processedValue }));
   };
@@ -95,7 +93,12 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
         <form className="node-config-modal-body" onSubmit={handleSubmit}>
           {node.data.config?.map(item => (
             <div className="node-config-form-item" key={item.name}>
-              <label>{item.name}</label>
+              <label>
+                {item.name}
+                {item.required === 1 || item.required === true ? (
+                  <span style={{ color: '#ff4d4f', marginLeft: 4 }}>*</span>
+                ) : null}
+              </label>
               {renderFormItem(item)}
               {item.description && (
                 <div className="node-config-form-description">{item.description}</div>

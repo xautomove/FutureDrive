@@ -247,6 +247,7 @@ const RosTopicManager = ({ visible, onClose }) => {
               ) : (
                 <List.Item
                   onContextMenu={e => handleContextMenu(e, topic)}
+                  onDoubleClick={() => viewTopicInfo(topic)}
                   className="ros-topic-manager-list-item"
                 >
                   {topic}

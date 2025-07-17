@@ -20,13 +20,10 @@ class GuiController {
         try {
             log('初始化GUI控制器...', LOG_TYPES.INFO);
             
-            // 初始化节点扫描器
             this.nodeScanner = new NodeScanner();
             
-            // 扫描可用节点
             this.nodeList = await this.scanNodes();
             
-            // 初始化配置
             await this.initializeConfig();
 
             this.initialized = true;
@@ -74,7 +71,6 @@ class GuiController {
         return this.initializing;
     }
 
-    // 添加重置方法
     reset() {
         this.nodeScanner = null;
         this.nodeList = [];
@@ -84,7 +80,6 @@ class GuiController {
     }
 }
 
-// 创建单例实例
 const guiController = new GuiController();
 
 export default guiController;

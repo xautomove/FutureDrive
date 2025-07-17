@@ -23,7 +23,6 @@ const TopicEchoViewer = ({ topic }) => {
   const isFirstRender = useRef(true);
   const isStrictModeCheck = useRef(true);
 
-  // 查找所有匹配项的位置
   const findAllMatches = (text, searchText) => {
     const matches = [];
     let index = text.toLowerCase().indexOf(searchText.toLowerCase());
@@ -34,17 +33,15 @@ const TopicEchoViewer = ({ topic }) => {
     return matches;
   };
 
-  // 滚动到指定位置
   const scrollToPosition = (index) => {
     if (index === -1 || !outputRef.current) return;
 
     const text = outputRef.current.value;
     const lines = text.substring(0, index).split('\n');
-    const lineHeight = 20; // 假设每行高度为20px
+    const lineHeight = 20;
     outputRef.current.scrollTop = (lines.length - 1) * lineHeight;
   };
 
-  // 导航到上一个匹配项
   const goToPreviousMatch = () => {
     if (matchCount === 0) return;
     const newIndex = currentMatchIndex > 0 ? currentMatchIndex - 1 : matchCount - 1;
@@ -53,7 +50,6 @@ const TopicEchoViewer = ({ topic }) => {
     scrollToPosition(matches[newIndex]);
   };
 
-  // 导航到下一个匹配项
   const goToNextMatch = () => {
     if (matchCount === 0) return;
     const newIndex = currentMatchIndex < matchCount - 1 ? currentMatchIndex + 1 : 0;
@@ -62,21 +58,23 @@ const TopicEchoViewer = ({ topic }) => {
     scrollToPosition(matches[newIndex]);
   };
 
-  // 新增: 非echo模式下请求话题信息
-  const requestGetTopic = () => {
+  const requestGetTopic = async () => {
     if (getTopicProcRef.current) {
-      try { getTopicProcRef.current.kill(); } catch {}
+      try { 
+        getTopicProcRef.current.kill('SIGKILL'); 
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch {}
       getTopicProcRef.current = null;
     }
     setOutput('');
-    rosController.getTopic(topic, mode, (text) => {
+    const proc = rosController.getTopic(topic, mode, (text) => {
       setOutput(prev => prev + text + '\n');
-    }).then(proc => {
-      getTopicProcRef.current = proc;
     });
+    if (proc && typeof proc.then !== 'function' && typeof proc.kill === 'function') {
+      getTopicProcRef.current = proc;
+    }
   };
 
-  // 监听isAutoScroll变化
   useEffect(() => {
     if (mode !== 'echo') return;
     if (isStrictModeCheck.current) {
@@ -85,50 +83,57 @@ const TopicEchoViewer = ({ topic }) => {
     }
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      // 初始加载时手动触发一次请求
       requestEcho(!isAutoScroll);
       return;
     }
     requestEcho(!isAutoScroll);
   }, [isAutoScroll, topic, mode]);
 
-  // 组件加载时触发初始请求
   useEffect(() => {
-    // 切换mode/topic时清理所有进程
-    if (echoProcRef.current) {
-      try { echoProcRef.current.kill(); } catch {}
-      echoProcRef.current = null;
-    }
-    if (getTopicProcRef.current) {
-      try { getTopicProcRef.current.kill(); } catch {}
-      getTopicProcRef.current = null;
-    }
-    setOutput('');
-    if (mode === 'echo') {
-      requestEcho(!isAutoScroll);
-    } else {
-      requestGetTopic();
-    }
-    return () => {
+    const cleanup = async () => {
       if (echoProcRef.current) {
-        try { echoProcRef.current.kill(); } catch {}
+        try { 
+          echoProcRef.current.kill('SIGKILL'); 
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch {
+          console.error('强制终止进程失败:', error);
+        }
         echoProcRef.current = null;
       }
       if (getTopicProcRef.current) {
-        try { getTopicProcRef.current.kill(); } catch {}
+        try { 
+          getTopicProcRef.current.kill('SIGKILL'); 
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch {
+          console.error('强制终止进程失败:', error);
+        }
         getTopicProcRef.current = null;
       }
     };
+
+    const init = async () => {
+      await cleanup();
+      setOutput('');
+      if (mode === 'echo') {
+        requestEcho(!isAutoScroll);
+      } else {
+        await requestGetTopic();
+      }
+    };
+
+    init();
+
+    return () => {
+      cleanup();
+    };
   }, [mode, topic]);
 
-  // 处理自动滚动
   useEffect(() => {
     if (!isSearching && outputRef.current) {
       outputRef.current.scrollTop = outputRef.current.scrollHeight;
     }
   }, [output, isSearching]);
 
-  // 过滤输出
   useEffect(() => {
     if (filter) {
       const lines = output.split('\n');
@@ -139,7 +144,6 @@ const TopicEchoViewer = ({ topic }) => {
       setFilteredOutput(filtered);
       setIsSearching(true);
 
-      // 更新匹配信息
       const matches = findAllMatches(filtered, filter);
       setMatchCount(matches.length);
       if (matches.length > 0) {
@@ -158,11 +162,9 @@ const TopicEchoViewer = ({ topic }) => {
   }, [output, filter]);
 
   
-  // 添加导出功能
   const handleExport = async () => {
     try {
-      const content = filteredOutputRef.current;
-      // 生成更简洁的文件名：话题名_年月日_时分秒.txt
+      const content = filteredOutputRef.current;  
       const now = new Date();
       const dateStr = now.toISOString().slice(0, 19).replace(/[T:]/g, '');
       const defaultPath = `${topic.replace(/\//g, '_')}_${dateStr}.txt`;
@@ -192,27 +194,23 @@ const TopicEchoViewer = ({ topic }) => {
   };
 
   // 请求话题数据
-  const requestEcho = (once = false) => {
+  const requestEcho = async (once = false) => {
     try {
       if (echoProcRef.current) {
-        try { echoProcRef.current.kill(); } catch { }
+        try { 
+          echoProcRef.current.kill('SIGKILL'); 
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch { }
         echoProcRef.current = null;
       }
       var proc = null;
-      if (once) {
-        proc = rosController.echoTopic(topic, true, (text) => {
-          setOutput(prev => prev + text + '\n');
-        });
-        if (proc) {
-          echoProcRef.current = proc;
-        }
-      } else {
-        proc = rosController.echoTopic(topic, false, (text) => {
-          setOutput(prev => prev + text + '\n');
-        });
-        if (proc) {
-          echoProcRef.current = proc;
-        }
+      
+      const isonce = (once)?true:false;
+      proc = rosController.echoTopic(topic, isonce, (text) => {
+        setOutput(prev => prev + text + '\n');
+      });
+      if (proc) {
+        echoProcRef.current = proc;
       }
       if (!proc) {
         message.error('获取数据失败');
@@ -233,11 +231,11 @@ const TopicEchoViewer = ({ topic }) => {
             onChange={setMode}
             style={{ width: 90 }}
             options={[
-              { value: 'echo', label: 'echo' },
-              { value: 'delay', label: 'delay' },
-              { value: 'hz', label: 'hz' },
-              { value: 'info', label: 'info' },
-              { value: 'type', label: 'type' },
+              { value: 'echo', label: '输出' },
+              { value: 'delay', label: '延迟' },
+              { value: 'hz', label: '频率' },
+              { value: 'info', label: '信息' },
+              { value: 'type', label: '类型' },
             ]}
             size="small"
           />

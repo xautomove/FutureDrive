@@ -6,34 +6,26 @@ const si = require('systeminformation');
 const path = require('path');
 const { startServer, stopServer, restartServer, setProjectPath: setApiProjectPath } = require('../api/server');
 
-// 存储当前下载请求的引用
 let currentDownload = null;
 
-// 创建一个Map来存储窗口参数
 const windowParamsMap = new Map();
 
-// 存储当前项目路径
 let currentProjectPath = null;
 
-// 存储 createWindow 函数的引用
 let createWindowFunction = null;
 
-// 设置 createWindow 函数
 function setCreateWindowFunction(func) {
   createWindowFunction = func;
 }
 
-// 设置项目路径
 function setProjectPath(path) {
   currentProjectPath = path;
 }
 
-// 获取项目路径
 function getProjectPath() {
   return currentProjectPath;
 }
 
-// 窗口创建处理
 ipcMain.handle('open_window', async (event, width = 1200, height = 800, page = '', params = []) => {
   if (createWindowFunction) {
     createWindowFunction(width, height, page, params);
@@ -43,20 +35,16 @@ ipcMain.handle('open_window', async (event, width = 1200, height = 800, page = '
   return { width, height, page, params };
 });
 
-// 设置项目路径的IPC处理
 ipcMain.handle('set-project-path', async (event, path) => {
   setProjectPath(path);
-  // 同时更新 API 服务器的项目路径
   setApiProjectPath(path);
   return { success: true };
 });
 
-// 获取项目路径的IPC处理
 ipcMain.handle('get-project-path', async () => {
   return { path: currentProjectPath };
 });
 
-// 获取窗口参数
 ipcMain.handle('get-window-params', async (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (win) {
@@ -66,7 +54,6 @@ ipcMain.handle('get-window-params', async (event) => {
   return { page: '', params: [] };
 });
 
-// 文件保存相关
 ipcMain.handle('save-dialog', async (event, options) => {
   const { filePath } = await dialog.showSaveDialog(options);
   return { filePath };
@@ -77,7 +64,6 @@ ipcMain.handle('write-file', async (event, { filePath, content }) => {
   return { success: true };
 });
 
-// 日志消息转发
 ipcMain.on('log-message', (event, logEntry) => {
   
   const windows = BrowserWindow.getAllWindows();
@@ -90,7 +76,6 @@ ipcMain.on('log-message', (event, logEntry) => {
   }
 });
 
-// 网络请求
 ipcMain.handle('net-request', async (event, options) => {
   return new Promise((resolve, reject) => {
     const request = net.request(options);
@@ -116,7 +101,6 @@ ipcMain.handle('net-request', async (event, options) => {
   });
 });
 
-// 文件下载
 ipcMain.handle('download-file', async (event, { url, savePath }) => {
   return new Promise((resolve, reject) => {
     try {
@@ -242,7 +226,6 @@ ipcMain.handle('download-file', async (event, { url, savePath }) => {
   });
 });
 
-// 停止下载
 ipcMain.handle('stop-download', async () => {
   if (currentDownload) {
     const { request, writeStream } = currentDownload;
@@ -259,18 +242,14 @@ ipcMain.handle('stop-download', async () => {
   return { success: false, message: '没有正在进行的下载' };
 });
 
-// 获取系统信息
 ipcMain.handle('get-sys-info', async () => {
   const osInfo = await si.osInfo();
   return osInfo;
 });
 
-// 启动服务器的IPC处理
 ipcMain.handle('start-server', async (event, config) => {
   try {
-    // 保存配置
     global.serverConfig = config;
-    // 启动服务器
     await startServer();
     return { success: true };
   } catch (error) {
@@ -279,7 +258,6 @@ ipcMain.handle('start-server', async (event, config) => {
   }
 });
 
-// 停止服务器的IPC处理
 ipcMain.handle('stop-server', async () => {
   try {
     await stopServer();
@@ -290,7 +268,6 @@ ipcMain.handle('stop-server', async () => {
   }
 });
 
-// 重启服务器的IPC处理
 ipcMain.handle('restart-server', async () => {
   try {
     await restartServer();
@@ -301,7 +278,6 @@ ipcMain.handle('restart-server', async () => {
   }
 });
 
-// 设置窗口参数
 function setWindowParams(winId, params) {
   windowParamsMap.set(winId, params);
 }

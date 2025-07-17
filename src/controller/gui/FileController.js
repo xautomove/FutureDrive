@@ -5,7 +5,6 @@ const { dialog } = require('@electron/remote');
 const { log, LOG_TYPES } = require('../../assets/js/utils');
 
 class FileController {
-  // 创建文件
   createFile(filePath) {
     try {
       if (fs.existsSync(filePath)) {
@@ -15,10 +14,8 @@ class FileController {
         };
       }
 
-      // 获取父目录路径
       const parentPath = path.dirname(filePath);
       
-      // 检查父目录是否存在
       if (!fs.existsSync(parentPath)) {
         return {
           success: false,
@@ -26,10 +23,8 @@ class FileController {
         };
       }
 
-      // 检查父目录是否为文件夹
       const parentStats = fs.statSync(parentPath);
       if (!parentStats.isDirectory()) {
-        // 如果父路径是文件，则使用父路径的父目录
         const grandParentPath = path.dirname(parentPath);
         const newFilePath = path.join(grandParentPath, path.basename(filePath));
         
@@ -48,7 +43,6 @@ class FileController {
         };
       }
 
-      // 如果父路径是文件夹，直接创建
       fs.writeFileSync(filePath, '');
       log(`创建文件成功: ${filePath}`, LOG_TYPES.SUCCESS);
       return {
@@ -64,7 +58,6 @@ class FileController {
     }
   }
 
-  // 创建文件夹
   createFolder(folderPath) {
     try {
       if (fs.existsSync(folderPath)) {
@@ -74,10 +67,8 @@ class FileController {
         };
       }
 
-      // 获取父目录路径
       const parentPath = path.dirname(folderPath);
       
-      // 检查父目录是否存在
       if (!fs.existsSync(parentPath)) {
         return {
           success: false,
@@ -85,10 +76,8 @@ class FileController {
         };
       }
 
-      // 检查父目录是否为文件夹
       const parentStats = fs.statSync(parentPath);
       if (!parentStats.isDirectory()) {
-        // 如果父路径是文件，则使用父路径的父目录
         const grandParentPath = path.dirname(parentPath);
         const newFolderPath = path.join(grandParentPath, path.basename(folderPath));
         
@@ -107,7 +96,6 @@ class FileController {
         };
       }
 
-      // 如果父路径是文件夹，直接创建
       fs.mkdirSync(folderPath, { recursive: true });
       log(`创建文件夹成功: ${folderPath}`, LOG_TYPES.SUCCESS);
       return {
@@ -123,30 +111,24 @@ class FileController {
     }
   }
 
-  // 递归删除文件夹
   deleteFolderRecursive(folderPath) {
     if (fs.existsSync(folderPath)) {
       fs.readdirSync(folderPath).forEach((file) => {
         const curPath = path.join(folderPath, file);
         if (fs.lstatSync(curPath).isDirectory()) {
-          // 递归删除子文件夹
           this.deleteFolderRecursive(curPath);
         } else {
-          // 删除文件
           fs.unlinkSync(curPath);
         }
       });
-      // 删除空文件夹
       fs.rmdirSync(folderPath);
     }
   }
 
-  //文件是否存在
   fileExists(filePath) {
     return fs.existsSync(filePath);
   }
 
-  // 删除文件或文件夹
   deleteFile(filePath) {
     try {
       if (!fs.existsSync(filePath)) {
@@ -158,11 +140,9 @@ class FileController {
 
       const stats = fs.statSync(filePath);
       if (stats.isDirectory()) {
-        // 如果是文件夹，递归删除
         this.deleteFolderRecursive(filePath);
         log(`删除文件夹成功: ${filePath}`, LOG_TYPES.SUCCESS);
       } else {
-        // 如果是文件，直接删除
         fs.unlinkSync(filePath);
         log(`删除文件成功: ${filePath}`, LOG_TYPES.SUCCESS);
       }
@@ -179,7 +159,6 @@ class FileController {
     }
   }
 
-  // 重命名文件
   renameFile(oldPath, newPath) {
     try {
       if (!fs.existsSync(oldPath)) {
@@ -209,7 +188,6 @@ class FileController {
     }
   }
 
-  // 在资源管理器中打开
   openInExplorer(filePath) {
     try {
       if (!fs.existsSync(filePath)) {
@@ -218,7 +196,6 @@ class FileController {
           error: '文件不存在'
         };
       }
-      // 使用 shell 打开文件所在目录
       const directory = path.dirname(filePath);
       shell.openPath(directory);
       log(`在资源管理器中打开: ${directory}`, LOG_TYPES.SUCCESS);
@@ -234,7 +211,6 @@ class FileController {
     }
   }
 
-  // 读取文件内容
   readFile(filePath) {
     try {
       if (!fs.existsSync(filePath)) {
@@ -267,10 +243,8 @@ class FileController {
     }
   }
 
-  // 写入文件内容
   writeFile(filePath, content,isdel=false) {
     try {
-      // 确保父目录存在
       const dir = path.dirname(filePath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -294,7 +268,6 @@ class FileController {
     }
   }
 
-  // 显示保存文件对话框
   async showSaveDialog(options = {}) {
     try {
       const result = await dialog.showSaveDialog({
@@ -342,7 +315,6 @@ class FileController {
     };
   }
 
-  // 选择目录
   async selectDirectory(options = {}) {
     const result = await dialog.showOpenDialog({
       properties: ['openDirectory'],
@@ -360,7 +332,6 @@ class FileController {
     };
   }
 
-  // 复制文件
   copyFile(sourcePath, targetPath) {
     try {
       if (!fs.existsSync(sourcePath)) {
@@ -370,20 +341,16 @@ class FileController {
         };
       }
 
-      // 确保目标目录存在
       const targetDir = path.dirname(targetPath);
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
 
-      // 如果目标文件已存在，先删除
       if (fs.existsSync(targetPath)) {
         fs.unlinkSync(targetPath);
       }
 
-      // 复制文件
       fs.copyFileSync(sourcePath, targetPath);
-      // log(`复制文件成功: ${sourcePath} -> ${targetPath}`, LOG_TYPES.SUCCESS);
       return {
         success: true,
         path: targetPath

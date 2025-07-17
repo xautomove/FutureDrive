@@ -10,17 +10,14 @@ class RosController {
 
     async initialize() {
         if (this.initialized) return;
-        // 初始化 ROS 相关逻辑
         this.initialized = true;
     }
 
     async start() {
         await this.initialize();
-        // 启动 ROS 相关逻辑
     }
 
     async stop() {
-        // 停止 ROS 相关逻辑
     }
 
     /**
@@ -34,16 +31,13 @@ class RosController {
                 onStderr: (text) => log(`获取话题列表错误: ${text}`, LOG_TYPES.ERROR),
             });
             
-            // 确保result存在且包含stdout属性
             if (!result || typeof result !== 'object' || !result.stdout) {
                 log('获取失败: ${result.stderr}', LOG_TYPES.ERROR);
                 return [];
             }
 
-            // 确保stdout是字符串
             const output = typeof result.stdout === 'string' ? result.stdout : String(result.stdout);
             
-            // 分割并过滤空值
             return output.split('\n')
                 .map(topic => topic.trim())
                 .filter(topic => topic);
@@ -141,16 +135,17 @@ class RosController {
      */
     async echoTopic(topic, once = false, onData) {
         try{
-            // 结束上一次进程
             if (this._lastEchoProc) {
-                try { this._lastEchoProc.kill(); } catch {}
+                try { 
+                    this._lastEchoProc.kill('SIGKILL'); 
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } catch {}
                 this._lastEchoProc = null;
             }
             const args = ['topic', 'echo', topic];
             if (once) {
-                args.push('--once');
                 let output = '';
-                const procPromise = await commandExecutor.execute('ros2', args, {
+                const result = await commandExecutor.execute('ros2', args.concat(['--once']), {
                     onStdout: (text) => {
                         output += text;
                         if (onData) onData(text);
@@ -162,12 +157,8 @@ class RosController {
                         console.error(`获取话题数据失败: ${error.message}`);
                     },
                 });
-                procPromise.then(result => { this._lastEchoProc = result.child; });
-                return new Promise((resolve, reject) => {
-                    procPromise.then(() => resolve(output)).catch(reject);
-                });
+                return output;
             } else {
-                // 持续模式
                 const child = commandExecutor.executeFlow('ros2', args, {
                     onStdout: onData,
                     onError: (error) => {
@@ -193,31 +184,44 @@ class RosController {
      * @param {function} onData 数据回调（可选）
      * @returns {Promise<string>|ChildProcess} 输出内容或进程对象
      */
-    async getTopic(topic,type, onData) {
-        try{
-            // 结束上一次进程
+    async getTopic(topic, type, onData) {
+        try {
             if (this._lastGetTopicProc) {
-                try { this._lastGetTopicProc.kill(); } catch {}
+                try { 
+                    this._lastGetTopicProc.kill('SIGKILL'); 
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } catch {}
                 this._lastGetTopicProc = null;
             }
             const args = ['topic', type, topic];
-            let output = '';
-            const procPromise = await commandExecutor.execute('ros2', args, {
-                onStdout: (text) => {
-                    output += text;
-                    if (onData) onData(text);
-                },
-                onError: (error) => {
-                    console.error(`获取话题数据失败: ${error.message}`);
-                },
-                onStderr: (error) => {
-                    console.error(`获取话题数据失败: ${error.message}`);
-                },
-            });
-            procPromise.then(result => { this._lastGetTopicProc = result.child; });
-            return new Promise((resolve, reject) => {
-                procPromise.then(() => resolve(output)).catch(reject);
-            });
+            if (["hz", "delay"].includes(type)) {
+                const child = commandExecutor.executeFlow('ros2', args, {
+                    onStdout: onData,
+                    onError: (error) => {
+                        console.error(`获取话题数据失败: ${error.message}`);
+                    },
+                    onStderr: (error) => {
+                        console.error(`获取话题数据失败: ${error.message}`);
+                    },
+                });
+                this._lastGetTopicProc = child;
+                return child;
+            } else {
+                let output = '';
+                const result = await commandExecutor.execute('ros2', args, {
+                    onStdout: (text) => {
+                        output += text;
+                        if (onData) onData(text);
+                    },
+                    onError: (error) => {
+                        console.error(`获取话题数据失败: ${error.message}`);
+                    },
+                    onStderr: (error) => {
+                        console.error(`获取话题数据失败: ${error.message}`);
+                    },
+                });
+                return output;
+            }
         } catch (error) {
             log(`获取话题数据失败: ${error.message}`, LOG_TYPES.ERROR);
             return null;

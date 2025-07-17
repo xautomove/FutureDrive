@@ -57,7 +57,6 @@ const pendingLogs = [];
 
 export const addLogListener = (listener) => {
   logListeners.add(listener);
-  // 新监听器注册时，补发所有队列日志
   if (pendingLogs.length > 0) {
     pendingLogs.forEach(log => listener(log));
     pendingLogs.length = 0;
@@ -78,15 +77,12 @@ export const log = (message, type = LOG_TYPES.INFO) => {
   const mm = String(now.getMinutes()).padStart(2, '0');
   const ss = String(now.getSeconds()).padStart(2, '0');
   const ms = String(now.getMilliseconds()).padStart(3, '0');
-  const timestamp = `${mm}${ss}${ms}`; // 只显示分:秒.毫秒
+  const timestamp = `${mm}${ss}${ms}`;
   const logEntry = { type, message, timestamp };
 
-  // 如果window.isMainWindow未定义或为null，等待一段时间再检查
   if (window.isMainWindow === undefined || window.isMainWindow === null) {
-    // 将日志先保存到pendingLogs
     pendingLogs.push(logEntry);
     
-    // 100ms后重试
     setTimeout(() => {
       if (window.isMainWindow == 1) {
         if (logListeners.size > 0) {
@@ -110,12 +106,10 @@ export const log = (message, type = LOG_TYPES.INFO) => {
       });
     }
   } else {
-    // 发送到主窗口
     ipcController.send('log-message', logEntry);
   }
 };
 
-// 文件类型判断
 export const FILE_TYPES = {
   CODE: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.c', '.cpp', '.h', '.hpp', '.cs', '.go', '.rs', '.php', '.rb', '.swift', '.kt', '.scala'],

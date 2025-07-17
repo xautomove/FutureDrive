@@ -51,7 +51,18 @@
 }
 
 .node-config-modal-body {
-  margin-bottom: 20px;
+  max-height: 550px;
+  overflow-y: auto;
+  padding-right: 16px;
+}
+
+.node-config-modal-body::-webkit-scrollbar {
+  width: 8px;
+  background: #232323;
+}
+.node-config-modal-body::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
 }
 
 .node-config-form-item {

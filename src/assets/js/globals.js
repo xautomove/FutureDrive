@@ -11,7 +11,7 @@ const activeProcesses = [];
 // 全局变量管理
 const GLOBALS = {
   // 全局用户数据目录
-  USERDATA_DIR: path.join(app.getPath('userData'), 'FutuDrive'),
+  USERDATA_DIR: path.join(app.getPath('userData'), 'FutureDrive'),
   // 全局NodeController实例
   nodeController: null,
   // 活动进程列表

@@ -6,8 +6,8 @@ import './AboutModal.css';
 
 const { Text, Title, Paragraph } = Typography;
 
-const LICENSE_URL = 'https://Future.automoves.cn/license';
-const LEGAL_URL = 'https://Future.automoves.cn/legal';
+const LICENSE_URL = 'https://future.automoves.cn/license';
+const LEGAL_URL = 'https://future.automoves.cn/legal';
 
 const AboutModal = ({ visible, onClose }) => {
   const handleOpenUrl = async (url) => {
@@ -19,7 +19,6 @@ const AboutModal = ({ visible, onClose }) => {
   };
 
   const handleCheckUpdate = () => {
-    // TODO: 实现检查更新逻辑
     console.log('检查更新');
   };
 

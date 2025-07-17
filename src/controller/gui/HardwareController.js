@@ -8,14 +8,12 @@ class HardwareController {
     this.configPath = path.join(this.hardwareDir, 'config.json');
   }
 
-  // 确保Hardware目录存在
   ensureHardwareDir() {
     if (!fs.existsSync(this.hardwareDir)) {
       fs.mkdirSync(this.hardwareDir, { recursive: true });
     }
   }
 
-  // 读取config.json
   readConfig() {
     this.ensureHardwareDir();
     if (!fs.existsSync(this.configPath)) {
@@ -29,13 +27,11 @@ class HardwareController {
     }
   }
 
-  // 写入config.json
   writeConfig(config) {
     this.ensureHardwareDir();
     fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2), 'utf8');
   }
 
-  // 添加设备
   addDevice(device) {
     const config = this.readConfig();
     config.devices = config.devices || [];
@@ -43,7 +39,6 @@ class HardwareController {
     this.writeConfig(config);
   }
 
-  //api获取驱动列表
   async getDriverList() {
     try {
       const response = await fetch('http://127.0.0.1:8080/api/driver/list');
@@ -53,7 +48,6 @@ class HardwareController {
       }
       throw new Error('数据格式错误');
     } catch (e) {
-      // 返回示例数据
       return [
         {
           brand: '诚科',

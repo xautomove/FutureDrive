@@ -11,13 +11,13 @@ const createWindow = (width = 1200, height = 800, page = '', params = []) => {
   const win = new BrowserWindow({
     width,
     height,
-    backgroundColor: '#1a1a1a', // 设置窗口背景色
-    show: false, // 先不显示窗口
+    backgroundColor: '#1a1a1a',
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      devTools: true, // 确保开发者工具可用
+      devTools: true,
       webSecurity: true,
       sandbox: false
     }
@@ -30,15 +30,12 @@ const createWindow = (width = 1200, height = 800, page = '', params = []) => {
   }
 
   const winid = win.id;
-  // 将参数存储到Map中
   setWindowParams(winid, { page, params });
   
-  // 立即设置 localStorage，包含窗口ID
   win.webContents.executeJavaScript(`
     localStorage.setItem('windowId', '${winid}');
   `);
   
-  // 设置 CSP
   win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -56,21 +53,17 @@ const createWindow = (width = 1200, height = 800, page = '', params = []) => {
     });
   });
 
-  // 在开发环境中加载 webpack dev server
   if (process.env.NODE_ENV === 'development') {
-    console.log("开发模式");
+    console.log("欢迎使用FutureDrive,交流Q群：791839065");
     win.loadURL('http://localhost:3000/')
   } else {
-    console.log("生产模式");
     win.loadFile(path.join(__dirname, 'public/index.html'))
   }
   
-  // 等待页面加载完成后再显示窗口
   win.webContents.on('did-finish-load', () => {
     win.show();
   });
 
-  // 监听 F12 按键
   win.webContents.on('before-input-event', (event, input) => {
     if (input.key === 'F12') {
       win.webContents.toggleDevTools();
@@ -78,15 +71,13 @@ const createWindow = (width = 1200, height = 800, page = '', params = []) => {
     }
   });
 
-  Menu.setApplicationMenu(null); // 移除菜单栏
+  Menu.setApplicationMenu(null);
   return win;
 }
 
-// 设置 createWindow 函数
 setCreateWindowFunction(createWindow);
 
 app.whenReady().then(async () => {
-  // 启动 API 服务器
   try {
     await startServer();
   } catch (error) {
@@ -108,7 +99,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-// 提供一个通过mainWindow send获取App.js config的函数
 function requestConfigFromRenderer(key) {
   return new Promise((resolve) => {
     if (!mainWindow) return resolve(null);
@@ -120,8 +110,7 @@ function requestConfigFromRenderer(key) {
   });
 }
 
-// 启动时注入
-// setConfigCallback(requestConfigFromRenderer);
+setConfigCallback(requestConfigFromRenderer);
 
 module.exports = {
   createWindow,

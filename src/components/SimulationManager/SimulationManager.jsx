@@ -7,7 +7,6 @@ import fileController from '../../controller/gui/FileController';
 import './SimulationManager.css';
 import { download, stopDownload } from '../../assets/js/http';
 import { exec } from 'child_process';
-import { promisify } from 'util';
 
 const { Option } = Select;
 
@@ -26,12 +25,10 @@ const SimulationManager = ({ visible, onClose }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [customArgs, setCustomArgs] = useState('');
 
-  // 初始化加载配置
   useEffect(() => {
     loadConfig();
   }, []);
 
-  // 加载配置
   const loadConfig = async () => {
     try {
       const simulationConfig = config.get('simulation');
@@ -53,7 +50,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 保存配置
   const saveConfig = async () => {
     try {
       const simulationConfig = {
@@ -75,7 +71,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 选择下载路径
   const handleSelectDownloadPath = async () => {
     try {
       const result = await fileController.selectDirectory();
@@ -89,7 +84,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 选择已下载的CARLA文件
   const handleSelectCarlaPath = async () => {
     try {
       const result = await fileController.selectFile({
@@ -109,7 +103,6 @@ const SimulationManager = ({ visible, onClose }) => {
   };
   
 
-  // 停止下载
   const handleStopDownload = async () => {
     const key = 'download-progress';
     try {
@@ -133,7 +126,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 解压文件
   const extractTarGz = (filePath) => {
     return new Promise((resolve, reject) => {
       const extractDir = filePath.replace('.tar.gz', '');
@@ -149,7 +141,6 @@ const SimulationManager = ({ visible, onClose }) => {
     });
   };
 
-  // 下载 CARLA
   const handleDownloadCarla = async () => {
     if (isDownloading) {
       handleStopDownload();
@@ -173,10 +164,8 @@ const SimulationManager = ({ visible, onClose }) => {
       message.destroy(key);
       message.loading({ content: '正在解压 CARLA...', key, duration: 0 });
 
-      // 解压文件
       const extractDir = await extractTarGz(downloadPath);
       
-      // 设置CARLA路径为解压后的目录
       setCarlaPath(extractDir + '/CarlaUnreal.sh');
       setCarlaStatus('已下载');
       await saveConfig();
@@ -192,7 +181,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 检查CARLA进程是否存在
   const checkCarlaProcess = () => {
     return new Promise((resolve) => {
       exec('ps aux | grep CarlaUnreal-Linux-Shipping | grep -v grep', (error, stdout) => {
@@ -202,7 +190,6 @@ const SimulationManager = ({ visible, onClose }) => {
     });
   };
 
-  // 结束CARLA进程
   const killCarlaProcess = () => {
     return new Promise((resolve, reject) => {
       exec('ps aux | grep CarlaUnreal-Linux-Shipping | grep -v grep', (error, stdout) => {
@@ -211,14 +198,12 @@ const SimulationManager = ({ visible, onClose }) => {
           return;
         }
 
-        // 提取PID
         const pid = stdout.split(/\s+/)[1];
         if (!pid) {
           resolve();
           return;
         }
 
-        // 使用kill命令结束进程
         exec(`kill -9 ${pid}`, (killError) => {
           if (killError) {
             reject(new Error('无法结束CARLA进程'));
@@ -230,7 +215,6 @@ const SimulationManager = ({ visible, onClose }) => {
     });
   };
 
-  // 启动 CARLA 环境
   const handleStartCarla = async () => {
     try {
       if (!carlaPath) {
@@ -238,10 +222,8 @@ const SimulationManager = ({ visible, onClose }) => {
         return;
       }
 
-      // 获取CARLA目录路径
       const carlaDir = carlaPath.substring(0, carlaPath.lastIndexOf('/'));
       
-      // 使用gnome-terminal（Ubuntu默认终端）打开新窗口并运行脚本
       const command = `gnome-terminal -- bash -c "cd '${carlaDir}' && bash '${carlaPath}'; exec bash"`;
       
       exec(command, async (error) => {
@@ -261,7 +243,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 停止 CARLA 环境
   const handleStopCarla = async () => {
     try {
       Modal.confirm({
@@ -273,7 +254,6 @@ const SimulationManager = ({ visible, onClose }) => {
         onOk: async () => {
           try {
             await killCarlaProcess();
-            // 等待一段时间后检查进程是否真的结束
             setTimeout(async () => {
               const isStillRunning = await checkCarlaProcess();
               if (!isStillRunning) {
@@ -295,7 +275,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 在组件加载时检查CARLA进程状态
   useEffect(() => {
     const checkProcess = async () => {
       console.log("检查CARLA进程状态");
@@ -310,7 +289,6 @@ const SimulationManager = ({ visible, onClose }) => {
     checkProcess();
   }, []);
 
-  // 选择Python脚本
   const handleSelectPythonScript = async () => {
     try {
       const result = await fileController.selectFile({
@@ -328,7 +306,6 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
-  // 开始仿真
   const handleStartSimulation = async () => {
     try {
       if (carlaStatus !== '运行中') {
@@ -341,18 +318,14 @@ const SimulationManager = ({ visible, onClose }) => {
       let command;
       
       if (launchType === 'default') {
-        // 获取CARLA目录路径
         const carlaDir = carlaPath.substring(0, carlaPath.lastIndexOf('/'));
         scriptPath = `${carlaDir}/PythonAPI/examples/manual_control.py`;
-        // 默认脚本不需要-m参数
         command = `python3 ${scriptPath} --host ${ip} -p ${port} ${customArgs}`;
       } else {
         scriptPath = customCommand;
-        // 自定义脚本需要-m参数
         command = `python3 ${scriptPath} -m ${map} --host ${ip} -p ${port} ${customArgs}`;
       }
       
-      // 使用gnome-terminal打开新窗口运行Python脚本
       const terminalCommand = `gnome-terminal -- bash -c "cd '${carlaPath.substring(0, carlaPath.lastIndexOf('/'))}' && ${command}; exec bash"`;
       
       exec(terminalCommand, (error) => {
@@ -363,7 +336,6 @@ const SimulationManager = ({ visible, onClose }) => {
         message.success('仿真启动成功');
       });
 
-      // 保存自定义命令
       if (launchType === 'custom' && customCommand && !savedCommands.includes(customCommand)) {
         const newCommands = [...savedCommands, customCommand];
         setSavedCommands(newCommands);

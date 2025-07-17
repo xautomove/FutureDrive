@@ -27,21 +27,16 @@ class IpcController {
      * @returns {Function} 用于移除监听器的函数
      */
     on(channel, callback) {
-        // 先移除该channel的所有旧监听器
         this.removeAllListeners(channel);
         
-        // 创建一个包装函数，用于存储和移除
         const wrappedCallback = (event, data) => {
             callback(event, data);
         };
         
-        // 存储监听器信息
         this.listeners.set(channel, new Set([wrappedCallback]));
         
-        // 添加新监听器
         ipcRenderer.on(channel, wrappedCallback);
 
-        // 返回移除监听器的函数
         return () => this.off(channel, wrappedCallback);
     }
 

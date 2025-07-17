@@ -7,7 +7,6 @@ const path = window.require('path');
 
 class Config {
     constructor() {
-        // config 目录放在全局用户数据目录下
         if (!fs.existsSync(GLOBALS.USERDATA_DIR)) {
             fs.mkdirSync(GLOBALS.USERDATA_DIR, { recursive: true });
         }
@@ -43,7 +42,6 @@ class Config {
     }
 
     getDefaultConfig() {
-        // 使用electron的app.getVersion()获取版本
         const { app } = window.require('@electron/remote');
         return {
             "version": app.getVersion(),
@@ -55,7 +53,8 @@ class Config {
             "environment": {
                 "listUrl": "https://example.com/api/environments"
             },
-            "systemInfo": null
+            "systemInfo": null,
+            "pythonPath": null
         };
     }
 
@@ -68,7 +67,6 @@ class Config {
         console.log(`当前配置版本: ${currentVersion || '无'}, 应用版本: ${newVersion}`);
         
         if (!currentVersion) {
-            // 首次运行，设置当前版本
             log(`首次运行，设置版本号为: ${newVersion}`, LOG_TYPES.INFO);
             this.data.version = newVersion;
             await this.save();
@@ -97,7 +95,6 @@ class Config {
 
     async save() {
         try {
-            //尝试遍历cache,然后逐个替换掉data
             this.cache.forEach((value, key) => {
                 this.setNestedValue(this.data, key, value);
             });
@@ -134,7 +131,6 @@ class Config {
 
     async set(key, value) {
         if (!this.initialized) {
-            // log(`set config to cache: ${key} = ${value}`, LOG_TYPES.INFO);
             this.cache.set(key, value);
             return;
         }

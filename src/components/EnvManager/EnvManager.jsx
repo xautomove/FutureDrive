@@ -31,7 +31,6 @@ const EnvManager = () => {
     }
   }, []);
 
-  // 刷新环境状态
   const refreshEnvironments = async () => {
     setLoading(true);
     try {
@@ -51,7 +50,6 @@ const EnvManager = () => {
     log(`正在安装 ${env.name} ${version}...`, LOG_TYPES.INFO);
     const installUrl = env.installUrl[process.platform === 'win32' ? 'windows' : 'ubuntu'];
     log(`安装地址: ${installUrl}`, LOG_TYPES.INFO);
-    // TODO: 集成实际安装逻辑
     EnvController.installEnv(env, installUrl);
   };
 

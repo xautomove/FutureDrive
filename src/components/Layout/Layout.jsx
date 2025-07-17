@@ -31,7 +31,6 @@ const Layout = () => {
   const leftTreeRef = useRef(null);
   const rightTreeRef = useRef(null);
 
-  // 自定义Hook确保方法只执行一次
   const useRunOnce = (fn, deps = []) => {
     const hasRun = useRef(false);
     
@@ -60,20 +59,17 @@ const Layout = () => {
 
   useRunOnce(initializeAppSettings, []);
 
-  // 初始化全局NodeController
   useEffect(() => {
     if (!GLOBALS.nodeController) {
       GLOBALS.nodeController = new NodeController();
     }
   }, []);
 
-  // 加载最近项目
   useEffect(() => {
     const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
     setRecentProjects(recents);
   }, []);
 
-  // 更新最小宽度
   useEffect(() => {
     const updateMinWidths = () => {
       if (leftTreeRef.current) {
@@ -91,7 +87,6 @@ const Layout = () => {
     return () => window.removeEventListener('resize', updateMinWidths);
   }, []);
 
-  // 打开项目
   const handleOpenProject = (projectPath, projectConfig) => {
     if (!projectPath) {
       ProjectController.selectAndOpenProject((path, config) => {
@@ -105,11 +100,9 @@ const Layout = () => {
     openProjectByPath(projectPath, projectConfig);
   };
 
-  // 真正打开项目并更新最近项目
   const openProjectByPath = (projectPath, projectConfig) => {
     try {
       let config = projectConfig;
-      // 如果没有传递配置，先读取 .proj 文件
       if (!config) {
         const pathModule = window.require ? window.require('path') : require('path');
         const fs = window.require ? window.require('fs') : require('fs');
@@ -122,7 +115,6 @@ const Layout = () => {
         const projContent = fs.readFileSync(projFile, 'utf8');
         config = JSON.parse(projContent);
       }
-      // 统一用 config.path 作为根目录，统一用 ProjectController.openProject
       const result = ProjectController.openProject(config.path);
       if (result.success) {
         window.currentProject = {
@@ -134,10 +126,8 @@ const Layout = () => {
         setProjectTree(result.tree);
         setCurrentProjectPath(config.path);
         setProjectConfig(result.config);
-        // 通知主进程更新项目路径
         ipcRenderer.invoke('set-project-path', config.path);
         log(`成功打开项目: ${result.config.name}`, LOG_TYPES.SUCCESS);
-        // 更新最近项目
         const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
         const newRecents = [{ name: result.config.name, path: config.path }, ...recents.filter(p => p.path !== config.path)].slice(0, 10);
         localStorage.setItem('recentProjects', JSON.stringify(newRecents));
@@ -152,7 +142,6 @@ const Layout = () => {
     }
   };
 
-  // 更新项目树
   const handleTreeDataChange = () => {
     if (currentProjectPath) {
       const result = ProjectController.openProject(currentProjectPath);
@@ -162,7 +151,6 @@ const Layout = () => {
     }
   };
 
-  // 新建项目后自动打开
   const handleCreateProject = (projectPath) => {
     if (projectPath) {
       openProjectByPath(projectPath);
@@ -170,16 +158,12 @@ const Layout = () => {
     }
   };
 
-  // 关闭项目
   const handleCloseProject = () => {
     setCurrentProjectPath('');
     setProjectTree([]);
     setProjectConfig(null);
-    // 通知主进程清除项目路径
     ipcRenderer.invoke('set-project-path', '');
-    // 重置 GUI 控制器
     guiController.reset();
-    // 可选：清理其它全局状态
     window.currentProject = { path: '', config: null, tree: [] };
   };
 
@@ -215,7 +199,6 @@ const Layout = () => {
         onCreateProject={() => setProjectModalVisible(true)}
       />
       <div className="main-container">
-        {/* 左侧项目管理器 */}
         <Resizable
           size={{ width: leftWidth, height: '100%' }}
           onResizeStop={(e, direction, ref, d) => {
@@ -235,7 +218,6 @@ const Layout = () => {
           </div>
         </Resizable>
 
-        {/* 中间内容区域 */}
         <div className="center-content">
           <div className="main-content">
             <MainContent onTreeDataChange={handleTreeDataChange} />
@@ -254,7 +236,6 @@ const Layout = () => {
           </Resizable>
         </div>
 
-        {/* 右侧硬件管理器 */}
         <Resizable
           size={{ width: rightWidth, height: '100%' }}
           onResizeStop={(e, direction, ref, d) => {
@@ -270,7 +251,6 @@ const Layout = () => {
           </div>
         </Resizable>
       </div>
-      {/* 新建项目弹窗 */}
       <ProjectModal
         visible={projectModalVisible}
         onClose={() => setProjectModalVisible(false)}
