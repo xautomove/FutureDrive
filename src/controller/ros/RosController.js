@@ -1,5 +1,7 @@
 import commandExecutor from '../../assets/js/commandExecutor';
 import { log, LOG_TYPES } from '../../assets/js/utils';
+import '../../assets/js/globals';
+import GLOBALS from '../../assets/js/globals';
 
 class RosController {
     constructor() {
@@ -27,8 +29,16 @@ class RosController {
     async getTopicList() {
         try {
             const result = await commandExecutor.execute('ros2', ['topic', 'list'], {
-                onStdout: (text) => log(`获取话题列表: ${text}`, LOG_TYPES.INFO),
-                onStderr: (text) => log(`获取话题列表错误: ${text}`, LOG_TYPES.ERROR),
+                onStdout: (text) => {
+                    if(GLOBALS.isDebug){
+                        log(`获取话题列表: ${text}`, LOG_TYPES.INFO)
+                    }
+                },
+                onStderr: (text) => {
+                    if(GLOBALS.isDebug){
+                        log(`获取话题列表错误: ${text}`, LOG_TYPES.ERROR)
+                    }
+                },
             });
             
             if (!result || typeof result !== 'object' || !result.stdout) {

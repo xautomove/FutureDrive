@@ -220,6 +220,29 @@
   transition: all 0.3s ease;
 }
 
+/* 选中状态边框效果 */
+.react-flow__node-custom.selected {
+  box-shadow: 0 0 0 3px rgba(42, 138, 246, 0.3);
+}
+
+/* 节点优先级样式 */
+.node-priority {
+  background: rgba(42, 138, 246, 0.2);
+  color: #2a8af6;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(42, 138, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.node-priority:hover {
+  background: rgba(42, 138, 246, 0.3);
+  border-color: rgba(42, 138, 246, 0.5);
+}
+
 .custom-node.running {
   border: 2px solid #00ff00;
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);

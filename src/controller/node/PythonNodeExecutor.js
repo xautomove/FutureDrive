@@ -4,7 +4,7 @@ import GLOBALS from '../../assets/js/globals';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import commandExecutor from '../../assets/js/commandExecutor';
 import config from '../../assets/js/config';
-import { env } from 'process';
+import globals from '../../assets/js/globals';
 
 class PythonNodeExecutor {
     constructor() {
@@ -36,9 +36,8 @@ class PythonNodeExecutor {
                 }
             }
             log(`开始执行节点: ${node.data.label}`, LOG_TYPES.INFO);
-            console.log('node', node);
 
-            let scriptContent = 'aW1wb3J0IHN5cwppbXBvcnQganNvbgppbXBvcnQgaW1wb3J0bGliLnV0aWwKaW1wb3J0IG9zCmltcG9ydCBsb2NhbGUKCgpvcy5lbnZpcm9uWydQWVRIT05JT0VOQ09ESU5HJ10gPSAndXRmLTgnCmlmIHN5cy5wbGF0Zm9ybSA9PSAnd2luMzInOgogICAgdHJ5OgogICAgICAgIGxvY2FsZS5zZXRsb2NhbGUobG9jYWxlLkxDX0FMTCwgJ2VuX1VTLlVURi04JykKICAgIGV4Y2VwdCBsb2NhbGUuRXJyb3I6CiAgICAgICAgdHJ5OgogICAgICAgICAgICBsb2NhbGUuc2V0bG9jYWxlKGxvY2FsZS5MQ19BTEwsICdFbmdsaXNoX1VuaXRlZCBTdGF0ZXMuVVRGLTgnKQogICAgICAgIGV4Y2VwdCBsb2NhbGUuRXJyb3I6CiAgICAgICAgICAgIHBhc3MKCnN5cy5zdGRvdXQucmVjb25maWd1cmUoZW5jb2Rpbmc9J3V0Zi04JykKc3lzLnN0ZGVyci5yZWNvbmZpZ3VyZShlbmNvZGluZz0ndXRmLTgnKQoKc3BlYyA9IGltcG9ydGxpYi51dGlsLnNwZWNfZnJvbV9maWxlX2xvY2F0aW9uKCJtYWluIiwgInttYWluUGF0aH0iKQptYWluID0gaW1wb3J0bGliLnV0aWwubW9kdWxlX2Zyb21fc3BlYyhzcGVjKQpzcGVjLmxvYWRlci5leGVjX21vZHVsZShtYWluKQoKbm9kZSA9IG1haW4uTWFpbk5vZGUoKQoKaW5wdXRfZGF0YSA9IGpzb24ubG9hZHMoJ3tpbnB1dF9kYXRhfScpCmNvbmZpZ19kYXRhID0ganNvbi5sb2Fkcygne2NvbmZpZ19kYXRhfScpCm5vZGUuZ2V0X3VzZXJfaW5wdXQoY29uZmlnX2RhdGEpCnJlc3VsdCA9IG5vZGUuZXhlY3V0ZSgpCnByaW50KGpzb24uZHVtcHMocmVzdWx0LCBlbnN1cmVfYXNjaWk9RmFsc2UpLCBmaWxlPXN5cy5zdGRlcnIpCg==';
+            let scriptContent = 'aW1wb3J0IHN5cwppbXBvcnQganNvbgppbXBvcnQgaW1wb3J0bGliLnV0aWwKaW1wb3J0IG9zCmltcG9ydCBsb2NhbGUKaW1wb3J0IGluc3BlY3QKaW1wb3J0IHJlZGlzCgpvcy5lbnZpcm9uWydQWVRIT05JT0VOQ09ESU5HJ10gPSAndXRmLTgnCmlmIHN5cy5wbGF0Zm9ybSA9PSAnd2luMzInOgogICAgdHJ5OgogICAgICAgIGxvY2FsZS5zZXRsb2NhbGUobG9jYWxlLkxDX0FMTCwgJ2VuX1VTLlVURi04JykKICAgIGV4Y2VwdCBsb2NhbGUuRXJyb3I6CiAgICAgICAgdHJ5OgogICAgICAgICAgICBsb2NhbGUuc2V0bG9jYWxlKGxvY2FsZS5MQ19BTEwsICdFbmdsaXNoX1VuaXRlZCBTdGF0ZXMuVVRGLTgnKQogICAgICAgIGV4Y2VwdCBsb2NhbGUuRXJyb3I6CiAgICAgICAgICAgIHBhc3MKCnN5cy5zdGRvdXQucmVjb25maWd1cmUoZW5jb2Rpbmc9J3V0Zi04JykKc3lzLnN0ZGVyci5yZWNvbmZpZ3VyZShlbmNvZGluZz0ndXRmLTgnKQoKY2xhc3MgUmVkaXNDYWNoZToKICAgIGRlZiBfX2luaXRfXyhzZWxmLCBob3N0PSdsb2NhbGhvc3QnLCBwb3J0PTYzNzksIGRiPTApOgogICAgICAgIHNlbGYuY2xpZW50ID0gcmVkaXMuUmVkaXMoaG9zdD1ob3N0LCBwb3J0PXBvcnQsIGRiPWRiKQoKICAgIGRlZiBzZXQoc2VsZiwga2V5LCB2YWx1ZSwgZXg9Tm9uZSk6CiAgICAgICAgcmV0dXJuIHNlbGYuY2xpZW50LnNldChrZXksIHZhbHVlLCBleD1leCkKCiAgICBkZWYgZ2V0KHNlbGYsIGtleSk6CiAgICAgICAgcmV0dXJuIHNlbGYuY2xpZW50LmdldChrZXkpCgogICAgZGVmIGRlbGV0ZShzZWxmLCBrZXkpOgogICAgICAgIHJldHVybiBzZWxmLmNsaWVudC5kZWxldGUoa2V5KQoKICAgIGRlZiBleGlzdHMoc2VsZiwga2V5KToKICAgICAgICByZXR1cm4gc2VsZi5jbGllbnQuZXhpc3RzKGtleSkKCiAgICBkZWYgZmx1c2goc2VsZik6CiAgICAgICAgcmV0dXJuIHNlbGYuY2xpZW50LmZsdXNoZGIoKQoKc3BlYyA9IGltcG9ydGxpYi51dGlsLnNwZWNfZnJvbV9maWxlX2xvY2F0aW9uKCJtYWluIiwgInttYWluUGF0aH0iKQptYWluID0gaW1wb3J0bGliLnV0aWwubW9kdWxlX2Zyb21fc3BlYyhzcGVjKQpzcGVjLmxvYWRlci5leGVjX21vZHVsZShtYWluKQoKY2FjaGUgPSBSZWRpc0NhY2hlKCkKCk1haW5Ob2RlQ2xhc3MgPSBtYWluLk1haW5Ob2RlCnNpZ25hdHVyZSA9IGluc3BlY3Quc2lnbmF0dXJlKE1haW5Ob2RlQ2xhc3MuX19pbml0X18pCmlmICdjYWNoZScgaW4gc2lnbmF0dXJlLnBhcmFtZXRlcnM6CiAgICBub2RlID0gTWFpbk5vZGVDbGFzcyhjYWNoZT1jYWNoZSkKZWxzZToKICAgIG5vZGUgPSBNYWluTm9kZUNsYXNzKCkKCmlucHV0X2RhdGEgPSBqc29uLmxvYWRzKCd7aW5wdXRfZGF0YX0nKQpjb25maWdfZGF0YSA9IGpzb24ubG9hZHMoJ3tjb25maWdfZGF0YX0nKQpub2RlLmdldF91c2VyX2lucHV0KGNvbmZpZ19kYXRhKQpub2RlLmdldF9ub2RlX2lucHV0KGlucHV0X2RhdGEpCnJlc3VsdCA9IG5vZGUuZXhlY3V0ZSgpCnRyeToKICAgIHByaW50KGpzb24uZHVtcHMocmVzdWx0LCBlbnN1cmVfYXNjaWk9RmFsc2UpLCBmaWxlPXN5cy5zdGRvdXQpCmV4Y2VwdCBFeGNlcHRpb246CiAgICBwcmludChqc29uLmR1bXBzKFsnZXJyb3InLCAn6I635Y+W57uT5p6c5aSx6LSl77yM6L+U5Zue57uT5p6E5pyJ6K+vJ10sIGVuc3VyZV9hc2NpaT1GYWxzZSksIGZpbGU9c3lzLnN0ZGVycik='
             let pythonCode = Buffer.from(scriptContent, 'base64').toString('utf-8');
             pythonCode = pythonCode
                 .replace('{mainPath}', mainPath.replace(/\\/g, '\\\\'))
@@ -61,11 +60,19 @@ class PythonNodeExecutor {
                     LD_LIBRARY_PATH: '/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu',
                     LD_PRELOAD: '/usr/lib/x86_64-linux-gnu/libstdc++.so.6'
                 };
-                const { stderr } = await commandExecutor.execute(pythonPath, ['-u', tempScriptPath], {
+                const { stderr, stdout } = await commandExecutor.execute(pythonPath, ['-u', tempScriptPath], {
                     nodeId: node.id,
                     env: cleanEnv,
-                    onStdout: (text) => log(`Python stdout: ${text}`, LOG_TYPES.INFO),
-                    onStderr: (text) => log(`Python stderr: ${text}`, LOG_TYPES.INFO),
+                    onStdout: (text) => {
+                        if(globals.isDebug){
+                            log(`节点输出: ${text}`, LOG_TYPES.INFO)
+                        }
+                    },
+                    onStderr: (text) => {
+                        if(globals.isDebug){
+                            log(`节点错误: ${text}`, LOG_TYPES.ERROR)
+                        }
+                    },
                     onError: (error) => {
                         if (error.message.includes('ENOENT')) {
                             throw new Error('Python 未安装或未添加到系统环境变量中。请安装 Python 并确保将其添加到系统环境变量。');
@@ -74,18 +81,20 @@ class PythonNodeExecutor {
                     }
                 });
 
-                const resultMatch = stderr.match(/\{[\s\S]*\}/);
-                if (resultMatch) {
-                    return JSON.parse(resultMatch[0]);
-                } else {
-                    throw new Error('无法解析 Python 输出结果');
+                if(stderr !== ''){
+                    throw new Error(stderr);
                 }
+                let filteredStdout = stdout
+                    .split('\n')
+                    .filter(line => !line.trim().startsWith('#'))
+                    .join('\n');
+                console.log('filteredStdout', filteredStdout);
+                return JSON.parse(filteredStdout);
             } finally {
                 commandExecutor.deleteTempFile(tempScriptPath);
             }
 
         } catch (error) {
-            log(`执行节点失败: ${error.message}`, LOG_TYPES.ERROR);
             throw error;
         }
     }

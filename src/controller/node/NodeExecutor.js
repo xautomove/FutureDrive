@@ -9,7 +9,6 @@ class NodeExecutor {
     }
 
     buildExecutionOrder(nodes, edges) {
-        // 构建节点依赖图
         const nodeMap = new Map(nodes.map(node => [node.id, node]));
         const edgeMap = new Map();
         const inDegree = new Map();
@@ -33,6 +32,12 @@ class NodeExecutor {
             }
         });
 
+        queue.sort((a, b) => {
+            const priorityA = a.data.priority || 0;
+            const priorityB = b.data.priority || 0;
+            return priorityB - priorityA;
+        });
+
         while (queue.length > 0) {
             const node = queue.shift();
             executionOrder.push(node);
@@ -49,6 +54,12 @@ class NodeExecutor {
                     }
                 }
             }
+
+            queue.sort((a, b) => {
+                const priorityA = a.data.priority || 0;
+                const priorityB = b.data.priority || 0;
+                return priorityB - priorityA;
+            });
         }
 
         return executionOrder;
@@ -88,7 +99,7 @@ class NodeExecutor {
                 edgeMap.get(edge.target).push(edge);
             });
             const executionOrder = this.buildExecutionOrder(connectedNodes, edges);
-            log(`执行顺序: ${executionOrder.map(node => node.id).join(' -> ')}`, LOG_TYPES.INFO);
+            log(`执行顺序: ${executionOrder.map(node => `${node.data.label}(P:${node.data.priority || 0})`).join(' -> ')}`, LOG_TYPES.INFO);
             for (const node of executionOrder) {
                 try {
                     const inputData = {};

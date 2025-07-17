@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Menu, Modal } from 'antd';
 import './MenuBar.css';
 import { log, LOG_TYPES } from '../../assets/js/utils';
@@ -11,6 +11,7 @@ import SettingsModal from '../SettingsModal/SettingsModal';
 import InstallExtensionModal from '../InstallExtensionModal/InstallExtensionModal';
 import windowController from '../../controller/gui/WindowController';
 const { shell } = require('electron');
+import { message } from 'antd';
 
 const DOCUMENTATION_URL = 'https://futuer.automoves.cn/docs/';
 
@@ -21,6 +22,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
   const [isSimulationManagerVisible, setIsSimulationManagerVisible] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
   const [isInstallExtVisible, setIsInstallExtVisible] = useState(false);
+  const [isDebugMode, setIsDebugMode] = useState(GLOBALS.isDebug);
 
   const handleMenuClick = async ({ key }) => {
     switch (key) {
@@ -75,7 +77,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
           await GLOBALS.nodeController.start(nodes, edges);
           log('流程执行完成', LOG_TYPES.SUCCESS);
         } catch (error) {
-          log(`流程执行失败`, LOG_TYPES.ERROR);
+          console.log(`流程执行失败`, error);
         }
         break;
       case 'stop':
@@ -89,6 +91,13 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         } catch (error) {
           log(`停止流程失败: ${error.message}`, LOG_TYPES.ERROR);
         }
+        break;
+      case 'debug':
+        GLOBALS.isDebug = !GLOBALS.isDebug;
+        setIsDebugMode(GLOBALS.isDebug);
+        const debugStatus = GLOBALS.isDebug ? '开启' : '关闭';
+        log(`调试模式已${debugStatus}`, GLOBALS.isDebug ? LOG_TYPES.INFO : LOG_TYPES.SUCCESS);
+        message.success(`调试模式已${debugStatus}`);
         break;
       case 'rostool':
         setIsRosTopicManagerVisible(true);
@@ -132,7 +141,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
       children: [
         { key: 'start', label: '开始运行' },
         { key: 'stop', label: '停止运行' },
-        { key: 'debug', label: '调试模式' },
+        { key: 'debug', label: `调试模式 ${isDebugMode ? '(开启)' : '(关闭)'}` },
       ],
     },
     {

@@ -59,7 +59,7 @@ const TopicEchoViewer = ({ topic }) => {
   };
 
   const requestGetTopic = async () => {
-    if (getTopicProcRef.current) {
+    if (getTopicProcRef.current && typeof getTopicProcRef.current.kill === 'function') {
       try { 
         getTopicProcRef.current.kill('SIGKILL'); 
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -91,20 +91,20 @@ const TopicEchoViewer = ({ topic }) => {
 
   useEffect(() => {
     const cleanup = async () => {
-      if (echoProcRef.current) {
+      if (echoProcRef.current && typeof echoProcRef.current.kill === 'function') {
         try { 
           echoProcRef.current.kill('SIGKILL'); 
           await new Promise(resolve => setTimeout(resolve, 100));
-        } catch {
+        } catch(error) {
           console.error('强制终止进程失败:', error);
         }
         echoProcRef.current = null;
       }
-      if (getTopicProcRef.current) {
+      if (getTopicProcRef.current && typeof getTopicProcRef.current.kill === 'function') {
         try { 
           getTopicProcRef.current.kill('SIGKILL'); 
           await new Promise(resolve => setTimeout(resolve, 100));
-        } catch {
+        } catch(error) {
           console.error('强制终止进程失败:', error);
         }
         getTopicProcRef.current = null;
@@ -196,7 +196,7 @@ const TopicEchoViewer = ({ topic }) => {
   // 请求话题数据
   const requestEcho = async (once = false) => {
     try {
-      if (echoProcRef.current) {
+      if (echoProcRef.current && typeof echoProcRef.current.kill === 'function') {
         try { 
           echoProcRef.current.kill('SIGKILL'); 
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -209,7 +209,7 @@ const TopicEchoViewer = ({ topic }) => {
       proc = rosController.echoTopic(topic, isonce, (text) => {
         setOutput(prev => prev + text + '\n');
       });
-      if (proc) {
+      if (proc && typeof proc.kill === 'function') {
         echoProcRef.current = proc;
       }
       if (!proc) {

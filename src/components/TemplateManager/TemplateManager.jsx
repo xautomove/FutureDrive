@@ -121,6 +121,7 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
         width={800}
         footer={[
           <Button
+              key="market"
               type="default"
               onClick={() => shell.openExternal('https://market.automoves.cn/')}
               style={{ marginLeft: 8 }}

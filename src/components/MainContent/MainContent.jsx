@@ -9,7 +9,7 @@ import ReactFlow, {
   NodeToolbar,
   useReactFlow,
 } from 'reactflow';
-import { Menu, Modal, Input } from 'antd';
+import { Menu, Modal, Input, message } from 'antd';
 import 'reactflow/dist/style.css';
 import './MainContent.css';
 import NodeListModal from '../NodeListModal/NodeListModal';
@@ -27,7 +27,7 @@ import { ChromePicker } from 'react-color';
 import ReactDOM from 'react-dom';
 
 
-const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange }) => {
+const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange, onPriorityChange }) => {
   const [showDescription, setShowDescription] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -93,7 +93,7 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
           </button>
         </div>
       </NodeToolbar>
-      <div className={`custom-node${isRunning ? ' running' : ''}`} style={{ background: data.color || '#2d2d2d' }}>
+      <div className={`custom-node${isRunning ? ' running' : ''}${selected ? ' selected' : ''}`} style={{ background: data.color || '#2d2d2d' }}>
         <div
           className="node-title"
           style={{
@@ -103,7 +103,54 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
           onMouseEnter={() => setShowDescription(true)}
           onMouseLeave={() => setShowDescription(false)}
         >
-          {data.label}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{data.label}</span>
+            <span 
+              className="node-priority"
+              title="点击修改优先级"
+              onClick={(e) => {
+                e.stopPropagation();
+                let inputValue = data.priority || 0;
+                Modal.confirm({
+                  title: '设置优先级',
+                  content: (
+                    <div>
+                      <p>请输入优先级 (数字越大优先级越高):</p>
+                      <Input
+                        type="number"
+                        defaultValue={inputValue}
+                        onChange={(e) => {
+                          inputValue = parseInt(e.target.value) || 0;
+                        }}
+                        onPressEnter={() => {
+                          if (!isNaN(inputValue)) {
+                            onPriorityChange(id, inputValue);
+                            Modal.destroyAll();
+                          } else {
+                            message.error('请输入有效的数字');
+                          }
+                        }}
+                        autoFocus
+                      />
+                    </div>
+                  ),
+                  okText: '确定',
+                  cancelText: '取消',
+                  className: 'dark-modal',
+                  onOk: () => {
+                    if (!isNaN(inputValue)) {
+                      onPriorityChange(id, inputValue);
+                    } else {
+                      message.error('请输入有效的数字');
+                      return Promise.reject();
+                    }
+                  }
+                });
+              }}
+            >
+              P: {data.priority || 0}
+            </span>
+          </div>
           {showDescription && data.description && (
             <div className="node-description-tip">
               {data.description}
@@ -125,7 +172,7 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
                   <span className="port-name">{input.name}</span>
                   <div className="port-info">
                     <span className="port-type">{input.type}</span>
-                    {input.default_value !== undefined && input.default_value !== '' && input.default_value !== null(
+                    {input.default_value !== undefined && input.default_value !== '' && input.default_value !== null && (
                       <span className="port-default-value" title={`默认值: ${input.default_value}`}>
                         {input.default_value}
                       </span>
@@ -168,9 +215,9 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange 
   );
 };
 
-const NODE_WIDTH = 220; 
-const NODE_HEIGHT = 120; 
-const NODE_OFFSET = 40; 
+const NODE_WIDTH = 200; 
+const NODE_HEIGHT = 150; 
+const NODE_OFFSET = 60; 
 
 const MainContent = ({ onTreeDataChange }) => {
   const [nodes, setNodes] = useState([]);
@@ -230,7 +277,7 @@ const MainContent = ({ onTreeDataChange }) => {
         await GLOBALS.nodeController.start(nodes, edges);
         log('流程执行完成', LOG_TYPES.SUCCESS);
       } catch (error) {
-        log(`流程执行失败`, LOG_TYPES.ERROR);
+        console.log(`流程执行失败`, error);
       }
     }
   };
@@ -327,20 +374,32 @@ const MainContent = ({ onTreeDataChange }) => {
     );
   }, []);
 
+  const handlePriorityChange = useCallback((nodeId, priority) => {
+    setNodes(nds =>
+      nds.map(node =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, priority } }
+          : node
+      )
+    );
+    log(`节点 ${nodeId} 优先级设置为: ${priority}`, LOG_TYPES.INFO);
+  }, []);
+
   const nodeTypes = useMemo(
     () => ({
-      custom: (props) => <CustomNode {...props} onDelete={handleDeleteNode} onOpenConfig={handleOpenConfig} onColorChange={handleColorChange} />,
+      custom: (props) => <CustomNode {...props} onDelete={handleDeleteNode} onOpenConfig={handleOpenConfig} onColorChange={handleColorChange} onPriorityChange={handlePriorityChange} />,
     }),
-    [handleDeleteNode, handleOpenConfig, handleColorChange]
+    [handleDeleteNode, handleOpenConfig, handleColorChange, handlePriorityChange]
   );
 
   function isOverlapping(x, y, nodes) {
     return nodes.some(n => {
       const nx = n.position.x;
       const ny = n.position.y;
+      const margin = 20;
       return (
-        Math.abs(nx - x) < NODE_WIDTH &&
-        Math.abs(ny - y) < NODE_HEIGHT
+        Math.abs(nx - x) < (NODE_WIDTH + margin) &&
+        Math.abs(ny - y) < (NODE_HEIGHT + margin)
       );
     });
   }
@@ -349,7 +408,7 @@ const MainContent = ({ onTreeDataChange }) => {
     const nodeType = node.data.type;
     if (nodeType === '流') {
       let x = 100, y = 100;
-      while (isOverlapping(x, y, nodes)) {
+      while (isOverlapping(x, y, nodesRef.current)) {
         x += NODE_OFFSET;
         y += NODE_OFFSET;
       }
@@ -366,7 +425,8 @@ const MainContent = ({ onTreeDataChange }) => {
           inputs: node.data.parameters?.inputs || [],
           outputs: node.data.parameters?.outputs || [],
           config: node.data.config || [], 
-          color: '#2d2d2d', 
+          color: '#2d2d2d',
+          priority: 0, // 默认优先级为0
         },
       };
       setNodes((nds) => {
@@ -377,7 +437,7 @@ const MainContent = ({ onTreeDataChange }) => {
       log(`添加节点: ${node.data.name}`, LOG_TYPES.INFO);
     } else if (nodeType === '任务') {
       let x = 100, y = 100;
-      while (isOverlapping(x, y, nodes)) {
+      while (isOverlapping(x, y, nodesRef.current)) {
         x += NODE_OFFSET;
         y += NODE_OFFSET;
       }
@@ -394,7 +454,8 @@ const MainContent = ({ onTreeDataChange }) => {
           inputs: node.data.parameters?.inputs || [],
           outputs: node.data.parameters?.outputs || [],
           config: node.data.config || [], 
-          color: '#2d2d2d', 
+          color: '#2d2d2d',
+          priority: 0, // 默认优先级为0
         },
       };
       setNodes((nds) => {
@@ -508,6 +569,45 @@ const MainContent = ({ onTreeDataChange }) => {
         handleDeleteNode(selectedNode.id);
         setSelectedNode(null);
       }
+    } else if (key === 'priority') {
+      if (selectedNode) {
+        let inputValue = selectedNode.data.priority || 0;
+        Modal.confirm({
+          title: '设置优先级',
+          content: (
+            <div>
+              <p>请输入优先级 (数字越大优先级越高):</p>
+              <Input
+                type="number"
+                defaultValue={inputValue}
+                onChange={(e) => {
+                  inputValue = parseInt(e.target.value) || 0;
+                }}
+                onPressEnter={() => {
+                  if (!isNaN(inputValue)) {
+                    handlePriorityChange(selectedNode.id, inputValue);
+                    Modal.destroyAll();
+                  } else {
+                    message.error('请输入有效的数字');
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+          ),
+          okText: '确定',
+          cancelText: '取消',
+          className: 'dark-modal',
+          onOk: () => {
+            if (!isNaN(inputValue)) {
+              handlePriorityChange(selectedNode.id, inputValue);
+            } else {
+              message.error('请输入有效的数字');
+              return Promise.reject();
+            }
+          }
+        });
+      }
     } else if (key === 'info') {
       if (selectedNode) {
         Modal.info({
@@ -519,7 +619,7 @@ const MainContent = ({ onTreeDataChange }) => {
       }
     }
     setContextMenu(null);
-  }, [selectedNode, handleAddNode, handleDeleteNode]);
+  }, [selectedNode, handleAddNode, handleDeleteNode, handlePriorityChange]);
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -869,8 +969,6 @@ const MainContent = ({ onTreeDataChange }) => {
         node.position.y + 60,  
         { zoom: 1, duration: 300 }
       );
-    } else if (nodes.length > 1) {
-      reactFlowInstance.fitView({ padding: 0.05, minZoom: 0.01, maxZoom: 50, duration: 300 });
     }
   }, [nodes, reactFlowInstance]);
 
@@ -1035,6 +1133,12 @@ const MainContent = ({ onTreeDataChange }) => {
                 {
                   key: 'delete',
                   label: '删除节点',
+                  style: { color: selectedNode ? '#fff' : '#888' },
+                  disabled: !selectedNode,
+                },
+                {
+                  key: 'priority',
+                  label: '设置优先级',
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },

@@ -306,6 +306,36 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
+  const handleStartRviz = async () => {
+    try {
+      const rvizCommand = `gnome-terminal -- bash -c "rviz2; exec bash"`;
+      exec(rvizCommand, (error) => {
+        if (error) {
+          message.error(`启动Rviz失败: ${error.message}`);
+          return;
+        }
+        message.success('Rviz启动成功');
+      });
+    } catch (error) {
+      message.error(`启动Rviz失败: ${error.message}`);
+    }
+  };
+
+  const handleStartRqt = async () => {
+    try {
+      const rqtCommand = `gnome-terminal -- bash -c "rqt; exec bash"`;
+      exec(rqtCommand, (error) => {
+        if (error) {
+          message.error(`启动rqt失败: ${error.message}`);
+          return;
+        }
+        message.success('rqt启动成功');
+      });
+    } catch (error) {
+      message.error(`启动rqt失败: ${error.message}`);
+    }
+  };
+
   const handleStartSimulation = async () => {
     try {
       if (carlaStatus !== '运行中') {
@@ -313,6 +343,7 @@ const SimulationManager = ({ visible, onClose }) => {
         return;
       }
 
+      const pythonPath = config.get('node')?.pythonPath || 'python3';
       const map = selectedMap === 'custom' ? customMap : selectedMap;
       let scriptPath;
       let command;
@@ -320,15 +351,26 @@ const SimulationManager = ({ visible, onClose }) => {
       if (launchType === 'default') {
         const carlaDir = carlaPath.substring(0, carlaPath.lastIndexOf('/'));
         scriptPath = `${carlaDir}/PythonAPI/examples/manual_control.py`;
-        command = `python3 ${scriptPath} --host ${ip} -p ${port} ${customArgs}`;
+        command = `${pythonPath} ${scriptPath} --host ${ip} -p ${port} ${customArgs}`;
       } else {
         scriptPath = customCommand;
-        command = `python3 ${scriptPath} -m ${map} --host ${ip} -p ${port} ${customArgs}`;
+        command = `${pythonPath} ${scriptPath} --map ${map} --host ${ip} --port ${port} ${customArgs}`;
       }
       
       const terminalCommand = `gnome-terminal -- bash -c "cd '${carlaPath.substring(0, carlaPath.lastIndexOf('/'))}' && ${command}; exec bash"`;
+
+      console.log(terminalCommand);
+
+      const cleanEnv = {
+        ...process.env,
+        PYTHONIOENCODING: 'utf-8',
+        LANG: 'en_US.UTF-8',
+        LC_ALL: 'en_US.UTF-8',
+        LD_LIBRARY_PATH: '/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu',
+        LD_PRELOAD: '/usr/lib/x86_64-linux-gnu/libstdc++.so.6'
+      };
       
-      exec(terminalCommand, (error) => {
+      exec(terminalCommand, { env: cleanEnv }, (error) => {
         if (error) {
           message.error(`启动仿真失败: ${error.message}`);
           return;
@@ -505,6 +547,20 @@ const SimulationManager = ({ visible, onClose }) => {
     >
       <Tabs defaultActiveKey="environment" items={items} />
       <div className="modal-footer">
+        <Button 
+          type="default"
+          onClick={handleStartRqt}
+          style={{ marginRight: 8 }}
+        >
+          rqt
+        </Button>
+        <Button 
+          type="default"
+          onClick={handleStartRviz}
+          style={{ marginRight: 8 }}
+        >
+          Rviz
+        </Button>
         <Button type="primary" onClick={handleStartSimulation}>
           开始仿真
         </Button>
