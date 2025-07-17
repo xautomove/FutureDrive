@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Modal, Input, Select, Button } from 'antd';
 import './InstallExtensionModal.css';
 import GLOBALS from '../../assets/js/globals';
+import fs from 'fs';
+import fse from 'fs-extra';
 
 const { Option } = Select;
 const path = window.require('path');
@@ -31,28 +33,35 @@ const InstallExtensionModal = ({ visible, onClose }) => {
     setLog('开始安装...\n');
     try {
       const baseDir = DIR_MAP[type];
-      if (!baseDir) {
-        throw new Error(`未知类型: ${type}`);
-      }
-      if (!fs.existsSync(baseDir)) {
-        throw new Error(`目标路径不存在: ${baseDir}`);
-      }
-  
+      if (!baseDir) throw new Error(`未知类型: ${type}`);
+      if (!fs.existsSync(baseDir)) throw new Error(`目标路径不存在: ${baseDir}`);
+
       const parts = repo.trim().split(/\s+/);
       const repoUrl = parts[0];
-      const sparsePath = parts[1];
-  
-      let cmd = `cd "${baseDir}" && `;
-  
-      if (sparsePath) {
-        const repoName = path.basename(repoUrl, '.git');
-        cmd +=
-          `git clone --depth=1 --filter=blob:none --sparse ${repoUrl} && cd ${repoName} && git sparse-checkout set ${sparsePath}`;
+      const sparsePath = parts[1]; 
+
+      if (!sparsePath) {
+        const cmd = `cd "${baseDir}" && git clone --depth=1 ${repoUrl}`;
+        exec(cmd, callback);
       } else {
-        cmd += `git clone --depth=1 ${repoUrl}`;
+        const tempDir = path.join(baseDir, 'temp_repo');
+        if (fs.existsSync(tempDir)) {
+          fs.rmSync(tempDir, { recursive: true, force: true });
+        }
+        const cmds = [
+          `cd "${baseDir}"`,
+          `git clone --depth=1 --filter=blob:none --sparse ${repoUrl} temp_repo`,
+          `cd temp_repo`,
+          `git sparse-checkout set ${sparsePath}`,
+          `cd ..`,
+          `mv temp_repo/${sparsePath} "${path.join(baseDir, sparsePath)}"`,
+          `rm -rf temp_repo`
+        ].join(' && ');
+
+        exec(cmds, callback);
       }
-  
-      exec(cmd, (error, stdout, stderr) => {
+
+      function callback(error, stdout, stderr) {
         if (error) {
           setLog(prev => prev + `安装失败: ${stderr || error.message}\n`);
           setLoading(false);
@@ -60,12 +69,13 @@ const InstallExtensionModal = ({ visible, onClose }) => {
         }
         setLog(prev => prev + `安装成功!\n${stdout}`);
         setLoading(false);
-      });
+      }
     } catch (e) {
       setLog(prev => prev + `发生异常: ${e.message}\n`);
       setLoading(false);
     }
   };
+
   
 
   return (
