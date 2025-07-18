@@ -359,8 +359,6 @@ const SimulationManager = ({ visible, onClose }) => {
       
       const terminalCommand = `gnome-terminal -- bash -c "cd '${carlaPath.substring(0, carlaPath.lastIndexOf('/'))}' && ${command}; exec bash"`;
 
-      console.log(terminalCommand);
-
       const cleanEnv = {
         ...process.env,
         PYTHONIOENCODING: 'utf-8',
@@ -443,7 +441,7 @@ const SimulationManager = ({ visible, onClose }) => {
               icon={isRunning ? <StopOutlined /> : <PlayCircleOutlined />}
               onClick={isRunning ? handleStopCarla : handleStartCarla}
             >
-              {isRunning ? '结束仿真' : '开始仿真'}
+              {isRunning ? '结束仿真' : '启动仿真'}
             </Button>
           </div>
         </div>

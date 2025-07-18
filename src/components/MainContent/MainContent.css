@@ -243,6 +243,31 @@
   border-color: rgba(42, 138, 246, 0.5);
 }
 
+/* 后台进程状态指示器样式 */
+.node-bg-process {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  transition: all 0.2s ease;
+  animation: pulse-bg 2s infinite;
+}
+
+@keyframes pulse-bg {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 .custom-node.running {
   border: 2px solid #00ff00;
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
@@ -793,4 +818,22 @@
 .dark-modal .ant-modal-confirm-btns .ant-btn {
   margin-left: 8px !important;
 } 
+
+/* 日志弹窗 Tabs 暗色主题覆盖 */
+.maincontent-log-modal :where(.ant-tabs) .ant-tabs-tab {
+  color: #d4d4d4 !important;
+}
+.maincontent-log-modal :where(.ant-tabs) .ant-tabs-tab.ant-tabs-tab-active {
+  color: #1890ff !important;
+} 
+.maincontent-log-modal .ant-modal-title {
+  color: #d4d4d4 !important;
+}
+.maincontent-log-modal .ant-modal-close {
+  color: #d4d4d4 !important;
+}
+
+
+
+
 

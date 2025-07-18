@@ -53,8 +53,6 @@ export const get = async (url, params = {}, config = {}) => {
     }else{
       fullUrl = `${BASE_URL}${url}${queryString ? `?${queryString}` : ''}`;
     }
-    console.log(fullUrl);
-
     const response = await ipcRenderer.invoke('net-request', {
       method: 'GET',
       url: fullUrl,

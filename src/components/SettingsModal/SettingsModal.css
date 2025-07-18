@@ -13,6 +13,8 @@
   display: flex;
   flex-direction: row;
   min-height: 400px;
+  max-height: calc(80vh - 110px);
+  overflow: hidden;
 }
 .settings-menu {
   width: 200px;
@@ -33,6 +35,7 @@
   background: #23272e;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .settings-form .ant-form-item-label > label {
   color: #cccccc;
@@ -89,11 +92,36 @@
   -ms-user-select: none;
 }
 
+.settings-form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.settings-form-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-form-content::-webkit-scrollbar-track {
+  background: #1a1d23;
+  border-radius: 3px;
+}
+
+.settings-form-content::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+.settings-form-content::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
 .settings-footer {
   margin-top: auto;
   padding-top: 16px;
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .settings-footer .ant-btn-primary {

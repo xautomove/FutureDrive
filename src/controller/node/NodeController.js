@@ -1,14 +1,14 @@
-const { app } = window.require('@electron/remote');
 const path = window.require('path');
 const fs = window.require('fs');
 const GLOBALS = require('../../assets/js/globals').default;
 const NodeExecutor = require('./NodeExecutor').default;
+const CommandExecutor = require('../../assets/js/commandExecutor').default;
 
 class NodeController {
-    constructor() {
+    constructor(setNodeLogs) {
         this.initialized = false;
         this.nodeDir = path.join(GLOBALS.USERDATA_DIR, 'node');
-        this.nodeExecutor = new NodeExecutor();
+        this.nodeExecutor = new NodeExecutor(setNodeLogs);
     }
 
     async initialize() {
@@ -21,6 +21,8 @@ class NodeController {
 
     async start(nodes, edges) {
         await this.initialize();
+        CommandExecutor.deleteAllTempFiles();
+        GLOBALS.redisController.deleteAllTaskKeys();
         return this.nodeExecutor.executeFlow(nodes, edges);
     }
 
@@ -29,7 +31,6 @@ class NodeController {
     }
 
     async forceStop() {
-        console.log('forceStop1');
         await this.nodeExecutor.forceStop();
     }
 }

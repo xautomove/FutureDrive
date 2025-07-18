@@ -12,6 +12,7 @@ import InstallExtensionModal from '../InstallExtensionModal/InstallExtensionModa
 import windowController from '../../controller/gui/WindowController';
 const { shell } = require('electron');
 import { message } from 'antd';
+import config from '../../assets/js/config';
 
 const DOCUMENTATION_URL = 'https://futuer.automoves.cn/docs/';
 
@@ -22,7 +23,9 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
   const [isSimulationManagerVisible, setIsSimulationManagerVisible] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
   const [isInstallExtVisible, setIsInstallExtVisible] = useState(false);
-  const [isDebugMode, setIsDebugMode] = useState(GLOBALS.isDebug);
+
+  const debugConfig = config.get('debug');
+  const [isDebugMode, setIsDebugMode] = useState(debugConfig?.enabled ?? GLOBALS.isDebug);
 
   const handleMenuClick = async ({ key }) => {
     switch (key) {
@@ -42,7 +45,6 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         }
         break;
       case 'documentation':
-        console.log("open confirm")
         Modal.confirm({
           title: '打开文档',
           content: '是否在浏览器中打开文档？',
@@ -64,6 +66,14 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
           log('任务正在运行，请先停止或等待完成', LOG_TYPES.WARNING);
           return;
         }
+
+        // 检查 Redis 是否启用
+        const redisConfig = config.get('redis') || {};
+        if (!redisConfig.enabled) {
+          message.warning('请先在设置中启用 Redis 缓存功能');
+          return;
+        }
+
         try {
           const nodes = window.flowNodes || [];
           const edges = window.flowEdges || [];
@@ -75,7 +85,6 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
 
           log('开始执行流程...', LOG_TYPES.INFO);
           await GLOBALS.nodeController.start(nodes, edges);
-          log('流程执行完成', LOG_TYPES.SUCCESS);
         } catch (error) {
           console.log(`流程执行失败`, error);
         }
@@ -93,10 +102,12 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         }
         break;
       case 'debug':
-        GLOBALS.isDebug = !GLOBALS.isDebug;
-        setIsDebugMode(GLOBALS.isDebug);
-        const debugStatus = GLOBALS.isDebug ? '开启' : '关闭';
-        log(`调试模式已${debugStatus}`, GLOBALS.isDebug ? LOG_TYPES.INFO : LOG_TYPES.SUCCESS);
+        const newDebug = !isDebugMode;
+        setIsDebugMode(newDebug);
+        GLOBALS.isDebug = newDebug;
+        await config.set('debug', { enabled: newDebug });
+        const debugStatus = newDebug ? '开启' : '关闭';
+        log(`调试模式已${debugStatus}`, newDebug ? LOG_TYPES.INFO : LOG_TYPES.SUCCESS);
         message.success(`调试模式已${debugStatus}`);
         break;
       case 'rostool':

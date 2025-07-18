@@ -1,6 +1,6 @@
 {
   "name": "FutureDrive",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "FutureDrive app",
   "author": "xautomove",
   "main": "index.js",
@@ -27,8 +27,10 @@
     "react-resizable": "^3.0.5",
     "react-router-dom": "^6.22.0",
     "reactflow": "^11.11.4",
+    "redis": "^5.6.0",
     "systeminformation": "^5.27.1",
-    "three": "^0.177.0"
+    "three": "^0.177.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",

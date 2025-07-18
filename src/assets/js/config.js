@@ -53,8 +53,15 @@ class Config {
             "environment": {
                 "listUrl": "https://example.com/api/environments"
             },
+            "debug": false,
             "systemInfo": null,
-            "pythonPath": null
+            "redis": {
+                "host": "localhost",
+                "port": 6379,
+                "password": null,
+                "db": 0,
+                "enabled": false
+            }
         };
     }
 

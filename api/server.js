@@ -55,7 +55,6 @@ apiApp.get('/api/files', async (req, res) => {
 
     if (req.query.path) {
       const filePath = path.join(currentProjectPath, req.query.path);
-      console.log("filePath", filePath);
       
       const normalizedPath = path.normalize(filePath);
       if (!normalizedPath.startsWith(currentProjectPath)) {

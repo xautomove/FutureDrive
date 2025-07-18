@@ -22,11 +22,11 @@ class EnvController {
   async getEnvironmentList() {
     try {
       var envListUrl = config.get('environment.listUrl');
-      if (!envListUrl) {
-        envListUrl = '';
+      var environments = '';
+      if (envListUrl) {
+        environments = await get(envListUrl);
       }
 
-      var environments = await get(envListUrl);
       if (!environments) {
         environments = this.getLocalTestData();
       }
@@ -46,7 +46,6 @@ class EnvController {
 
       const environmentsWithStatus = await Promise.all(
         environments.map(async (env) => {
-          console.log(env);
           const checkResult = await this.detectEnvByCommand(env);
           return {
             ...env,
@@ -61,7 +60,6 @@ class EnvController {
        const data = this.getLocalTestData();
        const environmentsWithStatus = await Promise.all(
         data.map(async (env) => {
-          console.log(env);
           const checkResult = await this.detectEnvByCommand(env);
           return {
             ...env,
@@ -90,8 +88,6 @@ class EnvController {
       }
 
       const output = execSync(checkCommand, { encoding: 'utf-8' });
-
-      console.log(output);
 
       if (env.name === 'NVIDIA Driver') {
         const versionMatch = output.match(/Driver Version: (\d+\.\d+)/);
@@ -124,7 +120,6 @@ class EnvController {
       }
       let pythonScript;
 
-      console.log(installUrl);
       if(installUrl.startsWith("http")){
         pythonScript = await get(installUrl);
       }else{
@@ -138,18 +133,15 @@ class EnvController {
       if (!pythonScript) {
         return { success: false, message: '下载失败' };
       }
-      console.log(pythonScript)
 
       const tempDir = path.join(os.tmpdir(), 'futuredrive_install');
       if (!fs.existsSync(tempDir)) {
-        console.log('创建临时目录');
         fs.mkdirSync(tempDir, { recursive: true });
       }
 
       const pythonScriptPath = path.join(tempDir, `install_${env.name.toLowerCase()}.py`);
 
       await writeFile(pythonScriptPath, pythonScript,true);
-      console.log(pythonScriptPath)
       if (!fs.existsSync(pythonScriptPath)) {
         return { success: false, message: `脚本写出失败: ${pythonScriptPath} 未找到` };
       }
@@ -196,8 +188,6 @@ pause`;
             detached: true,
             stdio: 'ignore'
           });
-
-          console.log('启动新终端窗口');
 
           terminal.unref();
         });
@@ -302,7 +292,6 @@ pause`;
     try {
       return JSON.parse(testData);
     } catch (e) {
-      console.error('解析本地测试数据失败:', e);
       return [];
     }
   }

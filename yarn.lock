@@ -1706,6 +1706,33 @@
     classcat "^5.0.3"
     zustand "^4.4.1"
 
+"@redis/bloom@5.6.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@redis/bloom/-/bloom-5.6.0.tgz#6937e2186dee99e49c258cfce2e169cb7651e08a"
+  integrity sha512-l13/d6BaZDJzogzZJEphIeZ8J0hpQpjkMiozomTm6nJiMNYkoPsNOBOOQua4QsG0fFjyPmLMDJFPAp5FBQtTXg==
+
+"@redis/client@5.6.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@redis/client/-/client-5.6.0.tgz#bf2d5fb7008e3dbad3f57097d380ef7904f909cc"
+  integrity sha512-wmP9kCFElCSr4MM4+1E4VckDuN4wLtiXSM/J0rKVQppajxQhowci89RGZr2OdLualowb8SRJ/R6OjsXrn9ZNFA==
+  dependencies:
+    cluster-key-slot "1.1.2"
+
+"@redis/json@5.6.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@redis/json/-/json-5.6.0.tgz#a43d6be4a8d8215e3c8dfe452d0102318bc39cad"
+  integrity sha512-YQN9ZqaSDpdLfJqwzcF4WeuJMGru/h4WsV7GeeNtXsSeyQjHTyDxrd48xXfRRJGv7HitA7zGnzdHplNeKOgrZA==
+
+"@redis/search@5.6.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@redis/search/-/search-5.6.0.tgz#2b3900b2df6b19c93926051d83e88d619eb41fca"
+  integrity sha512-sLgQl92EyMVNHtri5K8Q0j2xt9c0cO9HYurXz667Un4xeUYR+B/Dw5lLG35yqO7VvVxb9amHJo9sAWumkKZYwA==
+
+"@redis/time-series@5.6.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@redis/time-series/-/time-series-5.6.0.tgz#b8b56ec59a2d29ebc2471d5b6213d12df5581028"
+  integrity sha512-tXABmN1vu4aTNL3WI4Iolpvx/5jgil2Bs31ozvKblT+jkUoRkk8ykmYo9Pv/Mp7Gk6/Qkr/2rMgVminrt/4BBQ==
+
 "@remix-run/router@1.23.0":
   version "1.23.0"
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.23.0.tgz#35390d0e7779626c026b11376da6789eb8389242"
@@ -3099,6 +3126,11 @@ clsx@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/clsx/-/clsx-2.1.1.tgz#eed397c9fd8bd882bfb18deab7102049a2f32999"
   integrity sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==
+
+cluster-key-slot@1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/cluster-key-slot/-/cluster-key-slot-1.1.2.tgz#88ddaa46906e303b5de30d3153b7d9fe0a0c19ac"
+  integrity sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==
 
 codemirror@^6.0.0:
   version "6.0.2"
@@ -6425,6 +6457,17 @@ rechoir@^0.8.0:
   dependencies:
     resolve "^1.20.0"
 
+redis@^5.6.0:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/redis/-/redis-5.6.0.tgz#6e75a700a15f0431df312c1a8944bd68f434287f"
+  integrity sha512-0x3pM3SlYA5azdNwO8qgfMBzoOqSqr9M+sd1hojbcn0ZDM5zsmKeMM+zpTp6LIY+mbQomIc/RTTQKuBzr8QKzQ==
+  dependencies:
+    "@redis/bloom" "5.6.0"
+    "@redis/client" "5.6.0"
+    "@redis/json" "5.6.0"
+    "@redis/search" "5.6.0"
+    "@redis/time-series" "5.6.0"
+
 regenerate-unicode-properties@^10.2.0:
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/regenerate-unicode-properties/-/regenerate-unicode-properties-10.2.0.tgz#626e39df8c372338ea9b8028d1f99dc3fd9c3db0"
@@ -7397,6 +7440,11 @@ utils-merge@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/utils-merge/-/utils-merge-1.0.1.tgz#9f95710f50a267947b2ccc124741c1028427e713"
   integrity sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==
+
+uuid@^11.1.0:
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
+  integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
 
 uuid@^8.3.2:
   version "8.3.2"

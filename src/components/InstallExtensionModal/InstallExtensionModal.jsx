@@ -10,7 +10,6 @@ const path = window.require('path');
 const { exec } = window.require('child_process');
 
 const nodePath = path.join(GLOBALS.USERDATA_DIR, 'node');
-console.log(nodePath);
 
 const DIR_MAP = {
   node: nodePath,

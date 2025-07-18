@@ -16,6 +16,8 @@ import { message } from 'antd';
 const { ipcRenderer } = window.require('electron');
 import config from './assets/js/config'
 import { ReactFlowProvider } from 'reactflow';
+import RedisController from './controller/node/RedisController';
+import GLOBALS from './assets/js/globals';
 
 async function getSystemInfo() {
   const cachedInfo = config.get('systemInfo');
@@ -140,6 +142,42 @@ function App() {
           } catch (error) {
             console.error('启动服务器失败:', error);
             message.error('启动服务器失败');
+          }
+
+          // 初始化 Redis 连接
+          try {
+            const redisConfig = config.get('redis') || {
+              host: 'localhost',
+              port: 6379,
+              password: null,
+              db: 0,
+              enabled: false
+            };
+
+            if (redisConfig.enabled) {
+              console.log('正在连接 Redis...');
+              const redisController = new RedisController();
+              const connected = await redisController.initialize({
+                host: redisConfig.host,
+                port: redisConfig.port,
+                password: redisConfig.password,
+                db: redisConfig.db
+              });
+
+              if (connected) {
+                GLOBALS.redisController = redisController;
+                console.log('Redis 连接成功');
+                message.success('Redis 连接成功');
+              } else {
+                console.error('Redis 连接失败');
+                message.warning('Redis 连接失败，将使用默认缓存');
+              }
+            } else {
+              console.log('Redis 未启用，跳过连接');
+            }
+          } catch (error) {
+            console.error('Redis 初始化失败:', error);
+            message.warning('Redis 初始化失败，将使用默认缓存');
           }
         }
       } catch (error) {

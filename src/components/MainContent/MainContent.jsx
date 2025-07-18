@@ -17,33 +17,79 @@ import NodeButton from './NodeButton';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import NodeConfigModal from '../NodeConfigModal/NodeConfigModal';
 import guiController from '../../controller/gui/GuiController';
-import createExampleNode from '../../assets/js/createExampleNode';
 import GLOBALS from '../../assets/js/globals';
 import TemplateManager from '../TemplateManager/TemplateManager';
 import templateManager from '../../controller/gui/TemplateManager';
 import FileController from '../../controller/gui/FileController';
+import config from '../../assets/js/config';
 import path from 'path';
 import { ChromePicker } from 'react-color';
 import ReactDOM from 'react-dom';
+import NodeLogModal from './NodeLogModal';
+import { v4 as uuidv4 } from 'uuid';
 
 
-const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange, onPriorityChange }) => {
+const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorChange, onPriorityChange }) => {
   const [showDescription, setShowDescription] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [hasBackgroundProcess, setHasBackgroundProcess] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [colorPickerPos, setColorPickerPos] = useState({ left: 0, top: 0 });
 
   useEffect(() => {
-    const unsubscribe = GLOBALS.onRunningNodesChange((runningNodes) => {
-      setIsRunning(runningNodes.includes(id));
-    });
-    return () => unsubscribe();
-  }, [id]);
+    const interval = setInterval(() => {
+      setIsRunning(GLOBALS.activeProcesses.some(item => item.nodeId === uuid));
+      const logEntry = GLOBALS.nodeLogs.find(item => item.uuid === uuid);
+      setHasBackgroundProcess(logEntry?.hasBackgroundProcess || false);
+    }, 500);
+    return () => clearInterval(interval);
+  }, [uuid]);
 
   const handleColorBtnClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setColorPickerPos({ left: rect.left, top: rect.bottom + 4 });
     setShowColorPicker(v => !v);
+  };
+
+  const handleBgStop = () => {
+    Modal.confirm({
+      title: '退出后台进程',
+      content: '是否要退出后台进程？',
+      okText: '是',
+      cancelText: '否',
+      className: 'dark-modal',
+      onOk: async () => {
+        await GLOBALS.redisController.set(`task_stop:${uuid}`, '1');
+
+        try {
+          const pid = await GLOBALS.redisController.get(`task_pid:${uuid}`);
+          if (pid) {
+            await GLOBALS.redisController.del(`task_pid:${uuid}`);
+            let isRunning = false;
+            try {
+              process.kill(Number(pid), 0); // 检查进程是否存在
+              isRunning = true;
+            } catch (e) {
+              isRunning = false;
+            }
+            if (isRunning) {
+              process.kill(Number(pid), 'SIGKILL');
+              log(`已强制终止后台进程 (PID: ${pid})`, LOG_TYPES.SUCCESS);
+            }
+          } else {
+            log('未找到后台进程PID', LOG_TYPES.INFO);
+          }
+
+          const logEntry = GLOBALS.nodeLogs.find(item => item.uuid === uuid);
+          if (logEntry) {
+            logEntry.hasBackgroundProcess = false;
+          }
+          GLOBALS.stopDebugWatcher(uuid);
+        } catch (e) {
+          log(`终止后台进程时出错: ${e.message}`, LOG_TYPES.ERROR);
+        }
+      }
+    });
   };
 
   return (
@@ -105,51 +151,72 @@ const CustomNode = ({ data, selected, id, onDelete, onOpenConfig, onColorChange,
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>{data.label}</span>
-            <span 
-              className="node-priority"
-              title="点击修改优先级"
-              onClick={(e) => {
-                e.stopPropagation();
-                let inputValue = data.priority || 0;
-                Modal.confirm({
-                  title: '设置优先级',
-                  content: (
-                    <div>
-                      <p>请输入优先级 (数字越大优先级越高):</p>
-                      <Input
-                        type="number"
-                        defaultValue={inputValue}
-                        onChange={(e) => {
-                          inputValue = parseInt(e.target.value) || 0;
-                        }}
-                        onPressEnter={() => {
-                          if (!isNaN(inputValue)) {
-                            onPriorityChange(id, inputValue);
-                            Modal.destroyAll();
-                          } else {
-                            message.error('请输入有效的数字');
-                          }
-                        }}
-                        autoFocus
-                      />
-                    </div>
-                  ),
-                  okText: '确定',
-                  cancelText: '取消',
-                  className: 'dark-modal',
-                  onOk: () => {
-                    if (!isNaN(inputValue)) {
-                      onPriorityChange(id, inputValue);
-                    } else {
-                      message.error('请输入有效的数字');
-                      return Promise.reject();
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {hasBackgroundProcess && (
+                <span 
+                  className="node-bg-process"
+                  title="后台进程运行中，点击可退出"
+                  style={{
+                    background: 'rgba(255, 193, 7, 0.2)',
+                    color: '#ffc107',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    border: '1px solid rgba(255, 193, 7, 0.3)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={handleBgStop}
+                >
+                  BG
+                </span>
+              )}
+              <span 
+                className="node-priority"
+                title="点击修改优先级"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  let inputValue = data.priority || 0;
+                  Modal.confirm({
+                    title: '设置优先级',
+                    content: (
+                      <div>
+                        <p>请输入优先级 (数字越大优先级越高):</p>
+                        <Input
+                          type="number"
+                          defaultValue={inputValue}
+                          onChange={(e) => {
+                            inputValue = parseInt(e.target.value) || 0;
+                          }}
+                          onPressEnter={() => {
+                            if (!isNaN(inputValue)) {
+                              onPriorityChange(id, inputValue);
+                              Modal.destroyAll();
+                            } else {
+                              message.error('请输入有效的数字');
+                            }
+                          }}
+                          autoFocus
+                        />
+                      </div>
+                    ),
+                    okText: '确定',
+                    cancelText: '取消',
+                    className: 'dark-modal',
+                    onOk: () => {
+                      if (!isNaN(inputValue)) {
+                        onPriorityChange(id, inputValue);
+                      } else {
+                        message.error('请输入有效的数字');
+                        return Promise.reject();
+                      }
                     }
-                  }
-                });
-              }}
-            >
-              P: {data.priority || 0}
-            </span>
+                  });
+                }}
+              >
+                P: {data.priority || 0}
+              </span>
+            </div>
           </div>
           {showDescription && data.description && (
             <div className="node-description-tip">
@@ -233,6 +300,8 @@ const MainContent = ({ onTreeDataChange }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isTemplateManagerVisible, setIsTemplateManagerVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [logModalVisible, setLogModalVisible] = useState(false);
+  const [logModalUuid, setLogModalUuid] = useState(null);
 
   const nodesRef = useRef(nodes);
   const reactFlowInstance = useReactFlow();
@@ -243,17 +312,39 @@ const MainContent = ({ onTreeDataChange }) => {
     window.flowEdges = edges;
   }, [nodes, edges]);
 
+  // 监听activeProcesses变化，判断是否有进程在运行
   useEffect(() => {
-    const unsubscribe = GLOBALS.onRunningStateChange((newState) => {
-      setIsRunning(newState);
-    });
-
-    return () => unsubscribe();
+    const interval = setInterval(() => {
+      setIsRunning(GLOBALS.activeProcesses.length > 0);
+    }, 500);
+    return () => clearInterval(interval);
   }, []);
 
   const handleRunStop = async () => {
     if (isRunning) {
       try {
+        // 遍历所有 task_pid 开头的 key，强制结束进程
+        const keys = await GLOBALS.redisController.keys('task_pid*');
+        for (const key of keys) {
+          try {
+            const pid = await GLOBALS.redisController.get(key);
+            if (pid) {
+              try {
+                process.kill(Number(pid), 'SIGKILL');
+              } catch (killError) {
+              }
+            }
+          } catch (keyError) {
+          }
+        }
+
+        for (const key of keys) {
+          try {
+            await GLOBALS.redisController.del(key);
+          } catch (delError) {
+          }
+        }
+
         if (typeof GLOBALS.nodeController.forceStop === 'function') {
           await GLOBALS.nodeController.forceStop();
         } else {
@@ -264,6 +355,13 @@ const MainContent = ({ onTreeDataChange }) => {
         log(`停止流程失败：${error.message}`, LOG_TYPES.ERROR);
       }
     } else {
+      // 检查 Redis 是否启用
+      const redisConfig = config.get('redis') || {};
+      if (!redisConfig.enabled) {
+        message.warning('请先在设置中启用 Redis 缓存功能');
+        return;
+      }
+
       try {
         const nodes = window.flowNodes || [];
         const edges = window.flowEdges || [];
@@ -275,7 +373,6 @@ const MainContent = ({ onTreeDataChange }) => {
 
         log('开始执行流程...', LOG_TYPES.INFO);
         await GLOBALS.nodeController.start(nodes, edges);
-        log('流程执行完成', LOG_TYPES.SUCCESS);
       } catch (error) {
         console.log(`流程执行失败`, error);
       }
@@ -291,8 +388,6 @@ const MainContent = ({ onTreeDataChange }) => {
 
         setIsInitialized(false);
         setNodeList([]);
-
-        createExampleNode();
 
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('GUI初始化超时')), 5000);
@@ -387,7 +482,7 @@ const MainContent = ({ onTreeDataChange }) => {
 
   const nodeTypes = useMemo(
     () => ({
-      custom: (props) => <CustomNode {...props} onDelete={handleDeleteNode} onOpenConfig={handleOpenConfig} onColorChange={handleColorChange} onPriorityChange={handlePriorityChange} />,
+      custom: (props) => <CustomNode {...props} uuid={props.data.uuid} onDelete={handleDeleteNode} onOpenConfig={handleOpenConfig} onColorChange={handleColorChange} onPriorityChange={handlePriorityChange} />,
     }),
     [handleDeleteNode, handleOpenConfig, handleColorChange, handlePriorityChange]
   );
@@ -406,6 +501,8 @@ const MainContent = ({ onTreeDataChange }) => {
 
   const handleNodeSelect = (node) => {
     const nodeType = node.data.type;
+    let uuid = uuidv4();
+    
     if (nodeType === '流') {
       let x = 100, y = 100;
       while (isOverlapping(x, y, nodesRef.current)) {
@@ -426,7 +523,8 @@ const MainContent = ({ onTreeDataChange }) => {
           outputs: node.data.parameters?.outputs || [],
           config: node.data.config || [], 
           color: '#2d2d2d',
-          priority: 0, // 默认优先级为0
+          priority: 0,
+          uuid: uuid,
         },
       };
       setNodes((nds) => {
@@ -456,6 +554,7 @@ const MainContent = ({ onTreeDataChange }) => {
           config: node.data.config || [], 
           color: '#2d2d2d',
           priority: 0, // 默认优先级为0
+          uuid: uuid, // 新增uuid字段
         },
       };
       setNodes((nds) => {
@@ -617,6 +716,11 @@ const MainContent = ({ onTreeDataChange }) => {
           className: 'dark-modal',
         });
       }
+    } else if (key === 'view-log') {
+      if (selectedNode) {
+        setLogModalUuid(selectedNode.data.uuid); // 修正为data.uuid
+        setLogModalVisible(true);
+      }
     }
     setContextMenu(null);
   }, [selectedNode, handleAddNode, handleDeleteNode, handlePriorityChange]);
@@ -688,7 +792,10 @@ const MainContent = ({ onTreeDataChange }) => {
                   inputs: node.data.inputs,
                   outputs: node.data.outputs,
                   config: node.data.config,
-                  type: node.data.type
+                  type: node.data.type,
+                  color: node.data.color,
+                  priority: node.data.priority,
+                  uuid: node.data.uuid
                 }
               };
             }),
@@ -765,6 +872,7 @@ const MainContent = ({ onTreeDataChange }) => {
       type: 'custom',
       data: {
         ...node.data,
+        uuid: node.data.uuid || uuidv4(),
         onDelete: () => handleDeleteNode(node.id)
       }
     }));
@@ -780,10 +888,22 @@ const MainContent = ({ onTreeDataChange }) => {
     }));
     setEdges(newEdges);
 
+    // 导入模板后自动调整视图，让所有节点可见
+    setTimeout(() => {
+      if (reactFlowInstance) {
+        reactFlowInstance.fitView({ 
+          padding: 0.1,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 2
+        });
+      }
+    }, 100);
+
     if (onTreeDataChange) {
       onTreeDataChange();
     }
-  }, [handleDeleteNode, onTreeDataChange]);
+  }, [handleDeleteNode, onTreeDataChange, reactFlowInstance]);
 
   const handleAutoLayout = () => {
     Modal.confirm({
@@ -943,6 +1063,17 @@ const MainContent = ({ onTreeDataChange }) => {
         }));
 
         setNodes(newNodes);
+
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ 
+              padding: 0.1,
+              includeHiddenNodes: false,
+              minZoom: 0.1,
+              maxZoom: 2
+            });
+          }
+        }, 100);
       }
     });
   };
@@ -1148,6 +1279,12 @@ const MainContent = ({ onTreeDataChange }) => {
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },
+                {
+                  key: 'view-log',
+                  label: '查看运行记录',
+                  style: { color: selectedNode ? '#fff' : '#888' },
+                  disabled: !selectedNode,
+                },
               ]}
               onClick={onPaneMenuClick}
             />
@@ -1175,6 +1312,7 @@ const MainContent = ({ onTreeDataChange }) => {
           }
         }}
       />
+      <NodeLogModal visible={logModalVisible} uuid={logModalUuid} onClose={() => setLogModalVisible(false)} />
     </div>
   );
 };

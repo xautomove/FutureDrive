@@ -91,7 +91,6 @@ const Layout = () => {
     if (!projectPath) {
       ProjectController.selectAndOpenProject((path, config) => {
         if (path) {
-          console.log("选择路径： " + path);
           openProjectByPath(path, config);
         }
       }, log, LOG_TYPES);

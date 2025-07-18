@@ -44,7 +44,6 @@ const MapEditor = () => {
   const [mousePos, setMousePos] = useState(null); // 记录鼠标在世界坐标下的位置
   const [firstPoint, setFirstPoint] = useState(null); // 记录第一个点
   
-  // 使用 ref 保存状态
   const currentPolygonRef = useRef([]);
   const mousePosRef = useRef(null);
   const polygonsRef = useRef([]);
@@ -58,7 +57,6 @@ const MapEditor = () => {
   const controlsRef = useRef(null);
   const drawCanvasRef = useRef(null);
 
-  // 同步更新 ref
   useEffect(() => {
     currentPolygonRef.current = currentPolygon;
   }, [currentPolygon]);
@@ -71,16 +69,13 @@ const MapEditor = () => {
     polygonsRef.current = polygons;
   }, [polygons]);
 
-  // 初始化Three.js场景
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // 创建场景
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a1a);
     sceneRef.current = scene;
 
-    // 创建相机
     const camera = new THREE.PerspectiveCamera(
       75,
       canvasRef.current.clientWidth / canvasRef.current.clientHeight,
@@ -92,12 +87,10 @@ const MapEditor = () => {
     camera.lookAt(0, 0, 0);        // 朝向原点
     cameraRef.current = camera;
 
-    // 创建渲染器
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current });
     renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
     rendererRef.current = renderer;
 
-    // 创建控制器
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
@@ -116,21 +109,17 @@ const MapEditor = () => {
     controls.addEventListener('change', () => {
       if (lastFrame) cancelAnimationFrame(lastFrame);
       lastFrame = requestAnimationFrame(() => {
-        console.log('相机移动，触发重绘');
         redrawCanvas();
       });
     });
 
-    // 添加网格（XY平面，Z轴朝用户）
     const gridHelper = new THREE.GridHelper(10, 10);
-    gridHelper.rotation.x = Math.PI / 2; // 让网格平铺在XY平面
+    gridHelper.rotation.x = Math.PI / 2;
     scene.add(gridHelper);
 
-    // 添加坐标轴辅助器
     const axesHelper = new THREE.AxesHelper(10);
     scene.add(axesHelper);
 
-    // 动画循环
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -138,7 +127,6 @@ const MapEditor = () => {
     };
     animate();
 
-    // 处理窗口大小变化
     const handleResize = () => {
       if (!canvasRef.current) return;
       const width = canvasRef.current.clientWidth;
@@ -156,7 +144,6 @@ const MapEditor = () => {
     };
   }, []);
 
-  // 工具按钮配置
   const tools = [
     { key: 'import', icon: <ImportOutlined />, tooltip: '导入PCD文件' },
     { key: 'line', icon: <LineOutlined />, tooltip: '画线工具' },
@@ -197,7 +184,6 @@ const MapEditor = () => {
       });
       
       if (result.success) {
-        console.log(result.filePath);
         loadPCDFile(result.filePath);
       }
     } catch (error) {
@@ -222,9 +208,6 @@ const MapEditor = () => {
       if (!points || !points.geometry || !points.geometry.attributes || !points.geometry.attributes.position) {
         throw new Error('点云数据格式不正确');
       }
-
-      console.log('点云数据:', points);
-      console.log('点云属性:', points.geometry.attributes);
 
       // 移除之前的点云
       if (sceneRef.current) {
@@ -252,11 +235,6 @@ const MapEditor = () => {
           }
         }
       }
-
-      console.log('过滤后的点云数据:', {
-        originalPoints: positions.length / 3,
-        filteredPoints: filteredPositions.length / 3
-      });
 
       // 过滤后无点处理
       if (filteredPositions.length === 0) {
@@ -371,11 +349,6 @@ const MapEditor = () => {
       return;
     }
     
-    console.log('开始重绘');
-    console.log('当前多边形点数:', currentPolygonRef.current.length);
-    console.log('已完成的区域数:', polygonsRef.current.length);
-    console.log('polygons 数据:', JSON.stringify(polygonsRef.current));
-    
     const ctx = drawCanvasRef.current.getContext('2d', { alpha: true });
     const width = drawCanvasRef.current.width;
     const height = drawCanvasRef.current.height;
@@ -391,22 +364,18 @@ const MapEditor = () => {
     
     // 绘制当前正在绘制的线
     if (currentPolygonRef.current.length > 0) {
-      console.log('绘制当前线');
       ctx.beginPath();
       const start = worldToScreen(new THREE.Vector3(...currentPolygonRef.current[0]), cameraRef.current, width, height);
-      console.log('起点坐标:', start);
       ctx.moveTo(start.x, start.y);
       
       currentPolygonRef.current.slice(1).forEach((point, index) => {
         const p = worldToScreen(new THREE.Vector3(...point), cameraRef.current, width, height);
-        console.log(`第${index + 1}个点坐标:`, p);
         ctx.lineTo(p.x, p.y);
       });
       
       // 绘制预览线
       if (mousePosRef.current) {
         const p = worldToScreen(new THREE.Vector3(...mousePosRef.current), cameraRef.current, width, height);
-        console.log('预览点坐标:', p);
         ctx.lineTo(p.x, p.y);
       }
       
@@ -415,19 +384,15 @@ const MapEditor = () => {
     
     // 绘制已完成的区域
     if (polygonsRef.current && polygonsRef.current.length > 0) {
-      console.log('开始绘制已完成的区域');
       polygonsRef.current.forEach((polygon, idx) => {
         if (polygon && polygon.length > 2) {
-          console.log(`绘制第${idx + 1}个区域`);
           // 绘制面
           ctx.beginPath();
           const start = worldToScreen(new THREE.Vector3(...polygon[0]), cameraRef.current, width, height);
-          console.log('区域起点坐标:', start);
           ctx.moveTo(start.x, start.y);
           
           polygon.slice(1).forEach((point, index) => {
             const p = worldToScreen(new THREE.Vector3(...point), cameraRef.current, width, height);
-            console.log(`区域第${index + 1}个点坐标:`, p);
             ctx.lineTo(p.x, p.y);
           });
           
@@ -448,12 +413,10 @@ const MapEditor = () => {
       });
     }
     
-    console.log('重绘完成');
   };
 
   // 渲染所有已闭合区域和当前临时线
   useEffect(() => {
-    console.log('状态变化，触发重绘');
     redrawCanvas();
   }, [polygons, currentPolygon, mousePos]);
 
@@ -484,9 +447,7 @@ const MapEditor = () => {
         const dist = Math.sqrt(
           Math.pow(vector.x - fx, 2) + Math.pow(vector.y - fy, 2) + Math.pow(vector.z - fz, 2)
         );
-        console.log('dist', dist);
         if (dist < 0.01) {
-          console.log('闭合');
           setPolygons(prev => [...prev, [...currentPolygon, firstPoint]]);
           setCurrentPolygon([]);
           setIsDrawingPolygon(false);

@@ -3,7 +3,6 @@ import { log, LOG_TYPES } from './utils';
 import path from 'path';
 import fs from 'fs';
 import GLOBALS from './globals';
-import { Global } from '@emotion/react';
 
 class CommandExecutor {
     constructor() {
@@ -43,17 +42,17 @@ class CommandExecutor {
                 nodeId,
                 env = {},
                 onStdout = (text) => {
-                    if(Global.isDebug){
+                    if(GLOBALS.isDebug){
                         log(`Command stdout: ${text}`, LOG_TYPES.INFO)
                     }
                 },
                 onStderr = (text) => {
-                    if(Global.isDebug){
+                    if(GLOBALS.isDebug){
                         log(`Command stderr: ${text}`, LOG_TYPES.INFO)
                     }
                 },
                 onError = (error) => {
-                    if(Global.isDebug){
+                    if(GLOBALS.isDebug){
                         log(`Command error: ${error}`, LOG_TYPES.ERROR)
                     }
                 },
@@ -160,6 +159,18 @@ class CommandExecutor {
         }
     }
 
+    deleteAllTempFiles() {
+        try{
+            const files = fs.readdirSync(this.tempDir);
+            files.forEach(file => {
+                this.deleteTempFile(path.join(this.tempDir, file));
+            });
+        }catch(e){
+            log(`清空缓存文件失败: ${e.message}`, LOG_TYPES.WARNING);
+        }
+        
+    }
+
     /**
      * 强制终止所有活动进程
      */
@@ -189,7 +200,7 @@ class CommandExecutor {
             const { onStdout, onStderr, onError, env = {}, ...otherOptions } = options;
             
             const fullCommand = `${command} ${args.join(' ')}`;
-            if(Global.isDebug){
+            if(GLOBALS.isDebug){
                 log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
             }
 
@@ -206,7 +217,7 @@ class CommandExecutor {
             }
             
             const handleError = (error) => {
-                if(Global.isDebug){
+                if(GLOBALS.isDebug){
                     log(`命令执行错误: ${error.message}`, LOG_TYPES.ERROR);
                 }
                 if (onError) {
@@ -218,7 +229,7 @@ class CommandExecutor {
 
             child.on('close', (code) => {
                 if (code !== 0) {
-                   if(Global.isDebug){
+                   if(GLOBALS.isDebug){
                     log(`命令执行结束，退出码: ${code}`, LOG_TYPES.WARNING);
                    }
                 }
@@ -226,7 +237,7 @@ class CommandExecutor {
 
             return child;
         } catch (error) {
-            if(Global.isDebug){
+            if(GLOBALS.isDebug){
                 log(`创建进程失败: ${error.message}`, LOG_TYPES.ERROR);
             }
             if (options.onError) {
