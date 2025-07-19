@@ -130,7 +130,7 @@ const AboutModal = ({ visible, onClose }) => {
           <div className="version-section">
             <Title level={3}>FutureDrive 自动驾驶</Title>
             <Space>
-              <Text strong>版本 1.0.4 免费版</Text>
+              <Text strong>版本 1.0.5 免费版</Text>
               <Button 
                 type="primary" 
                 icon={<SyncOutlined />} 
