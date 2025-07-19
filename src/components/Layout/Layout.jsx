@@ -47,11 +47,8 @@ const Layout = () => {
         while (!window.systemInfo) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-        console.log(window.systemInfo);
       };
       checkSystemInfo();
-    } else {
-      console.log(window.systemInfo);
     }
 
   }, []);
@@ -121,7 +118,6 @@ const Layout = () => {
           config: result.config,
           tree: result.tree
         };
-        console.log(window.currentProject);
         setProjectTree(result.tree);
         setCurrentProjectPath(config.path);
         setProjectConfig(result.config);

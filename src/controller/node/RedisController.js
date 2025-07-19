@@ -86,23 +86,15 @@ class RedisController {
             throw new Error('Redis 未连接');
         }
     
-        let cursor = '0';
         let deletedCount = 0;
-    
-        do {
-            const result = await this.client.scan(cursor, {
-                MATCH: 'task_*',
-                COUNT: 100
-            });
-    
-            cursor = result.cursor;
-            const keys = result.keys;
-    
-            if (keys.length > 0) {
-                await this.client.del(...keys.map(k => String(k)));
-                deletedCount += keys.length;
+        const keys = await this.client.keys('task_*');
+        if (keys && keys.length > 0) {
+            for (const key of keys) {
+                await this.client.del(key);
+                deletedCount += 1;
             }
-        } while (cursor !== '0');
+        }
+        this.del('future_config');
     
         return deletedCount;
     }

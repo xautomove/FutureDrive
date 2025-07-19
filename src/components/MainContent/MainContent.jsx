@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import ReactFlow, {
   Background,
   MiniMap,
+  Controls,
   applyEdgeChanges,
   applyNodeChanges,
   Handle,
@@ -13,7 +14,6 @@ import { Menu, Modal, Input, message } from 'antd';
 import 'reactflow/dist/style.css';
 import './MainContent.css';
 import NodeListModal from '../NodeListModal/NodeListModal';
-import NodeButton from './NodeButton';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import NodeConfigModal from '../NodeConfigModal/NodeConfigModal';
 import guiController from '../../controller/gui/GuiController';
@@ -65,16 +65,32 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
           const pid = await GLOBALS.redisController.get(`task_pid:${uuid}`);
           if (pid) {
             await GLOBALS.redisController.del(`task_pid:${uuid}`);
-            let isRunning = false;
-            try {
-              process.kill(Number(pid), 0); // 检查进程是否存在
-              isRunning = true;
-            } catch (e) {
-              isRunning = false;
+            let pidList = [];
+            
+            const pidStr = String(pid);
+            if (pidStr.includes(',')) {
+              pidList = pidStr.split(',').map(p => p.trim()).filter(p => p);
+            } else {
+              pidList = [pidStr];
             }
-            if (isRunning) {
-              process.kill(Number(pid), 'SIGKILL');
-              log(`已强制终止后台进程 (PID: ${pid})`, LOG_TYPES.SUCCESS);
+            
+            let killedCount = 0;
+            for (const singlePid of pidList) {
+              let isRunning = false;
+              try {
+                process.kill(Number(singlePid), 0); // 检查进程是否存在
+                isRunning = true;
+              } catch (e) {
+                isRunning = false;
+              }
+              if (isRunning) {
+                process.kill(Number(singlePid), 'SIGKILL');
+                killedCount++;
+                log(`已终止后台进程 (PID: ${singlePid})`, LOG_TYPES.SUCCESS);
+              }
+            }
+            if (killedCount === 0) {
+              log('未找到正在运行的后台进程PID', LOG_TYPES.INFO);
             }
           } else {
             log('未找到后台进程PID', LOG_TYPES.INFO);
@@ -298,6 +314,7 @@ const MainContent = ({ onTreeDataChange }) => {
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [isStarting, setIsStarting] = useState(false); // 添加启动状态
   const [isTemplateManagerVisible, setIsTemplateManagerVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [logModalVisible, setLogModalVisible] = useState(false);
@@ -312,7 +329,6 @@ const MainContent = ({ onTreeDataChange }) => {
     window.flowEdges = edges;
   }, [nodes, edges]);
 
-  // 监听activeProcesses变化，判断是否有进程在运行
   useEffect(() => {
     const interval = setInterval(() => {
       setIsRunning(GLOBALS.activeProcesses.length > 0);
@@ -320,10 +336,20 @@ const MainContent = ({ onTreeDataChange }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // 设置启动完成回调
+  useEffect(() => {
+    GLOBALS.onStartupComplete = () => {
+      setIsStarting(false);
+    };
+    
+    return () => {
+      GLOBALS.onStartupComplete = null;
+    };
+  }, []);
+
   const handleRunStop = async () => {
     if (isRunning) {
       try {
-        // 遍历所有 task_pid 开头的 key，强制结束进程
         const keys = await GLOBALS.redisController.keys('task_pid*');
         for (const key of keys) {
           try {
@@ -371,10 +397,15 @@ const MainContent = ({ onTreeDataChange }) => {
           return;
         }
 
+        // 设置启动状态，禁用按钮
+        setIsStarting(true);
+        
         log('开始执行流程...', LOG_TYPES.INFO);
         await GLOBALS.nodeController.start(nodes, edges);
       } catch (error) {
         console.log(`流程执行失败`, error);
+        // 出错时也要重置状态
+        setIsStarting(false);
       }
     }
   };
@@ -867,20 +898,32 @@ const MainContent = ({ onTreeDataChange }) => {
   const handleApplyTemplate = useCallback((templateData) => {
     setNodes([]);
     setEdges([]);
-    const newNodes = templateData.nodes.map(node => ({
-      ...node,
-      type: 'custom',
-      data: {
-        ...node.data,
-        uuid: node.data.uuid || uuidv4(),
-        onDelete: () => handleDeleteNode(node.id)
-      }
-    }));
+    
+    // 创建ID映射：旧ID -> 新ID
+    const idMapping = new Map();
+    
+    const newNodes = templateData.nodes.map(node => {
+      const newId = `${node.path}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      idMapping.set(node.id, newId);
+      
+      return {
+        ...node,
+        id: newId,
+        type: 'custom',
+        data: {
+          ...node.data,
+          uuid: uuidv4(), // 为每个节点生成新的唯一UUID
+          onDelete: () => handleDeleteNode(newId)
+        }
+      };
+    });
     setNodes(newNodes);
 
     const newEdges = templateData.edges.map(edge => ({
       ...edge,
-      id: `edge-${edge.source}-${edge.sourceHandle}-${edge.target}-${edge.targetHandle}-${Date.now()}`,
+      source: idMapping.get(edge.source) || edge.source,
+      target: idMapping.get(edge.target) || edge.target,
+      id: `edge-${idMapping.get(edge.source) || edge.source}-${edge.sourceHandle}-${idMapping.get(edge.target) || edge.target}-${edge.targetHandle}-${Date.now()}`,
       style: {
         stroke: '#555',
         strokeWidth: 2,
@@ -888,7 +931,6 @@ const MainContent = ({ onTreeDataChange }) => {
     }));
     setEdges(newEdges);
 
-    // 导入模板后自动调整视图，让所有节点可见
     setTimeout(() => {
       if (reactFlowInstance) {
         reactFlowInstance.fitView({ 
@@ -1133,7 +1175,8 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className={`toolbar-button ${isRunning ? 'danger' : 'primary'}`}
                   onClick={handleRunStop}
-                  title={isRunning ? "停止运行" : "运行流程"}
+                  title={isStarting ? "正在启动..." : isRunning ? "停止运行" : "运行流程"}
+                  disabled={isStarting}
                 >
                   {isRunning ? (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
@@ -1223,7 +1266,6 @@ const MainContent = ({ onTreeDataChange }) => {
             defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           >
             <Background />
-            <NodeButton onNodeSelect={handleNodeSelect} />
             <MiniMap
               nodeColor={(node) => {
                 switch (node.type) {
@@ -1242,6 +1284,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 border: '1px solid #444'
               }}
             />
+            <Controls />
           </ReactFlow>
           {contextMenu && contextMenu.type === 'pane' && (
             <Menu

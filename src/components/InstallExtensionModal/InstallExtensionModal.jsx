@@ -75,7 +75,14 @@ const InstallExtensionModal = ({ visible, onClose }) => {
     }
   };
 
-  
+  const handleOpenMarket = () => {
+    if (window.require) {
+      const { shell } = window.require('electron');
+      shell.openExternal('https://market.automoves.cn/');
+    } else {
+      window.open('https://market.automoves.cn/', '_blank');
+    }
+  };
 
   return (
     <Modal
@@ -109,6 +116,14 @@ const InstallExtensionModal = ({ visible, onClose }) => {
           style={{ marginLeft: 12 }}
         >
           安装
+        </Button>
+        <Button
+          type="default"
+          onClick={handleOpenMarket}
+          style={{ marginLeft: 12 }}
+          title="打开扩展市场"
+        >
+          市场
         </Button>
       </div>
       <div className="install-ext-log-title">执行日志：</div>

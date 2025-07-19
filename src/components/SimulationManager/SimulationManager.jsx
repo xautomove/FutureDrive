@@ -557,7 +557,7 @@ const SimulationManager = ({ visible, onClose }) => {
           onClick={handleStartRviz}
           style={{ marginRight: 8 }}
         >
-          Rviz
+          rviz
         </Button>
         <Button type="primary" onClick={handleStartSimulation}>
           开始仿真

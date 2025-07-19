@@ -121,6 +121,10 @@ class NodeExecutor {
                 return;
             }
             
+            if(GLOBALS.isDebug){
+                log(`初始化完成，共 ${this.executionOrder.length} 个节点待执行`, LOG_TYPES.INFO);
+            }
+            
             this.startPollingService();
             
             await this.executeNextNode();
@@ -131,84 +135,117 @@ class NodeExecutor {
     }
 
     async executeNextNode() {
+        const readyNodes = [];
+        
         for (const node of this.executionOrder) {
             const uuid = node.data.uuid;
             if (!uuid){
                 log(`节点没有UUID: ${node.data.label}`, LOG_TYPES.ERROR);
                 continue;
-            };
+            }
+            
+            const currentStatus = await GLOBALS.redisController.get(`task_status:${uuid}`);
+            if (currentStatus === 'running') {
+                continue;
+            }
+            
             if (await this.isNodeReady(node)) {
-                try {
-                    node._startTime = new Date();
-                    await GLOBALS.redisController.set(`task_status:${uuid}`, 'running');
-                    const inputData = await this.prepareNodeInput(node);
-                    node._lastInputData = inputData;
-                    const configData = node.data.config || [];
-                    const child = this.pythonExecutor.execute(node, inputData, configData);
-                    GLOBALS.addProcess(uuid, child);
-                    startDebugWatcher(uuid, node);
-                    break;
-                } catch (error) {
-                    log(`准备节点执行失败: ${node.data.label} - ${error.message}`, LOG_TYPES.ERROR);
-                }
-            }else{
-                log(`节点未准备好执行: ${node.data.label}`, LOG_TYPES.WARNING);
+                readyNodes.push(node);
+            }
+        }
+        
+        readyNodes.sort((a, b) => {
+            const priorityA = a.data.priority || 0;
+            const priorityB = b.data.priority || 0;
+            return priorityB - priorityA;
+        });
+        
+        if (readyNodes.length > 0) {
+
+            const nodeToExecute = readyNodes[0];
+            const uuid = nodeToExecute.data.uuid;
+            
+            try {
+                nodeToExecute._startTime = new Date();
+                await GLOBALS.redisController.set(`task_status:${uuid}`, 'running');
+                const inputData = await this.prepareNodeInput(nodeToExecute);
+                nodeToExecute._lastInputData = inputData;
+                const configData = nodeToExecute.data.config || [];
+                const child = this.pythonExecutor.execute(nodeToExecute, inputData, configData);
+                GLOBALS.addProcess(uuid, child);
+                startDebugWatcher(uuid, nodeToExecute);
+            } catch (error) {
+                log(`准备节点执行失败: ${nodeToExecute.data.label} - ${error.message}`, LOG_TYPES.ERROR);
+                await GLOBALS.redisController.set(`task_status:${uuid}`, 'error');
             }
         }
     }
 
     async isNodeReady(node) {
-        const nodeMap = new Map();
-        for (const n of this.executionOrder) {
-            nodeMap.set(n.id, n);
-        }
+        const dependencies = [];
+        let allReady = true;
         
         for (const edge of this.edges || []) {
             if (edge.target === node.id) {
-                const sourceNode = nodeMap.get(edge.source);
+                const sourceNode = this.nodeMap.get(edge.source);
                 if (sourceNode) {
                     const sourceUuid = sourceNode.data.uuid;
                     if (sourceUuid) {
                         const status = await GLOBALS.redisController.get(`task_status:${sourceUuid}`);
+                        dependencies.push({
+                            sourceLabel: sourceNode.data.label,
+                            sourceUuid: sourceUuid,
+                            status: status
+                        });
+                        
                         if (status !== 'finish') {
-                            return false;
+                            allReady = false;
                         }
+                    } else {
+                        log(`源节点 ${sourceNode.data.label} 没有UUID`, LOG_TYPES.ERROR);
+                        allReady = false;
                     }
+                } else {
+                    log(`找不到源节点 ${edge.source}`, LOG_TYPES.ERROR);
+                    allReady = false;
                 }
             }
         }
-        return true;
+        
+        return allReady;
     }
 
-    // 准备节点的输入数据
     async prepareNodeInput(node) {
         const inputData = {};
-        // 根据节点连接关系准备输入数据
+        
         for (const edge of this.edges || []) {
             if (edge.target === node.id) {
                 const sourceNode = this.nodeMap.get(edge.source);
-                let outputValue;
-                if (sourceNode && sourceNode.data.outputs) {
-                    // 优先用内存
-                    const sourceOutputIndex = parseInt(edge.sourceHandle.split('-')[1]);
-                    if (sourceNode.data.outputs[sourceOutputIndex]) {
-                        outputValue = sourceNode.data.outputs[sourceOutputIndex].value;
-                        if (node.data.inputs) {
-                            const targetInputIndex = parseInt(edge.targetHandle.split('-')[1]);
-                            if (node.data.inputs[targetInputIndex]) {
-                                const inputName = node.data.inputs[targetInputIndex].name;
-                                inputData[inputName] = outputValue;
+                if (sourceNode) {
+                    const sourceUuid = sourceNode.data.uuid;
+                    
+                    let outputValue;
+                    if (sourceNode.data.outputs) {
+                        const sourceOutputIndex = parseInt(edge.sourceHandle.split('-')[1]);
+                        if (sourceNode.data.outputs[sourceOutputIndex]) {
+                            outputValue = sourceNode.data.outputs[sourceOutputIndex].value;
+                            
+                            if (node.data.inputs) {
+                                const targetInputIndex = parseInt(edge.targetHandle.split('-')[1]);
+                                if (node.data.inputs[targetInputIndex]) {
+                                    const inputName = node.data.inputs[targetInputIndex].name;
+                                    inputData[inputName] = outputValue;
+                                }
                             }
                         }
-                        continue;
                     }
                 }
             }
         }
+        
         return inputData;
     }
 
-    // 启动轮询服务
     startPollingService() {
         if (this.isPolling) {
             return;
@@ -221,22 +258,24 @@ class NodeExecutor {
             } catch (error) {
                 log(`轮询检查失败: ${error.message}`, LOG_TYPES.ERROR);
             }
-        }, 500); // 0.5秒轮询间隔
+        }, 500);
         
-        log('轮询服务已启动', LOG_TYPES.INFO);
+        if(GLOBALS.isDebug){
+            log('轮询服务已启动', LOG_TYPES.INFO);
+        }
     }
 
-    // 停止轮询服务
     stopPollingService() {
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
             this.pollingInterval = null;
         }
         this.isPolling = false;
-        log('轮询服务已停止', LOG_TYPES.INFO);
+        if(GLOBALS.isDebug){
+            log('轮询服务已停止', LOG_TYPES.INFO);
+        }
     }
 
-    // 处理节点结果（完成或错误）
     async handleNodeResult(node, uuid, status) {
         try {
             const outputKey = `task_result:${uuid}`;
@@ -248,6 +287,7 @@ class NodeExecutor {
             const endTime = new Date();
             const startTime = node._startTime || endTime;
             const duration = endTime - startTime;
+            
             let logEntry = GLOBALS.nodeLogs.find(item => item.uuid === uuid);
             if (!logEntry) {
                 logEntry = {
@@ -272,26 +312,25 @@ class NodeExecutor {
                 logEntry.status = status;
                 logEntry.endTime = endTime.toLocaleString();
                 logEntry.duration = `${duration}ms`;
+                logEntry.input = inputData;
             }
             GLOBALS.removeProcess(uuid);
-            // 不再删除redis数据，不再stopDebugWatcher
-            if (status === 'completed' && outputData) {
-                node.data.outputs = node.data.outputs.map(output => ({
-                    ...output,
-                    value: outputData[output.name]
-                }));
+            if (status === 'completed') {
+                if (outputData) {
+                    node.data.outputs = node.data.outputs.map(output => ({
+                        ...output,
+                        value: outputData[output.name]
+                    }));
+                }
                 log(`节点执行完成: ${node.data.label}`, LOG_TYPES.SUCCESS);
             } else if (status === 'error') {
                 log(`节点执行出错: ${node.data.label}`, LOG_TYPES.ERROR);
             }
-            // 从执行队列中移除
-            const index = this.executionOrder.findIndex(n => n.data.uuid === uuid); // 使用data.uuid
+            const index = this.executionOrder.findIndex(n => n.data.uuid === uuid);
             if (index !== -1) {
                 this.executionOrder.splice(index, 1);
             }
-            // 尝试执行下一个节点
-            await this.executeNextNode();
-            // 如果所有节点都完成了，停止轮询
+            
             if (this.executionOrder.length === 0) {
                 this.stopPollingService();
                 log('所有节点执行完成', LOG_TYPES.SUCCESS);
@@ -301,30 +340,48 @@ class NodeExecutor {
         }
     }
 
-    // 检查节点状态
     async checkNodeStatus() {
         if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
             console.log('redis not connected');
             this.stopPollingService();
             return;
         }
-        for (const node of this.executionOrder) {
-            const uuid = node.data.uuid; // 使用data.uuid
+        
+        const completedNodes = [];
+        const errorNodes = [];
+        
+        const currentExecutionOrder = [...this.executionOrder];
+        
+        for (const node of currentExecutionOrder) {
+            const uuid = node.data.uuid;
             if (!uuid){
                 log(`节点没有UUID: ${node.data.label}`, LOG_TYPES.ERROR);
                 continue;
-            };
+            }
+            
             const statusKey = `task_status:${uuid}`;
             const status = await GLOBALS.redisController.get(statusKey);
+            
             if (status === 'finish') {
-                await this.handleNodeResult(node, uuid, 'completed');
+                completedNodes.push({ node, uuid });
             } else if (status === 'error') {
-                await this.handleNodeResult(node, uuid, 'error');
+                errorNodes.push({ node, uuid });
             }
+        }
+        
+        for (const { node, uuid } of completedNodes) {
+            await this.handleNodeResult(node, uuid, 'completed');
+        }
+        
+        for (const { node, uuid } of errorNodes) {
+            await this.handleNodeResult(node, uuid, 'error');
+        }
+        
+        if (this.executionOrder.length > 0) {
+            await this.executeNextNode();
         }
     }
 
-    // 强制终止流程
     async forceStop() {
         this.stopPollingService();
         this.pythonExecutor.killActiveProcess();
