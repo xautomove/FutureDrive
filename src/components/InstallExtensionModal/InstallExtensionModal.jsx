@@ -13,11 +13,13 @@ const pluginPath = path.join(GLOBALS.USERDATA_DIR, 'plugins');
 const templatePath = window.currentProject && window.currentProject.path
   ? path.join(window.currentProject.path, 'templates')
   : '';
+const driverPath = path.join(GLOBALS.USERDATA_DIR, 'drivers');
 
 const DIR_MAP = {
   node: nodePath,
   template: templatePath,
   plugin: pluginPath,
+  driver: driverPath,
 };
 
 const InstallExtensionModal = ({ visible, onClose }) => {
@@ -111,6 +113,7 @@ const InstallExtensionModal = ({ visible, onClose }) => {
           <Option value="node">节点</Option>
           <Option value="template">模板</Option>
           <Option value="plugin">插件</Option>
+          <Option value="driver">驱动</Option>
         </Select>
         <Button
           type="primary"

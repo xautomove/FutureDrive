@@ -297,12 +297,22 @@ class FileController {
   }
 
   async selectFile(options = {}){
-    const result = await dialog.showOpenDialog({
+    const dialogOptions = {
       properties: ['openFile', 'multiSelections'],
       filters: options.filters || [
         { name: 'Text Files', extensions: ['txt'] }
       ]
-    });
+    };
+    
+    if (options.defaultPath) {
+      dialogOptions.defaultPath = options.defaultPath;
+    }
+    
+    if (options.title) {
+      dialogOptions.title = options.title;
+    }
+    
+    const result = await dialog.showOpenDialog(dialogOptions);
     if (result.canceled) {
       return {
         success: false,

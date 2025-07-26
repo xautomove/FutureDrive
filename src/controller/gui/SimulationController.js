@@ -79,10 +79,48 @@ const SimulationController = {
             if (onProgress) onProgress(progress);
           });
         }
+        let pythonPath = 'python3';
+        try {
+          const nodeConfig = (await config.get('node')) || {};
+          if (nodeConfig.pythonPath) pythonPath = nodeConfig.pythonPath;
+        } catch (e) {
+          console.log('获取Python路径配置失败，使用默认值:', e.message);
+        }
+        
         const tempDir = path.join(os.tmpdir(), 'futuredrive_sim_install');
         if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
         const shellScriptPath = path.join(tempDir, `install_${name.toLowerCase()}.sh`);
-        const shellContent = `#!/bin/bash\necho \"开始安装 ${name}...\"\n${ext === 'py' ? `python3 \"${scriptPath}\"` : `bash \"${scriptPath}\"`}\necho \"安装完成！\"\nread -p \"按任意键退出...\"`;
+        const shellContent = `#!/bin/bash
+echo \"开始安装 ${name}...\"
+# 检测并退出 Conda 环境
+if [ ! -z "$CONDA_DEFAULT_ENV" ]; then
+  echo \"检测到 Conda 环境: $CONDA_DEFAULT_ENV，正在退出...\"
+  conda deactivate 2>/dev/null || true
+  while [ ! -z "$CONDA_DEFAULT_ENV" ]; do
+    conda deactivate 2>/dev/null || break
+  done
+  echo \"已退出 Conda 环境\"
+  # 手动清理 PATH 中的 miniconda 路径
+  export PATH=$(echo $PATH | tr ':' '\n' | grep -v 'miniconda3' | grep -v 'anaconda3' | tr '\n' ':' | sed 's/:$//')
+  echo \"已清理 PATH 中的 Conda 路径\"
+  # 清理 Conda 相关环境变量
+  unset CONDA_DEFAULT_ENV
+  unset CONDA_PREFIX
+  unset CONDA_PREFIX_1
+  unset CONDA_PROMPT_MODIFIER
+  unset CONDA_PYTHON_EXE
+  unset CONDA_SHLVL
+  unset PYTHONPATH
+  echo \"已清理 Conda 环境变量\"
+fi
+# 加载 ROS 环境
+if [ -f "/opt/ros/humble/setup.bash" ]; then
+  source /opt/ros/humble/setup.bash
+  echo \"已加载 ROS Humble 环境\"
+fi
+${ext === 'py' ? `\"${pythonPath}\" \"${scriptPath}\"` : `bash \"${scriptPath}\"`}
+echo \"安装完成！\"
+read -p \"按任意键退出...\"`;
         fs.writeFileSync(shellScriptPath, shellContent, 'utf8');
         fs.chmodSync(shellScriptPath, 0o755);
         const { spawn } = require('child_process');
@@ -139,16 +177,61 @@ const SimulationController = {
       const platformConfig = await SimulationController.getSimulationConfig(name);
       if (name === 'Gazebo') {
         const { launchFile, launchArgs = '' } = platformConfig;
-        const { spawn } = require('child_process');
+        const { spawn, execSync } = require('child_process');
+
+        try {
+          execSync('pkill -9 gzserver', { stdio: 'ignore' });
+        } catch (e) {
+        }
         if (launchFile) {
           const ext = launchFile.split('.').pop().toLowerCase();
+          
+          let pythonPath = 'python3';
+          try {
+            const nodeConfig = (await config.get('node')) || {};
+            if (nodeConfig.pythonPath) pythonPath = nodeConfig.pythonPath;
+          } catch (e) {
+            console.log('获取Python路径配置失败，使用默认值:', e.message);
+          }
+
           const tempDir = path.join(os.tmpdir(), 'futuredrive_sim_launch');
           if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
           const shellScriptPath = path.join(tempDir, `launch_gazebo.sh`);
-          const shellContent = `#!/bin/bash\necho \"启动 Gazebo 控制脚本...\"\n${ext === 'py' ? `python3 \"${launchFile}\" ${launchArgs}` : `bash \"${launchFile}\" ${launchArgs}`}\necho \"脚本执行完成！\"\nread -p \"按任意键退出...\"`;
+          const shellContent = `#!/bin/bash
+echo \"启动 Gazebo 控制脚本...\"
+# 检测并退出 Conda 环境
+if [ ! -z "$CONDA_DEFAULT_ENV" ]; then
+  echo \"检测到 Conda 环境: $CONDA_DEFAULT_ENV，正在退出...\"
+  conda deactivate 2>/dev/null || true
+  while [ ! -z "$CONDA_DEFAULT_ENV" ]; do
+    conda deactivate 2>/dev/null || break
+  done
+  echo \"已退出 Conda 环境\"
+  # 手动清理 PATH 中的 miniconda 路径
+  export PATH=$(echo $PATH | tr ':' '\n' | grep -v 'miniconda3' | grep -v 'anaconda3' | tr '\n' ':' | sed 's/:$//')
+  echo \"已清理 PATH 中的 Conda 路径\"
+  # 清理 Conda 相关环境变量
+  unset CONDA_DEFAULT_ENV
+  unset CONDA_PREFIX
+  unset CONDA_PREFIX_1
+  unset CONDA_PROMPT_MODIFIER
+  unset CONDA_PYTHON_EXE
+  unset CONDA_SHLVL
+  unset PYTHONPATH
+  echo \"已清理 Conda 环境变量\"
+fi
+# 加载 ROS 环境
+if [ -f "/opt/ros/humble/setup.bash" ]; then
+  source /opt/ros/humble/setup.bash
+  echo \"已加载 ROS Humble 环境\"
+fi
+${ext === 'py' ? `\"${pythonPath}\" \"${launchFile}\" ${launchArgs}` : `bash \"${launchFile}\" ${launchArgs}`}
+echo \"脚本执行完成！\"
+read -p \"按任意键退出...\"`;
+          console.log(shellContent);
           fs.writeFileSync(shellScriptPath, shellContent, 'utf8');
           fs.chmodSync(shellScriptPath, 0o755);
-          spawn('gnome-terminal', ['--', 'bash', '-c', `${shellScriptPath}; exec bash`], {
+          spawn('gnome-terminal', ['--', 'bash','-l', '-c', `${shellScriptPath}; exec bash`], {
             detached: true,
             stdio: 'ignore'
           }).unref();

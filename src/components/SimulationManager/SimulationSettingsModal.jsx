@@ -6,6 +6,8 @@ import GLOBALS from '../../assets/js/globals';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import { shell } from 'electron';
 
+const path = window.require ? window.require('path') : require('path');
+
 const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, onUninstall }) => {
   const [form] = Form.useForm();
 
@@ -93,7 +95,7 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
     } else if (platform === 'Gazebo') {
       return (
         <>
-          <Form.Item label="Map" name="map" rules={[{ required: true, message: '请输入Map' }]}> 
+          <Form.Item label="Map" name="map" rules={[{ message: '请输入Map' }]}> 
             <Input /> 
           </Form.Item>
           <Form.Item label="启动文件" required>
@@ -109,6 +111,7 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
                 onClick={async () => {
                   const result = await fileController.selectFile({
                     title: '选择启动文件',
+                    defaultPath: path.join(GLOBALS.USERDATA_DIR, 'plugins'),
                     filters: [
                       { name: 'Python/Shell', extensions: ['py', 'sh'] }
                     ]
