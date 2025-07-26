@@ -78,7 +78,7 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
             for (const singlePid of pidList) {
               let isRunning = false;
               try {
-                process.kill(Number(singlePid), 0); // 检查进程是否存在
+                process.kill(Number(singlePid), 0); 
                 isRunning = true;
               } catch (e) {
                 isRunning = false;
@@ -381,7 +381,6 @@ const MainContent = ({ onTreeDataChange }) => {
         log(`停止流程失败：${error.message}`, LOG_TYPES.ERROR);
       }
     } else {
-      // 检查 Redis 是否启用
       const redisConfig = config.get('redis') || {};
       if (!redisConfig.enabled) {
         message.warning('请先在设置中启用 Redis 缓存功能');
@@ -397,14 +396,12 @@ const MainContent = ({ onTreeDataChange }) => {
           return;
         }
 
-        // 设置启动状态，禁用按钮
         setIsStarting(true);
         
         log('开始执行流程...', LOG_TYPES.INFO);
         await GLOBALS.nodeController.start(nodes, edges);
       } catch (error) {
         console.log(`流程执行失败`, error);
-        // 出错时也要重置状态
         setIsStarting(false);
       }
     }
@@ -584,8 +581,8 @@ const MainContent = ({ onTreeDataChange }) => {
           outputs: node.data.parameters?.outputs || [],
           config: node.data.config || [], 
           color: '#2d2d2d',
-          priority: 0, // 默认优先级为0
-          uuid: uuid, // 新增uuid字段
+          priority: 0, 
+          uuid: uuid, 
         },
       };
       setNodes((nds) => {
@@ -749,7 +746,7 @@ const MainContent = ({ onTreeDataChange }) => {
       }
     } else if (key === 'view-log') {
       if (selectedNode) {
-        setLogModalUuid(selectedNode.data.uuid); // 修正为data.uuid
+        setLogModalUuid(selectedNode.data.uuid); 
         setLogModalVisible(true);
       }
     }
@@ -899,7 +896,6 @@ const MainContent = ({ onTreeDataChange }) => {
     setNodes([]);
     setEdges([]);
     
-    // 创建ID映射：旧ID -> 新ID
     const idMapping = new Map();
     
     const newNodes = templateData.nodes.map(node => {
@@ -912,7 +908,7 @@ const MainContent = ({ onTreeDataChange }) => {
         type: 'custom',
         data: {
           ...node.data,
-          uuid: uuidv4(), // 为每个节点生成新的唯一UUID
+          uuid: uuidv4(), 
           onDelete: () => handleDeleteNode(newId)
         }
       };

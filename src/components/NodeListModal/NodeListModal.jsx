@@ -17,12 +17,9 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
   const searchInputRef = useRef(null);
   const nodeScanner = new NodeScanner();
 
-  // 新增：处理节点列表更新的方法
   const updateNodeList = (nodeList) => {
     if (nodeList && nodeList.length > 0) {
-      // 获取所有唯一的 type
       const types = [...new Set(nodeList.map(node => node.data.type || 'other'))];
-      // 创建 tabs 配置
       const tabItems = [
         {
           key: 'all',
@@ -36,7 +33,6 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
         }))
       ];
       setTabs(tabItems);
-      // 如果当前激活 tab 不存在，重置为 all
       if (!tabItems.find(tab => tab.key === activeTab)) {
         setActiveTab('all');
       }
@@ -63,12 +59,9 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
 
   const handleRefreshNodes = () => {
     try {
-      // 直接使用NodeScanner重新扫描节点
       const newNodes = nodeScanner.scanNodes();
-      // 更新模态框内的节点列表
       setTabs([]);
       setActiveTab('all');
-      // 使用新的方法更新节点列表
       updateNodeList(newNodes);
       message.success('节点列表刷新成功');
     } catch (error) {
@@ -77,7 +70,6 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
   };
 
   const renderNodeList = (nodeList) => {
-    // 根据搜索文本过滤节点
     const filteredList = nodeList.filter(node => {
       if (!searchText) return true;
       const searchLower = searchText.toLowerCase();

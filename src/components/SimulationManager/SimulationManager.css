@@ -1,6 +1,7 @@
 .simulation-manager-modal .ant-modal-content {
   background-color: #333333;
   color: #e0e0e0;
+  padding: 32px 32px 24px 32px;
 }
 
 .simulation-manager-modal .ant-modal-header {
@@ -215,4 +216,113 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+/* 仿真管理卡片内容内边距优化 */
+.simulation-manager-modal .ant-card-body {
+  padding: 24px 24px 8px 24px !important;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* 仿真管理卡片内容去除内边距 */
+.simulation-manager-modal .ant-card-body {
+  padding: 0 !important;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+.simulation-manager-modal .ant-list-item {
+  padding: 24px !important;
+}
+
+/* 自定义滚动条样式 */
+.simulation-manager-modal .ant-card-body::-webkit-scrollbar {
+  width: 6px;
+}
+.simulation-manager-modal .ant-card-body::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+.simulation-manager-modal .ant-card-body::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+.simulation-manager-modal .ant-card-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 仿真设置弹窗暗色系样式 */
+.simulation-settings-modal .ant-modal-content {
+  background: #232323;
+  color: #e0e0e0;
+  border-radius: 10px;
+  border: 1px solid #444;
+}
+.simulation-settings-modal .ant-modal-header {
+  background: #232323;
+  border-bottom: 1px solid #444;
+  border-radius: 10px 10px 0 0;
+}
+.simulation-settings-modal .ant-modal-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+.simulation-settings-modal .ant-modal-close-x {
+  color: #f5f5f5;
+}
+.simulation-settings-modal .ant-modal-close:hover .ant-modal-close-x {
+  color: #1976d2;
+}
+.simulation-settings-modal .ant-form-item-label > label {
+  color: #e0e0e0;
+}
+.simulation-settings-modal .ant-input,
+.simulation-settings-modal .ant-select-selector {
+  background: #444 !important;
+  border-color: #555 !important;
+  color: #e0e0e0 !important;
+}
+.simulation-settings-modal .ant-input:focus,
+.simulation-settings-modal .ant-input:hover {
+  border-color: #1890ff !important;
+}
+.simulation-settings-modal .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: #fff;
+}
+.simulation-settings-modal .ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+.simulation-settings-modal .ant-btn {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+.simulation-settings-modal .ant-btn:hover {
+  background: #333;
+  border-color: #555;
+  color: #fff;
+}
+
+/* 仿真设置表单行间距优化 */
+.simulation-settings-modal .ant-form-item {
+  margin-bottom: 12px;
+}
+
+/* 启动文件选择行样式 */
+.launch-file-row .ant-input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.launch-file-row .ant-btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  height: 32px;
+  padding: 0 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
 }

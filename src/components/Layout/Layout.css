@@ -1,21 +1,19 @@
-/* 基础样式重置 */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* 主布局容器 */
 .layout {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background-color: #1e1e1e;
   color: #cccccc;
-  user-select: none; /* 防止拖动时选中文本 */
+  user-select: none; 
 }
 
-/* 顶部菜单栏 */
 .menu-bar {
   display: flex;
   align-items: center;
@@ -35,7 +33,6 @@
   background-color: #404040;
 }
 
-/* 主容器布局 */
 .main-container {
   display: flex;
   flex: 1;
@@ -44,14 +41,12 @@
   position: relative;
 }
 
-/* 左侧项目管理器 */
 .project-explorer {
   position: relative;
   background-color: #252526;
   overflow: hidden;
 }
 
-/* 中间内容区域 */
 .center-content {
   flex: 1;
   display: flex;
@@ -74,14 +69,12 @@
   overflow: hidden;
 }
 
-/* 右侧硬件管理器 */
 .hardware-manager {
   position: relative;
   background-color: #252526;
   overflow: hidden;
 }
 
-/* 调整大小的手柄 */
 .resize-handle {
   position: absolute;
   z-index: 2;
@@ -116,7 +109,6 @@
   background-color: #0e639c;
 }
 
-/* 拖动时的遮罩层 */
 .resize-overlay {
   position: fixed;
   top: 0;
@@ -127,7 +119,6 @@
   cursor: inherit;
 }
 
-/* 通用标题样式 */
 .section-title {
   padding: 10px;
   font-size: 13px;
@@ -136,12 +127,10 @@
   border-bottom: 1px solid #1e1e1e;
 }
 
-/* 树状视图容器 */
 .tree-view {
   padding: 10px;
 }
 
-/* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -160,7 +149,6 @@
   background: #4f4f4f;
 }
 
-/* 覆盖 antd 默认样式 */
 .layout {
   height: 100vh;
 }
@@ -211,7 +199,6 @@
   overflow: auto;
 }
 
-/* 自定义树组件样式 */
 .custom-tree {
   background: transparent;
   color: #cccccc;
@@ -222,7 +209,6 @@
   background-color: #37373d !important;
 }
 
-/* re-resizable 样式覆盖 */
 .re-resizable-handle {
   background-color: transparent;
   transition: background-color 0.2s;

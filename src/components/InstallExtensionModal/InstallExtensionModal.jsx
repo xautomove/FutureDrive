@@ -3,18 +3,21 @@ import { Modal, Input, Select, Button } from 'antd';
 import './InstallExtensionModal.css';
 import GLOBALS from '../../assets/js/globals';
 import fs from 'fs';
-import fse from 'fs-extra';
 
 const { Option } = Select;
 const path = window.require('path');
 const { exec } = window.require('child_process');
 
 const nodePath = path.join(GLOBALS.USERDATA_DIR, 'node');
+const pluginPath = path.join(GLOBALS.USERDATA_DIR, 'plugins');
+const templatePath = window.currentProject && window.currentProject.path
+  ? path.join(window.currentProject.path, 'templates')
+  : '';
 
 const DIR_MAP = {
   node: nodePath,
-  template: 'templates',
-  plugin: 'plugins',
+  template: templatePath,
+  plugin: pluginPath,
 };
 
 const InstallExtensionModal = ({ visible, onClose }) => {

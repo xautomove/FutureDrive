@@ -125,7 +125,6 @@
     margin-top: 16px;
   }
 
-  /* 搜索框样式 */
   .search-wrapper {
     position: relative;
     display: flex;
@@ -173,7 +172,6 @@
     color: #888;
   }
 
-  /* 确保搜索框在标签栏右侧正确显示 */
   .ant-tabs-extra-content {
     display: flex;
     align-items: center;

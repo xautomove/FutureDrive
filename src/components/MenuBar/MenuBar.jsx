@@ -67,7 +67,6 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
           return;
         }
 
-        // 检查 Redis 是否启用
         const redisConfig = config.get('redis') || {};
         if (!redisConfig.enabled) {
           message.warning('请先在设置中启用 Redis 缓存功能');

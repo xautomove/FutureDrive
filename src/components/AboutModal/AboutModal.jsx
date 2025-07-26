@@ -130,7 +130,7 @@ const AboutModal = ({ visible, onClose }) => {
           <div className="version-section">
             <Title level={3}>FutureDrive 自动驾驶</Title>
             <Space>
-              <Text strong>版本 1.0.5 免费版</Text>
+              <Text strong>版本 1.0.6 免费版</Text>
               <Button 
                 type="primary" 
                 icon={<SyncOutlined />} 
@@ -146,7 +146,7 @@ const AboutModal = ({ visible, onClose }) => {
               <Text strong>开发团队：</Text> FutureDrive 自动驾驶团队
             </Paragraph>
             <Paragraph>
-              <Text strong>公司：</Text> 浙江春贵科技有限公司
+              <Text strong>公司：</Text> 安徽灵元机器人科技有限公司
             </Paragraph>
             <Paragraph>
               <Text strong>联系方式：</Text> php300@qqcom

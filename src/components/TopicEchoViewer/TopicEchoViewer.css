@@ -205,7 +205,6 @@
   color: #e0e0e0;
 } 
 
-/* 让下拉框和输入框风格一致 */
 .topic-echo-viewer-toolbar .ant-select-selector {
   background: #232323 !important;
   border: 1px solid #333 !important;

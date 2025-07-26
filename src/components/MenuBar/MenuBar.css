@@ -1,8 +1,6 @@
 .menu-bar {
   width: 100%;
   background: #333333;
-  /* 可选：加阴影或分割线 */
-  /* box-shadow: 0 1px 4px rgba(0,0,0,0.08); */
 }
 
 .menu-bar .ant-menu {
@@ -67,7 +65,6 @@
   overflow: hidden;
 }
 
-/* Modal.confirm 暗色系样式 */
 .menu-bar-modal .ant-modal-confirm {
   background-color: #333333 !important;
   user-select: none !important;
@@ -119,7 +116,6 @@
   border-color: #40a9ff !important;
 }
 
-/* 确保 Modal 背景也是暗色的 */
 .menu-bar-modal .ant-modal-mask {
   background-color: rgba(0, 0, 0, 0.65) !important;
 }
@@ -129,7 +125,6 @@
   box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* 地图编辑器模态框样式 */
 .map-editor-modal .ant-modal-content {
   background: #1a1a1a !important;
   border-radius: 8px;

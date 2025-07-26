@@ -143,7 +143,6 @@
   overflow-y: auto;
 }
 
-/* 自定义滚动条样式 */
 .env-manager-card .ant-card-body::-webkit-scrollbar {
   width: 6px;
 }

@@ -1,5 +1,5 @@
 import React,{ useEffect, useState, useRef } from 'react';
-import { Card, List, Select, Button, message, Spin } from 'antd';
+import { Card, List, Button, message, Spin } from 'antd';
 import EnvController from '../../controller/gui/EnvController';
 import './EnvManager.css';
 import { log, LOG_TYPES } from '../../assets/js/utils';
@@ -10,14 +10,13 @@ const EnvManager = () => {
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
 
-  // 获取环境列表
-  const fetchEnvironments = async () => {
+  const loadEnvironments = async (clearBeforeLoad = false) => {
     setLoading(true);
     try {
+      if (clearBeforeLoad) setEnvironments([]);
       const envs = await EnvController.getEnvironmentList();
       setEnvironments(envs);
     } catch (error) {
-      console.error('获取环境列表失败:', error);
       message.error('获取环境列表失败');
     } finally {
       setLoading(false);
@@ -27,23 +26,9 @@ const EnvManager = () => {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      fetchEnvironments();
+      loadEnvironments();
     }
   }, []);
-
-  const refreshEnvironments = async () => {
-    setLoading(true);
-    try {
-      setEnvironments([]);
-      const envs = await EnvController.getEnvironmentList();
-      setEnvironments(envs);
-    } catch (error) {
-      console.error('刷新环境列表失败:', error);
-      message.error('刷新环境列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
   
   const handleInstall = (env) => {
     const version = selectedVersions[env.name] || env.version;
@@ -59,7 +44,7 @@ const EnvManager = () => {
       title="环境管理"
       extra={
         <Button 
-          onClick={refreshEnvironments}
+          onClick={() => loadEnvironments(true)}
           loading={loading}
         >
           刷新状态

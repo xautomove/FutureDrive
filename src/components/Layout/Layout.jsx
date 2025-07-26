@@ -16,7 +16,6 @@ import GLOBALS from '../../assets/js/globals';
 const { ipcRenderer } = window.require('electron');
 
 const Layout = () => {
-  // 状态管理
   const [leftWidth, setLeftWidth] = useState(250);
   const [rightWidth, setRightWidth] = useState(250);
   const [debugHeight, setDebugHeight] = useState(200);
@@ -162,7 +161,6 @@ const Layout = () => {
     window.currentProject = { path: '', config: null, tree: [] };
   };
 
-  // 没有项目时显示欢迎页
   if (!currentProjectPath) {
     return (
       <div className="layout">

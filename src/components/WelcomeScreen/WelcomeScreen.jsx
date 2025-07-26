@@ -54,6 +54,9 @@ const WelcomeScreen = ({ recentProjects, onOpenProject, onCreateProject }) => {
           </ul>
         </div>
       </div>
+      <div style={{ position: 'fixed', left: 0, right: 0, bottom: 16, textAlign: 'center', color: '#888', fontSize: 14, zIndex: 10 }}>
+        安徽灵元机器人科技有限公司
+      </div>
     </div>
   );
 };

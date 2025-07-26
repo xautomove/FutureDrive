@@ -4,7 +4,6 @@
   background-color: #1e1e1e;
 }
 
-/* CodeMirror 样式覆盖 */
 .code-editor .cm-editor {
   height: 100%;
   font-family: 'Consolas', 'Monaco', monospace;
@@ -19,7 +18,6 @@
   padding: 10px 0;
 }
 
-/* 自定义滚动条样式 */
 .code-editor .cm-scroller::-webkit-scrollbar {
   width: 10px;
   height: 10px;

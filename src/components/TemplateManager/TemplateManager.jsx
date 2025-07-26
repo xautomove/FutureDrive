@@ -5,7 +5,6 @@ import templateManager from '../../controller/gui/TemplateManager';
 import fileController from '../../controller/gui/FileController';
 import path from 'path';
 import './TemplateManager.css';
-import { log } from 'console';
 
 const { shell } = window.require ? window.require('electron') : require('electron');
 
@@ -13,7 +12,6 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 加载模板列表
   useEffect(() => {
     if (visible) {
       loadTemplates();
@@ -32,7 +30,6 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
     }
   };
 
-  // 应用模板
   const handleApplyTemplate = async (template) => {
     try {
       const templateData = await templateManager.loadTemplate(template.fileName);
@@ -46,10 +43,8 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
     }
   };
 
-  // 导入模板
   const handleImportTemplate = async () => {
     try {
-      // 选择模板文件
       const result = await fileController.selectFile({
         filters: [
           { name: 'JSON Files', extensions: ['json'] }
@@ -60,12 +55,10 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
         return;
       }
 
-      // 获取模板目录
       const templateDir = templateManager.getTemplateDir();
       const fileName = path.basename(result.filePath);
       const targetPath = path.join(templateDir, fileName);
 
-      // 检查是否存在同名文件
       if (fileController.fileExists(targetPath)) {
         Modal.confirm({
           title: '文件已存在',
@@ -74,14 +67,12 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
           cancelText: '取消',
           onOk: async () => {
             try {
-              // 复制文件到模板目录
               const copyResult = fileController.copyFile(result.filePath, targetPath);
               if (!copyResult.success) {
                 message.error(`导入模板失败: ${copyResult.error}`);
                 return;
               }
 
-              // 重新加载模板列表
               loadTemplates();
               message.success('模板导入成功');
             } catch (error) {
@@ -92,14 +83,12 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
         return;
       }
 
-      // 如果不存在同名文件，直接复制
       const copyResult = fileController.copyFile(result.filePath, targetPath);
       if (!copyResult.success) {
         message.error(`导入模板失败: ${copyResult.error}`);
         return;
       }
 
-      // 重新加载模板列表
       loadTemplates();
       message.success('模板导入成功');
     } catch (error) {

@@ -169,7 +169,6 @@ const TopicEchoViewer = ({ topic }) => {
       const dateStr = now.toISOString().slice(0, 19).replace(/[T:]/g, '');
       const defaultPath = `${topic.replace(/\//g, '_')}_${dateStr}.txt`;
 
-      console.log("导出文件", defaultPath);
       const result = await fileController.showSaveDialog({
         defaultPath,
         filters: [
@@ -193,7 +192,6 @@ const TopicEchoViewer = ({ topic }) => {
     }
   };
 
-  // 请求话题数据
   const requestEcho = async (once = false) => {
     try {
       if (echoProcRef.current && typeof echoProcRef.current.kill === 'function') {

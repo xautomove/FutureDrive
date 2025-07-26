@@ -13,12 +13,10 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // 清理表单
   const resetForm = () => {
     form.resetFields();
   };
 
-  // 处理关闭弹窗
   const handleClose = () => {
     resetForm();
     onClose();
@@ -29,7 +27,6 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
       const values = await form.validateFields();
       setLoading(true);
 
-      // 创建项目目录
       const projectDir = values.path;
       if (fs.existsSync(projectDir)) {
         message.error('项目目录已存在');
@@ -38,7 +35,6 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
 
       fs.mkdirSync(projectDir, { recursive: true });
 
-      // 创建项目配置文件
       const projectConfig = {
         name: values.name,
         description: values.description,
@@ -55,12 +51,9 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
       resetForm();
       onClose();
 
-      //打开项目
       try {
-        // 记录日志
         log(`正在打开项目: ${projectDir}`, 'INFO');
         
-        // 调用打开项目
         onOpenProject(projectDir);
       } catch (error) {
         log(`打开项目失败: ${error.message}`, 'ERROR');

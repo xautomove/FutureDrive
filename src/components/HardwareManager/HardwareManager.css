@@ -2,7 +2,6 @@
   height: 100%;
   background-color: #252526;
   padding-top: 10px;
-  /* padding-left: 10px; */
   position: relative;
 }
 
@@ -43,7 +42,6 @@
   padding-left: 8px;
 }
 
-/* 修改选中效果为整个树节点 */
 .hardware-manager .ant-tree-treenode {
   width: 100%;
   padding: 0 !important;
@@ -56,12 +54,12 @@
 .hardware-manager .ant-tree-treenode-selected::after {
   content: '';
   position: absolute;
-  left: -20px;  /* 抵消父容器的 padding-left */
-  right: 0px; /* 延伸到右侧 */
+  left: -20px;  
+  right: 0px; 
   height: 100%;
   background-color: #37373d;
   z-index: 0;
-  width: calc(100% + 20px); /* 确保宽度覆盖整个区域 */
+  width: calc(100% + 20px); 
 }
 
 .hardware-manager .ant-tree-indent,
@@ -72,7 +70,6 @@
   background: transparent !important;
 }
 
-/* 覆盖 Ant Design 的默认选中效果 */
 .hardware-manager .ant-tree-node-content-wrapper.ant-tree-node-selected,
 .hardware-manager .ant-tree-node-content-wrapper:hover {
   background: transparent !important;
@@ -170,13 +167,11 @@
   color: #e0e0e0 !important;
 }
 
-/* 只影响添加设备弹窗里的输入框 placeholder */
 .add-device-modal .ant-input::placeholder {
   color: #888 !important;
   opacity: 1 !important;
 }
 
-/* 添加设备弹窗文本不可选 */
 .add-device-modal,
 .add-device-modal * {
   user-select: none !important;

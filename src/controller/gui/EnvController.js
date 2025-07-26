@@ -87,7 +87,11 @@ class EnvController {
         return { installed: false, version: '' };
       }
 
-      const output = execSync(checkCommand, { encoding: 'utf-8' });
+      const extraEnv = {
+        PATH: process.env.PATH,
+        PATH: '/opt/ros/humble/bin:' + process.env.PATH,
+      };
+      const output = execSync(checkCommand, { encoding: 'utf-8', env: { ...process.env, ...extraEnv } });
 
       if (env.name === 'NVIDIA Driver') {
         const versionMatch = output.match(/Driver Version: (\d+\.\d+)/);
@@ -104,7 +108,6 @@ class EnvController {
           return { installed: true, version: nvccMatch[1] };
         }
       }
-
       return { installed: true };
     } catch (e) {
       return { installed: false, version: '' };
@@ -208,8 +211,8 @@ pause`;
         "version": "humble",
         "description": "机器人操作系统2代",
         "installUrl": {
-          "windows": "xxx",
-          "ubuntu": "http://180.76.236.15:8777/install_ros2_humble.py"
+          "windows": "",
+          "ubuntu": "https://future.automoves.cn/install_script/install_ros2_humble.py"
         },
         "checkCommand": {
           "windows": "ros2",
@@ -222,8 +225,8 @@ pause`;
         "version": "3.10",
         "description": "Python编程语言",
         "installUrl": {
-          "windows": "https://www.python.org/downloads/windows/",
-          "ubuntu": "http://180.76.236.15:8777/install_py.py"
+          "windows": "",
+          "ubuntu": "https://future.automoves.cn/install_script/install_py.py"
         },
         "checkCommand": {
           "windows": "python3 --version",
@@ -236,8 +239,8 @@ pause`;
         "version": "未知",
         "description": "NVIDIA CUDA并行计算平台",
         "installUrl": {
-          "windows": "http://180.76.236.15:8777/install_cuda.py",
-          "ubuntu": "http://180.76.236.15:8777/install_cuda.py"
+          "windows": "",
+          "ubuntu": "https://future.automoves.cn/install_script/install_cuda.py"
         },
         "checkCommand": {
           "windows": "nvcc --version",
@@ -250,8 +253,8 @@ pause`;
         "version": "9.6.0",
         "description": "NVIDIA CUDA深度神经网络库",
         "installUrl": {
-          "windows": "http://180.76.236.15:8777/install_cudnn.py",
-          "ubuntu": "http://180.76.236.15:8777/install_cudnn.py"
+          "windows": "",
+          "ubuntu": "https://future.automoves.cn/install_script/install_cudnn.py"
         },
         "checkCommand": {
           "windows": "findstr CUDNN_MAJOR \\"%CUDA_PATH%\\\\include\\\\cudnn_version.h\\"",
@@ -264,8 +267,8 @@ pause`;
         "version": "10.7.0",
         "description": "NVIDIA高性能深度学习推理库",
         "installUrl": {
-          "windows": "http://180.76.236.15:8777/install_tensorrt.py",
-          "ubuntu": "http://180.76.236.15:8777/install_tensorrt.py"
+          "windows": "",
+          "ubuntu": "/media/bylike/6AA72AF22E95B698/Mycode/electron/FutuDrive_js/install_script/install_tensorrt.py"
         },
         "checkCommand": {
           "windows": "dpkg -l | findstr tensorrt",
@@ -278,7 +281,7 @@ pause`;
         "version": "未知",
         "description": "NVIDIA显卡驱动",
         "installUrl": {
-          "windows": "https://www.nvidia.cn/geforce/drivers/",
+          "windows": "",
           "ubuntu": "https://www.nvidia.cn/geforce/drivers/"
         },
         "checkCommand": {

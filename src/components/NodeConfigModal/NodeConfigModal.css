@@ -100,7 +100,6 @@
   border-color: #666;
 }
 
-/* Select 特定样式 */
 .node-config-form-item select {
   appearance: none;
   -webkit-appearance: none;
@@ -166,7 +165,6 @@
   background-color: #1565c0;
 }
 
-/* 禁用状态样式 */
 .node-config-form-item input:disabled,
 .node-config-form-item select:disabled {
   background-color: #333;
@@ -175,7 +173,6 @@
   border-color: #444;
 }
 
-/* 错误状态样式 */
 .node-config-form-item input.error,
 .node-config-form-item select.error {
   border-color: #d32f2f;

@@ -28,10 +28,8 @@ const SettingsModal = ({ visible, onClose }) => {
   const [otherForm] = Form.useForm();
   const [frameworkForm] = Form.useForm();
 
-  // 初始化表单数据
   useEffect(() => {
     if (visible) {
-      // 加载现有配置
       const loadConfig = async () => {
         try {
           const nodeConfig = config.get('node') || {};
@@ -40,7 +38,6 @@ const SettingsModal = ({ visible, onClose }) => {
           const otherConfig = config.get('other') || {};
           const frameworkConfig = config.get('framework') || {};
 
-          // 使用 setTimeout 确保表单已经渲染
           setTimeout(() => {
             nodeForm.setFieldsValue({
               delay: nodeConfig.delay || 0,
@@ -84,12 +81,10 @@ const SettingsModal = ({ visible, onClose }) => {
     }
   }, [visible]);
 
-  // 处理菜单切换
   const handleMenuClick = (e) => {
     setSelectedKey(e.key);
   };
 
-  // 测试 Redis 连接
   const handleTestRedis = async () => {
     try {
       setTestingRedis(true);
@@ -105,7 +100,6 @@ const SettingsModal = ({ visible, onClose }) => {
 
       if (connected) {
         message.success('Redis 连接测试成功！');
-        // 测试基本操作
         await redisController.set('test:connection', 'success', 10);
         const testValue = await redisController.get('test:connection');
         if (testValue === 'success') {
@@ -123,20 +117,17 @@ const SettingsModal = ({ visible, onClose }) => {
     }
   };
 
-  // 处理保存设置
   const handleSave = async () => {
     try {
       setLoading(true);
       console.log('保存设置');
       
-      //获取表单数据
       const nodeValues = nodeForm.getFieldsValue();
       const apiValues = apiForm.getFieldsValue();
       const redisValues = redisForm.getFieldsValue();
       const otherValues = otherForm.getFieldsValue();
       const frameworkValues = frameworkForm.getFieldsValue();
       
-      // 保存各个配置
       await config.set('node', {
         ...nodeValues,
         delay: nodeValues.delay || 0,

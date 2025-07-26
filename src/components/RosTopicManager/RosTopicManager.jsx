@@ -14,14 +14,13 @@ const RosTopicManager = ({ visible, onClose }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  // 录制相关
+
   const [recordMode, setRecordMode] = useState(false);
   const [recordSelectedTopics, setRecordSelectedTopics] = useState([]);
   const [recordPath, setRecordPath] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const recordProcessRef = useRef(null);
 
-  // 获取话题列表
   const fetchTopics = async () => {
     try {
       const topicList = await rosController.getTopicList();
@@ -31,7 +30,6 @@ const RosTopicManager = ({ visible, onClose }) => {
     }
   };
 
-  // 复制话题名称到剪贴板
   const copyTopicName = (topic) => {
     navigator.clipboard.writeText(topic).then(
       () => message.success('话题名称已复制到剪贴板'),
@@ -39,12 +37,10 @@ const RosTopicManager = ({ visible, onClose }) => {
     );
   };
 
-  // 查看话题详情（多窗口弹出，主窗口负责进程和数据推送）
   const viewTopicInfo = (topic) => {
     windowController.openViewer(800, 600, 'show_topic', { topic });
   };
 
-  // 处理右键菜单
   const handleContextMenu = (event, topic) => {
     event.preventDefault();
     setSelectedTopic(topic);
@@ -54,7 +50,6 @@ const RosTopicManager = ({ visible, onClose }) => {
     });
   };
 
-  // 处理菜单点击
   const handleMenuClick = ({ key }) => {
     if (!selectedTopic) return;
 
@@ -69,22 +64,18 @@ const RosTopicManager = ({ visible, onClose }) => {
     setContextMenu(null);
   };
 
-  // 过滤话题列表
   const filteredTopics = topics.filter(topic =>
     topic.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // 组件加载时获取话题列表
   useEffect(() => {
     if (visible) {
       fetchTopics();
     }
   }, [visible]);
 
-  // 录制按钮点击
   const handleRecordClick = () => {
     if (isRecording) {
-      // 停止录制
       if (recordProcessRef.current) {
         try {
           recordProcessRef.current.kill('SIGINT');
@@ -99,7 +90,6 @@ const RosTopicManager = ({ visible, onClose }) => {
     }
   };
 
-  // 录制面板确认
   const handleRecordConfirm = async () => {
     if (!recordPath) {
       message.warning('请选择保存路径');
@@ -127,14 +117,12 @@ const RosTopicManager = ({ visible, onClose }) => {
     }
   };
 
-  // 录制面板取消
   const handleRecordCancel = () => {
     setRecordMode(false);
     setRecordSelectedTopics([]);
     setRecordPath('');
   };
 
-  // 选择文件夹（可用 Electron 的 dialog，示例为简单输入）
   const handleSelectFolder = async () => {
     try {
       const { dialog } = window.require('@electron/remote');

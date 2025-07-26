@@ -79,7 +79,6 @@
   background: #888;
 }
 
-/* 自定义按钮样式 */
 .custom-button {
   background: #2d2d2d;
   border: none;
@@ -97,7 +96,6 @@
   background: #3d3d3d;
 }
 
-/* 确保按钮在panel中的位置正确 */
 .react-flow__panel .custom-button {
   margin-left: 4px;
 }
@@ -107,7 +105,6 @@
   height: 100%;
 }
 
-/* 节点列表模态框样式 */
 .node-list-modal {
   position: fixed;
   top: 0;
@@ -205,7 +202,6 @@
   font-weight: 500;
 }
 
-/* 自定义节点样式 */
 .custom-node {
   background: #2d2d2d;
   border: 1px solid #444;
@@ -220,12 +216,10 @@
   transition: all 0.3s ease;
 }
 
-/* 选中状态边框效果 */
 .react-flow__node-custom.selected {
   box-shadow: 0 0 0 3px rgba(42, 138, 246, 0.3);
 }
 
-/* 节点优先级样式 */
 .node-priority {
   background: rgba(42, 138, 246, 0.2);
   color: #2a8af6;
@@ -243,7 +237,6 @@
   border-color: rgba(42, 138, 246, 0.5);
 }
 
-/* 后台进程状态指示器样式 */
 .node-bg-process {
   background: rgba(255, 193, 7, 0.2);
   color: #ffc107;
@@ -379,7 +372,6 @@
   border: 1px solid rgba(76, 175, 80, 0.2);
 }
 
-/* 输入端口样式 */
 .node-inputs .port-label::before {
   content: '';
   width: 0;
@@ -390,7 +382,6 @@
   margin-right: 4px;
 }
 
-/* 输出端口样式 */
 .node-outputs .port-label::after {
   content: '';
   width: 0;
@@ -483,7 +474,7 @@
 .node-description-tip {
   position: absolute;
   left: 50%;
-  top: 100%;          /* 改为 100%，使其显示在标题下方 */
+  top: 100%;          
   transform: translateX(-50%);
   background: #232323;
   color: #fff;
@@ -497,14 +488,14 @@
   width: 100%;
   opacity: 0.96;
   transition: opacity 0.2s;
-  margin-top: 8px;     /* 添加顶部间距 */
+  margin-top: 8px;     
 }
 
 .node-description-tip::before {
   content: '';
   position: absolute;
   left: 50%;
-  top: -8px;          /* 添加小三角形指示器 */
+  top: -8px;          
   transform: translateX(-50%);
   border-width: 0 8px 8px 8px;
   border-style: solid;

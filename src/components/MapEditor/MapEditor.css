@@ -1,4 +1,4 @@
-/* 全局样式 */
+
 * {
   user-select: none;
   -webkit-user-select: none;
@@ -13,8 +13,7 @@
   color: #e0e0e0;
   position: relative;
 }
-
-/* 左侧工具栏 */
+  
 .map-editor-toolbar-wrapper {
   width: 60px;
   background: #232323;
@@ -51,7 +50,6 @@
   color: #fff;
 }
 
-/* 中间画布区域 */
 .map-editor-canvas {
   flex: 1;
   position: relative;
@@ -67,7 +65,6 @@
   height: 100%;
 }
 
-/* 图层控制按钮 */
 .map-editor-layers-toggle {
   position: absolute;
   bottom: 20px;
@@ -82,7 +79,6 @@
   padding: 0;
 }
 
-/* 右侧属性面板 */
 .map-editor-properties-wrapper {
   background: #232323;
   border-left: 1px solid #333;
@@ -117,7 +113,6 @@
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
 }
 
-/* 图层面板 */
 .map-editor-layers-panel {
   position: absolute;
   bottom: 80px;
@@ -165,7 +160,6 @@
   background: #2d2d2d;
 }
 
-/* 滚动条样式 */
 .map-editor-properties::-webkit-scrollbar,
 .map-editor-layers-content::-webkit-scrollbar {
   width: 8px;
@@ -187,7 +181,6 @@
   background: #555;
 }
 
-/* Resizable 手柄样式 */
 .re-resizable-handle {
   background: #333;
   transition: background-color 0.2s;

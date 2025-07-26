@@ -1,4 +1,4 @@
-/* 弹窗基础样式 */
+
 .ros-topic-manager-modal {
   z-index: 2000 !important;
   user-select: none !important;
@@ -68,14 +68,12 @@
   color: #1976d2;
 }
 
-/* 允许输入框内容可选 */
 .ros-topic-manager-modal input,
 .ros-topic-manager-modal textarea {
   user-select: text !important;
   -webkit-user-select: text !important;
 }
 
-/* 主体内容区域 */
 .ros-topic-manager {
   display: flex;
   flex-direction: column;
@@ -84,7 +82,6 @@
   color: #fff;
 }
 
-/* 工具栏 */
 .ros-topic-manager-toolbar {
   display: flex;
   align-items: center;
@@ -120,7 +117,6 @@
   color: #fff !important;
 }
 
-/* 搜索框 */
 .ros-topic-manager-search-wrapper {
   position: relative;
   display: flex;
@@ -169,7 +165,6 @@
   color: #fff !important;
 }
 
-/* 列表区域 */
 .ros-topic-manager-list-wrapper {
   flex: 1;
   display: flex;
@@ -202,7 +197,6 @@
   font-size: 14px;
 }
 
-/* 滚动条样式 */
 .ros-topic-manager-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -220,7 +214,6 @@
   background: #555;
 }
 
-/* 录制面板 */
 .ros-topic-manager-inline-record {
   background: #232323;
   border-radius: 6px;
@@ -255,7 +248,6 @@
   color: #888;
 }
 
-/* 右键菜单 */
 .ros-topic-manager .ant-menu-item,
 .ros-topic-manager .ant-menu-item-only-child {
   color: #e0e0e0;

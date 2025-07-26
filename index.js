@@ -1,16 +1,19 @@
-const { app, BrowserWindow, Menu } = require('electron/main')
+const { app, BrowserWindow, Menu, screen } = require('electron/main')
 const path = require('path')
 const { startServer, setConfigCallback } = require('./api/server');
 const { setWindowParams, setCreateWindowFunction } = require('./ipc/handlers');
 require('@electron/remote/main').initialize()
 
-
 let mainWindow = null;
 
-const createWindow = (width = 1200, height = 800, page = '', params = []) => {
+const createWindow = (width, height, page = '', params = []) => {
+  // 动态获取屏幕宽高，默认80%
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const winWidth = width || Math.floor(screenWidth * 0.8);
+  const winHeight = height || Math.floor(screenHeight * 0.8);
   const win = new BrowserWindow({
-    width,
-    height,
+    width: winWidth,
+    height: winHeight,
     backgroundColor: '#1a1a1a',
     show: false,
     webPreferences: {
