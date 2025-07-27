@@ -182,4 +182,58 @@
   color: #d32f2f;
   font-size: 12px;
   margin-top: 4px;
+}
+
+/* 文件选择样式 */
+.file-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.file-path-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.file-path-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.file-path-input:hover {
+  border-color: #666;
+}
+
+.file-select-button {
+  background-color: #3a3a3a !important;
+  border-color: #555 !important;
+  color: #e0e0e0 !important;
+  font-size: 12px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  transition: all 0.3s ease !important;
+  white-space: nowrap !important;
+}
+
+.file-select-button:hover {
+  background-color: #4a4a4a !important;
+  border-color: #1890ff !important;
+  color: #fff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3) !important;
+}
+
+.file-select-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 4px rgba(24, 144, 255, 0.2) !important;
 } 

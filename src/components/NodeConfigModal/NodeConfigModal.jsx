@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './NodeConfigModal.css';
-import { Switch } from 'antd';
+import { Switch, Button } from 'antd';
+import fileController from '../../controller/gui/FileController';
 
 const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   const [form, setForm] = useState({});
@@ -24,6 +25,22 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   const handleChange = (name, value) => {
     const processedValue = value === '' ? (node.data.config.find(item => item.name === name)?.type === 'number' ? 0 : '') : value;
     setForm(f => ({ ...f, [name]: processedValue }));
+  };
+
+  const handleFileSelect = async (name) => {
+    try {
+      const result = await fileController.selectFile({
+        title: `选择${name}文件`,
+        filters: [
+          { name: '所有文件', extensions: ['*'] }
+        ]
+      });
+      if (result.success) {
+        setForm(f => ({ ...f, [name]: result.filePath }));
+      }
+    } catch (error) {
+      console.error('选择文件失败:', error);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -70,6 +87,26 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
               checked={!!form[item.name]}
               onChange={checked => handleChange(item.name, checked)}
             />
+          </div>
+        );
+      case 'file':
+        return (
+          <div className="file-input-container">
+            <input
+              type="text"
+              value={form[item.name] ?? ''}
+              placeholder="请选择文件..."
+              readOnly
+              className="file-path-input"
+            />
+            <Button 
+              type="default" 
+              size="small"
+              onClick={() => handleFileSelect(item.name)}
+              className="file-select-button"
+            >
+              选择文件
+            </Button>
           </div>
         );
       default:
