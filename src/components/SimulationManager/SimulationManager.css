@@ -107,7 +107,6 @@
   padding-top: 20px;
 }
 
-/* 自定义下拉框样式 */
 .ant-select-dropdown {
   background-color: #333333 !important;
 }
@@ -125,7 +124,6 @@
   background-color: #444444 !important;
 }
 
-/* 按钮样式 */
 .simulation-manager-modal .ant-btn-primary {
   color: #ffffff;
 }
@@ -147,7 +145,6 @@
   border-color: #555555 !important;
 }
 
-/* 暗色系模态框样式 */
 .dark-modal .ant-modal-content {
   background-color: #1f1f1f;
   border: 1px solid #333;
@@ -218,14 +215,12 @@
   -ms-user-select: none;
 }
 
-/* 仿真管理卡片内容内边距优化 */
 .simulation-manager-modal .ant-card-body {
   padding: 24px 24px 8px 24px !important;
   background: transparent;
   box-shadow: none;
 }
 
-/* 仿真管理卡片内容去除内边距 */
 .simulation-manager-modal .ant-card-body {
   padding: 0 !important;
   max-height: calc(100vh - 300px);
@@ -236,7 +231,6 @@
   padding: 24px !important;
 }
 
-/* 自定义滚动条样式 */
 .simulation-manager-modal .ant-card-body::-webkit-scrollbar {
   width: 6px;
 }
@@ -251,7 +245,6 @@
   background: #555;
 }
 
-/* 仿真设置弹窗暗色系样式 */
 .simulation-settings-modal .ant-modal-content {
   background: #232323;
   color: #e0e0e0;
@@ -307,12 +300,10 @@
   color: #fff;
 }
 
-/* 仿真设置表单行间距优化 */
 .simulation-settings-modal .ant-form-item {
   margin-bottom: 12px;
 }
 
-/* 启动文件选择行样式 */
 .launch-file-row .ant-input {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
@@ -325,4 +316,43 @@
   font-size: 14px;
   display: flex;
   align-items: center;
+}
+
+.simulation-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+}
+
+.simulation-toolbar .toolbar-button {
+  background: #3a3a3a;
+  border-color: #555;
+  color: #e0e0e0;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 45px;
+  height: 28px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+.simulation-toolbar .toolbar-button:hover {
+  background: #4a4a4a;
+  border-color: #1890ff;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.simulation-toolbar .toolbar-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(24, 144, 255, 0.2);
+}
+
+.simulation-manager-modal .ant-modal-footer {
+  background: transparent;
 }

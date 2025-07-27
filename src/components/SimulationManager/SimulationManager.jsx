@@ -5,6 +5,7 @@ import SimulationSettingsModal from './SimulationSettingsModal';
 import fileController from '../../controller/gui/FileController';
 import './SimulationManager.css';
 import { stopDownload } from '../../assets/js/http';
+const { exec } = window.require('child_process');
 
 const SimulationManager = ({ visible, onClose }) => {
   const [simulations, setSimulations] = useState([]);
@@ -146,12 +147,60 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
+  const handleLaunchRqt = async () => {
+    try {
+      exec('rqt', (error) => {
+        if (error) {
+          message.error('启动rqt失败，请确保已安装ROS和rqt');
+        } else {
+          message.success('rqt启动成功');
+        }
+      });
+    } catch (error) {
+      message.error('启动rqt失败');
+    }
+  };
+
+  const handleLaunchRviz = async () => {
+    try {
+      
+      exec('rviz2', (error) => {
+        if (error) {
+          message.error('启动rviz失败，请确保已安装ROS和rviz');
+        } else {
+          message.success('rviz启动成功');
+        }
+      });
+    } catch (error) {
+      message.error('启动rviz失败');
+    }
+  };
+
   return (
     <Modal
       title="仿真管理"
       open={visible}
       onCancel={onClose}
-      footer={null}
+      footer={
+        <div className="simulation-toolbar">
+          <Space>
+            <Button 
+              type="default" 
+              onClick={handleLaunchRqt}
+              className="toolbar-button"
+            >
+              RQT
+            </Button>
+            <Button 
+              type="default" 
+              onClick={handleLaunchRviz}
+              className="toolbar-button"
+            >
+              RViz
+            </Button>
+          </Space>
+        </div>
+      }
       width={700}
       className="simulation-manager-modal"
       destroyOnHidden
@@ -202,18 +251,19 @@ const SimulationManager = ({ visible, onClose }) => {
             )}
           />
         </Spin>
-        <SimulationSettingsModal
-          visible={settingsModal.visible}
-          onClose={() => setSettingsModal({ ...settingsModal, visible: false })}
-          platform={settingsModal.platform}
-          config={settingsModal.config}
-          onSave={handleSaveSettings}
-          onUninstall={() => {
-            setSettingsModal({ ...settingsModal, visible: false });
-            fetchSimulations();
-          }}
-        />
       </Card>
+      
+      <SimulationSettingsModal
+        visible={settingsModal.visible}
+        onClose={() => setSettingsModal({ ...settingsModal, visible: false })}
+        platform={settingsModal.platform}
+        config={settingsModal.config}
+        onSave={handleSaveSettings}
+        onUninstall={() => {
+          setSettingsModal({ ...settingsModal, visible: false });
+          fetchSimulations();
+        }}
+      />
     </Modal>
   );
 };
