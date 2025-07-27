@@ -5,7 +5,10 @@ import SimulationSettingsModal from './SimulationSettingsModal';
 import fileController from '../../controller/gui/FileController';
 import './SimulationManager.css';
 import { stopDownload } from '../../assets/js/http';
-const { exec } = window.require('child_process');
+import commandExecutor from '../../assets/js/commandExecutor';
+import fs from 'fs';
+import path from 'path';
+import { exec } from 'child_process';
 
 const SimulationManager = ({ visible, onClose }) => {
   const [simulations, setSimulations] = useState([]);
@@ -176,6 +179,64 @@ const SimulationManager = ({ visible, onClose }) => {
     }
   };
 
+  const handleViewTf = async () => {
+    try {
+      message.loading({ content: '正在生成TF树...', key: 'view-tf', duration: 0 });
+      
+      const result = await commandExecutor.execute('ros2', ['run', 'tf2_tools', 'view_frames'], {
+        cwd: '/tmp',
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+          LANG: 'en_US.UTF-8',
+          LC_ALL: 'en_US.UTF-8'
+        }
+      });
+
+      message.destroy('view-tf');
+      
+      if (result.exitCode === 0) {
+        const tmpDir = '/tmp';
+        const files = fs.readdirSync(tmpDir);
+        const pdfFile = files.find(file => file.match(/^frames_.*\.pdf$/));
+        
+        if (pdfFile) {
+          const pdfPath = path.join(tmpDir, pdfFile);
+          const gvFile = pdfFile.replace('.pdf', '.gv');
+          const gvPath = path.join(tmpDir, gvFile);
+          
+          exec(`xdg-open "${pdfPath}"`, (error) => {
+            if (error) {
+              message.error('无法打开PDF文件');
+            } else {
+              message.success('TF树已生成并打开');
+              
+              setTimeout(() => {
+                try {
+                  if (fs.existsSync(pdfPath)) {
+                    fs.unlinkSync(pdfPath);
+                  } 
+                  if (fs.existsSync(gvPath)) {
+                    fs.unlinkSync(gvPath);
+                  }
+                } catch (deleteError) {
+                  console.log('删除临时文件失败:', deleteError);
+                }
+              }, 3000);
+            }
+          });
+        } else {
+          message.warning('未找到生成的PDF文件');
+        }
+      } else {
+        message.error('生成TF树失败');
+      }
+    } catch (error) {
+      message.destroy('view-tf');
+      message.error(`查看TF失败: ${error.message}`);
+    }
+  };
+
   return (
     <Modal
       title="仿真管理"
@@ -184,6 +245,13 @@ const SimulationManager = ({ visible, onClose }) => {
       footer={
         <div className="simulation-toolbar">
           <Space>
+            <Button 
+              type="default" 
+              onClick={handleViewTf}
+              className="toolbar-button"
+            >
+              TF
+            </Button>
             <Button 
               type="default" 
               onClick={handleLaunchRqt}

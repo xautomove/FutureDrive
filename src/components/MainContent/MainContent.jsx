@@ -314,11 +314,12 @@ const MainContent = ({ onTreeDataChange }) => {
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [isStarting, setIsStarting] = useState(false); // 添加启动状态
+  const [isStarting, setIsStarting] = useState(false);
   const [isTemplateManagerVisible, setIsTemplateManagerVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [logModalVisible, setLogModalVisible] = useState(false);
   const [logModalUuid, setLogModalUuid] = useState(null);
+  const [copiedNode, setCopiedNode] = useState(null);
 
   const nodesRef = useRef(nodes);
   const reactFlowInstance = useReactFlow();
@@ -336,7 +337,6 @@ const MainContent = ({ onTreeDataChange }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // 设置启动完成回调
   useEffect(() => {
     GLOBALS.onStartupComplete = () => {
       setIsStarting(false);
@@ -346,6 +346,70 @@ const MainContent = ({ onTreeDataChange }) => {
       GLOBALS.onStartupComplete = null;
     };
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.contentEditable === 'true') {
+        return;
+      }
+
+      if (event.key === 'Delete' && selectedNode) {
+        event.preventDefault();
+        handleDeleteNode(selectedNode.id);
+        setSelectedNode(null);
+        return;
+      }
+
+      if (event.ctrlKey && event.key === 'c' && selectedNode) {
+        event.preventDefault();
+        setCopiedNode({
+          ...selectedNode,
+          data: { ...selectedNode.data }
+        });
+        message.success('节点已复制');
+        return;
+      }
+
+      if (event.ctrlKey && event.key === 'v' && copiedNode) {
+        event.preventDefault();
+        handlePasteNode();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedNode, copiedNode]);
+
+  const handlePasteNode = () => {
+    if (!copiedNode) return;
+
+    const newId = `${copiedNode.path}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newUuid = uuidv4();
+
+    const offset = 50;
+    const newPosition = {
+      x: copiedNode.position.x + offset,
+      y: copiedNode.position.y + offset
+    };
+
+    const newNode = {
+      ...copiedNode,
+      id: newId,
+      position: newPosition,
+      data: {
+        ...copiedNode.data,
+        uuid: newUuid,
+        label: `${copiedNode.data.label} (副本)`
+      }
+    };
+
+    setNodes(nds => [...nds, newNode]);
+    setSelectedNode(newNode);
+    message.success('节点已粘贴');
+  };
 
   const handleRunStop = async () => {
     if (isRunning) {
@@ -696,6 +760,20 @@ const MainContent = ({ onTreeDataChange }) => {
         handleDeleteNode(selectedNode.id);
         setSelectedNode(null);
       }
+    } else if (key === 'copy') {
+      if (selectedNode) {
+        setCopiedNode({
+          ...selectedNode,
+          data: { ...selectedNode.data }
+        });
+        message.success('节点已复制');
+      }
+    } else if (key === 'paste') {
+      if (copiedNode) {
+        handlePasteNode();
+      } else {
+        message.warning('没有可粘贴的节点');
+      }
     } else if (key === 'priority') {
       if (selectedNode) {
         let inputValue = selectedNode.data.priority || 0;
@@ -751,7 +829,7 @@ const MainContent = ({ onTreeDataChange }) => {
       }
     }
     setContextMenu(null);
-  }, [selectedNode, handleAddNode, handleDeleteNode, handlePriorityChange]);
+  }, [selectedNode, copiedNode, handleAddNode, handleDeleteNode, handlePriorityChange, handlePasteNode]);
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -1301,10 +1379,25 @@ const MainContent = ({ onTreeDataChange }) => {
                   style: { color: '#fff' },
                 },
                 {
+                  key: 'copy',
+                  label: '复制节点',
+                  style: { color: selectedNode ? '#fff' : '#888' },
+                  disabled: !selectedNode,
+                },
+                {
+                  key: 'paste',
+                  label: '粘贴节点',
+                  style: { color: copiedNode ? '#fff' : '#888' },
+                  disabled: !copiedNode,
+                },
+                {
                   key: 'delete',
                   label: '删除节点',
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
+                },
+                {
+                  type: 'divider',
                 },
                 {
                   key: 'priority',
