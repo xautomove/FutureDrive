@@ -14,7 +14,7 @@ const { Text, Title, Paragraph } = Typography;
 const LICENSE_URL = 'https://future.automoves.cn/license';
 const LEGAL_URL = 'https://future.automoves.cn/legal';
 
-const localVersion = '1.0.7';
+const localVersion = '1.0.8';
 const GITHUB_RELEASES_URL = 'https://api.github.com/repos/xautomove/FutureDrive/releases';
 
 const AboutModal = ({ visible, onClose }) => {
@@ -130,7 +130,7 @@ const AboutModal = ({ visible, onClose }) => {
           <div className="version-section">
             <Title level={3}>FutureDrive 自动驾驶</Title>
             <Space>
-              <Text strong>版本 1.0.7 免费版</Text>
+              <Text strong>版本 {localVersion} 免费版</Text>
               <Button 
                 type="primary" 
                 icon={<SyncOutlined />} 
