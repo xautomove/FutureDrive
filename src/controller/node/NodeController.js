@@ -231,8 +231,13 @@ class NodeController {
                     
                     for (const singlePid of pidList) {
                         try {
-                            process.kill(Number(singlePid), 'SIGKILL');
+                            process.kill(-Number(singlePid), 'SIGKILL');
                         } catch (e) {
+                            try {
+                                process.kill(Number(singlePid), 'SIGKILL');
+                            } catch (e2) {
+                                console.error('杀死进程失败:', e2);
+                            }
                         }
                     }
                 }

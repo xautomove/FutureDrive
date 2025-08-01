@@ -84,9 +84,14 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
                 isRunning = false;
               }
               if (isRunning) {
-                process.kill(Number(singlePid), 'SIGKILL');
+                try {
+                  process.kill(-Number(singlePid), 'SIGKILL');
+                  log(`已终止后台进程组 (PGID: ${singlePid})`, LOG_TYPES.SUCCESS);
+                } catch (e) {
+                  process.kill(Number(singlePid), 'SIGKILL');
+                  log(`已终止后台进程 (PID: ${singlePid})`, LOG_TYPES.SUCCESS);
+                }
                 killedCount++;
-                log(`已终止后台进程 (PID: ${singlePid})`, LOG_TYPES.SUCCESS);
               }
             }
             if (killedCount === 0) {

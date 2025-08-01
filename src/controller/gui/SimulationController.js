@@ -228,7 +228,6 @@ fi
 ${ext === 'py' ? `\"${pythonPath}\" \"${launchFile}\" ${launchArgs}` : `bash \"${launchFile}\" ${launchArgs}`}
 echo \"脚本执行完成！\"
 read -p \"按任意键退出...\"`;
-          console.log(shellContent);
           fs.writeFileSync(shellScriptPath, shellContent, 'utf8');
           fs.chmodSync(shellScriptPath, 0o755);
           spawn('gnome-terminal', ['--', 'bash','-l', '-c', `${shellScriptPath}; exec bash`], {
