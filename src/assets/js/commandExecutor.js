@@ -189,7 +189,7 @@ class CommandExecutor {
     }
 
     /**
-     * 持续化运行命令，返回进程对象（适合流式输出/需手动kill的场景）
+     * 持续化运行命令，返回进程对象
      * @param {string} command
      * @param {string[]} args
      * @param {Object} options
@@ -203,19 +203,16 @@ class CommandExecutor {
             if(GLOBALS.isDebug){
                 log(`执行命令: ${fullCommand}`, LOG_TYPES.INFO);
             }
-
             const child = spawn(command, args, {
                 env: { ...process.env, ...env },
                 ...otherOptions
             });
-
             if (onStdout) {
                 child.stdout.on('data', (data) => onStdout(data.toString('utf8')));
             }
             if (onStderr) {
                 child.stderr.on('data', (data) => onStderr(data.toString('utf8')));
             }
-            
             const handleError = (error) => {
                 if(GLOBALS.isDebug){
                     log(`命令执行错误: ${error.message}`, LOG_TYPES.ERROR);
@@ -224,9 +221,7 @@ class CommandExecutor {
                     onError(error);
                 }
             };
-
             child.on('error', handleError);
-
             child.on('close', (code) => {
                 if (code !== 0) {
                    if(GLOBALS.isDebug){
@@ -234,7 +229,6 @@ class CommandExecutor {
                    }
                 }
             });
-
             return child;
         } catch (error) {
             if(GLOBALS.isDebug){

@@ -86,8 +86,8 @@ class NodeController {
     }
 
     /**
-     * 检查是否有后台运行的任务节点
-     * @returns {Promise<string[]>} 返回需要结束的后台任务UUID列表
+     * 检查后台任务节点
+     * @returns {Promise<string[]>} 返回需UUID列表
      */
     async checkBackgroundTasks() {
         try {
@@ -181,7 +181,6 @@ class NodeController {
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             
-            // 添加事件监听器
             document.getElementById('cancel-btn').addEventListener('click', () => {
                 document.body.removeChild(overlay);
                 resolve('cancel');
@@ -197,7 +196,6 @@ class NodeController {
                 resolve('start');
             });
             
-            // 点击遮罩层关闭
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     document.body.removeChild(overlay);
@@ -209,7 +207,7 @@ class NodeController {
 
     /**
      * 强制结束指定的后台任务
-     * @param {string[]} taskUuids 需要结束的任务UUID列表
+     * @param {string[]} taskUuids 需要UUID列表
      */
     async forceStopAllBackgroundTasks(taskUuids) {
         try {

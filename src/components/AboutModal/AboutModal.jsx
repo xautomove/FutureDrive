@@ -14,7 +14,7 @@ const { Text, Title, Paragraph } = Typography;
 const LICENSE_URL = 'https://future.automoves.cn/license';
 const LEGAL_URL = 'https://future.automoves.cn/legal';
 
-const localVersion = '1.0.8';
+const localVersion = '1.0.9';
 const GITHUB_RELEASES_URL = 'https://api.github.com/repos/xautomove/FutureDrive/releases';
 
 const AboutModal = ({ visible, onClose }) => {
@@ -149,7 +149,7 @@ const AboutModal = ({ visible, onClose }) => {
               <Text strong>公司：</Text> 安徽灵元机器人科技有限公司
             </Paragraph>
             <Paragraph>
-              <Text strong>联系方式：</Text> php300@qq.com
+              <Text strong>联系方式：</Text> xautomove@foxmail.com
             </Paragraph>
           </div>
 

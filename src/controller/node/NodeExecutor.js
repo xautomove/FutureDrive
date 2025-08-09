@@ -222,8 +222,6 @@ class NodeExecutor {
             if (edge.target === node.id) {
                 const sourceNode = this.nodeMap.get(edge.source);
                 if (sourceNode) {
-                    const sourceUuid = sourceNode.data.uuid;
-                    
                     let outputValue;
                     if (sourceNode.data.outputs) {
                         const sourceOutputIndex = parseInt(edge.sourceHandle.split('-')[1]);

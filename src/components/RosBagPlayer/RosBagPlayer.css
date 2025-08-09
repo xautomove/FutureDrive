@@ -1,0 +1,180 @@
+.ros-bag-player-window {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ros-bag-player-modal {
+  z-index: 2000 !important;
+}
+
+.ros-bag-player-modal .ant-modal-content {
+  background: #232323;
+  border-radius: 10px;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+
+.ros-bag-player-modal .ant-modal-header {
+  background: #232323;
+  border-bottom: 1px solid #444;
+  border-radius: 10px 10px 0 0;
+  padding-bottom: 10px;
+  margin-bottom: 0px !important;
+}
+
+.ros-bag-player-modal .ant-modal-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ros-bag-player-modal .ant-modal-body {
+  padding: 20px;
+}
+
+.ros-bag-player {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.ros-bag-player-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ros-bag-player-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ros-bag-player-path-input {
+  flex: 1;
+  background: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #333 !important;
+  border-radius: 4px !important;
+}
+
+.ros-bag-player-path-input::placeholder {
+  color: #888;
+}
+
+.ros-bag-player-path-input:focus {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+}
+
+.ros-bag-player-path-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.ros-bag-player-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.ros-bag-player-info {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ros-bag-player-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 13px;
+  gap: 12px;
+}
+
+.ros-bag-player-info-item .label {
+  color: #888;
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.ros-bag-player-info-item .value {
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+}
+
+.ros-bag-player-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ros-bag-player-time {
+  display: flex;
+  justify-content: space-between;
+  color: #e0e0e0;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+.ros-bag-player-progress-bar .ant-progress-bg {
+  background: #1976d2 !important;
+}
+
+.ros-bag-player-progress-bar .ant-progress-track {
+  background: #444 !important;
+}
+
+.ros-bag-player-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ros-bag-player-controls .ant-btn {
+  min-width: 80px;
+  height: 36px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.ros-bag-player-controls .ant-btn-primary {
+  background: #1976d2;
+  border-color: #1976d2;
+}
+
+.ros-bag-player-controls .ant-btn-primary:hover {
+  background: #1565c0;
+  border-color: #1565c0;
+}
+
+.ros-bag-player-controls .ant-btn-dangerous {
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.ros-bag-player-controls .ant-btn-dangerous:hover {
+  background: #c62828;
+  border-color: #c62828;
+}
+
+.ros-bag-player-modal .ant-modal-close {
+  color: #e0e0e0 !important;
+}

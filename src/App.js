@@ -12,6 +12,7 @@ window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
 import Layout from './components/Layout/Layout';
 import TopicEchoViewer from './components/TopicEchoViewer/TopicEchoViewer';
 import MapEditor from './components/MapEditor/MapEditor';
+import RosBagPlayer from './components/RosBagPlayer/RosBagPlayer';
 import { message } from 'antd';
 const { ipcRenderer } = window.require('electron');
 import config from './assets/js/config'
@@ -120,6 +121,8 @@ function App() {
           setComponent(<TopicEchoViewer topic={topic} />);
         } else if (page === 'map_editor') {
           setComponent(<MapEditor />);
+        } else if (page === 'ros_bag_player') {
+          setComponent(<RosBagPlayer visible={true} onClose={() => window.close()} />);
         } else {
           setComponent(<Layout />);
         }
