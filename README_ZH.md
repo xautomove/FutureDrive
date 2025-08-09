@@ -2,7 +2,7 @@
 
 中文 | [English](README.md)
 
-FutureDrive 是一个模块化自动驾驶解决方案，提供实用工具、即用型方案和简化的工作流程，用于快速开发和部署。
+FutureDrive 是一个工作流式自动驾驶解决方案，提供实用工具、即用型方案和简化的工作流程，用于快速开发和部署。
 
 ## 🎯 项目目标
 
@@ -117,4 +117,9 @@ yarn dev
 ## 欢迎加入微信交流群
 <img src="./image/wechat.png" width="200" height="200" alt="WeChat QR Code">
 
-**FutureDrive** - 加速自动驾驶开发 
+---
+## 如果本项目对您有所帮助，欢迎给予一些小小支持，开发持续进行～
+<img src="./image/wepay.jpeg" height="350" alt="WeChat QR Code">
+
+---
+**FutureDrive** - 加速自动驾驶生态发展
