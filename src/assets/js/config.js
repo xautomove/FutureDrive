@@ -51,7 +51,7 @@ class Config {
                 "nodes": []
             },
             "environment": {
-                "listUrl": "https://example.com/api/environments"
+                "listUrl": "https://future.api.automoves.cn/api/environments/list"
             },
             "debug": false,
             "systemInfo": null,
@@ -61,6 +61,10 @@ class Config {
                 "password": null,
                 "db": 0,
                 "enabled": false
+            },
+            'api_server':{
+                "host": "https://future.api.automoves.cn",
+                "logs_add":"/api/logs/add"
             }
         };
     }

@@ -23,21 +23,40 @@ class EnvController {
     try {
       var envListUrl = config.get('environment.listUrl');
       var environments = '';
-      if (envListUrl) {
+      const cacheKey = 'environment.cache';
+      const cacheDateKey = 'environment.cacheDate';
+      const cacheData = config.get(cacheKey);
+      const cacheDate = config.get(cacheDateKey);
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (cacheData && cacheDate && cacheDate === today) {
+        environments = cacheData;
+      } else if (envListUrl) {
         environments = await get(envListUrl);
+        config.set(cacheKey, environments);
+        config.set(cacheDateKey, today);
+        await config.save?.();
       }
 
       if (!environments) {
         environments = this.getLocalTestData();
       }
 
-      if (typeof environments === 'string') {
+      if (typeof environments == 'string') {
         try {
           environments = JSON.parse(environments);
+          if (environments && environments.data) {
+            environments = environments.data;
+          }
         } catch (e) {
           console.error('解析环境列表失败:', e);
           environments = this.getLocalTestData();
         }
+      }
+
+      if (environments && typeof environments === 'object' && !Array.isArray(environments)) {
+        environments = Object.values(environments);
+        environments = environments[0];
       }
 
       if (!Array.isArray(environments)) {
@@ -81,8 +100,8 @@ class EnvController {
   async detectEnvByCommand(env) {
     try {
       const isWindows = this.platform === 'win32';
-      const checkCommand = isWindows ? env.checkCommand.windows : env.checkCommand.ubuntu;
-
+      const checkCommand = isWindows ? env.check_cmd_windows : env.check_cmd_ubuntu;
+      console.log('checkCommand',checkCommand);
       if (!checkCommand) {
         return { installed: false, version: '' };
       }
@@ -92,6 +111,7 @@ class EnvController {
         PATH: '/opt/ros/humble/bin:' + process.env.PATH,
       };
       const output = execSync(checkCommand, { encoding: 'utf-8', env: { ...process.env, ...extraEnv } });
+      console.log(output);
 
       if (env.name === 'NVIDIA Driver') {
         const versionMatch = output.match(/Driver Version: (\d+\.\d+)/);
@@ -117,7 +137,7 @@ class EnvController {
   async installEnv(env, installUrl) {
     try {
       if(env.name === "NVIDIA Driver"){
-        const url = this.isWindows ? env.installUrl.windows : env.installUrl.ubuntu;
+        const url = this.isWindows ? env.install_url_windows : env.install_url_ubuntu;
         await shell.openExternal(url);
         return;
       }
@@ -268,8 +288,7 @@ pause`;
         "description": "NVIDIA高性能深度学习推理库",
         "installUrl": {
           "windows": "",
-          "ubuntu": "/media/bylike/6AA72AF22E95B698/Mycode/electron/FutuDrive_js/install_script/install_tensorrt.py"
-        },
+          "ubuntu": ""
         "checkCommand": {
           "windows": "dpkg -l | findstr tensorrt",
           "ubuntu": "python3 -c \\"import tensorrt as trt; print('TensorRT version: ' + str(trt.__version__))\\""

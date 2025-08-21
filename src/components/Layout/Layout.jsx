@@ -1,18 +1,25 @@
-import React, { useState, useRef, useEffect,useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { message } from 'antd';
 import { Resizable } from 're-resizable';
+
 import MenuBar from '../MenuBar/MenuBar';
 import ProjectExplorer from '../ProjectExplorer/ProjectExplorer';
 import MainContent from '../MainContent/MainContent';
 import DebugConsole from '../DebugConsole/DebugConsole';
 import HardwareManager from '../HardwareManager/HardwareManager';
-import './Layout.css';
-import ProjectController from '../../controller/gui/ProjectController';
 import ProjectModal from '../ProjectModal/ProjectModal';
-import { log, LOG_TYPES } from '../../assets/js/utils';
 import WelcomeScreen from '../WelcomeScreen/WelcomeScreen';
+
+import './Layout.css';
+
+import ProjectController from '../../controller/gui/ProjectController';
 import guiController from '../../controller/gui/GuiController';
 import NodeController from '../../controller/node/NodeController';
+
 import GLOBALS from '../../assets/js/globals';
+import config from '../../assets/js/config';
+import { log, LOG_TYPES } from '../../assets/js/utils';
+
 const { ipcRenderer } = window.require('electron');
 
 const Layout = () => {
@@ -59,6 +66,14 @@ const Layout = () => {
     if (!GLOBALS.nodeController) {
       GLOBALS.nodeController = new NodeController();
     }
+
+    try {
+      const sys = config.get('systemInfo');
+      const text = typeof sys === 'string' ? sys : JSON.stringify(sys || {});
+      if (text && !text.includes('22.04.5')) {
+        message.warning('检测到系统版本非推荐版本，建议使用Ubuntu22.04.5');
+      }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {

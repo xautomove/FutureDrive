@@ -77,7 +77,14 @@ export const get = async (url, params = {}, config = {}) => {
  */
 export const post = async (url, data = {}, config = {}) => {
   try {
-    const response = await fetch(`${BASE_URL}${url}`, {
+    let fullUrl = '';
+    if (url && url.includes('http')) {
+      fullUrl = url;
+    } else {
+      fullUrl = `${BASE_URL}${url || ''}`;
+    }
+
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +94,8 @@ export const post = async (url, data = {}, config = {}) => {
       ...config
     });
 
-    return responseInterceptor(response);
+    const text = await response.text();
+    return responseInterceptor({ statusCode: response.status, data: text });
   } catch (error) {
     return errorHandler(error);
   }

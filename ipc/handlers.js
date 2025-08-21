@@ -244,7 +244,8 @@ ipcMain.handle('stop-download', async () => {
 
 ipcMain.handle('get-sys-info', async () => {
   const osInfo = await si.osInfo();
-  return osInfo;
+  const graphicsInfo = await si.graphics();
+  return { graphics: graphicsInfo, os: osInfo };
 });
 
 ipcMain.handle('start-server', async (event, config) => {

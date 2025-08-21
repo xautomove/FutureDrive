@@ -19,70 +19,7 @@ import config from './assets/js/config'
 import { ReactFlowProvider } from 'reactflow';
 import RedisController from './controller/node/RedisController';
 import GLOBALS from './assets/js/globals';
-
-async function getSystemInfo() {
-  const cachedInfo = config.get('systemInfo');
-  if (cachedInfo && cachedInfo.platform) {
-    window.systemInfo = cachedInfo;
-    return;
-  }
-
-  const platform = process.platform;
-  let version = 'unknown';
-  
-  try {
-    if (platform === 'linux') {
-      const { execSync } = window.require('child_process');
-      const osRelease = execSync('cat /etc/os-release', { encoding: 'utf-8' });
-      const versionMatch = osRelease.match(/VERSION_ID="([^"]+)"/);
-      version = versionMatch ? versionMatch[1] : 'unknown';
-    } else if (platform === 'win32') {
-      const { exec } = window.require('child_process');
-      
-      try {
-        version = process.getSystemVersion?.() || 'unknown';
-      } catch (e) {
-        console.log('使用process.getSystemVersion失败:', e);
-      }
-      
-      if (version === 'unknown') {
-        try {
-          version = await new Promise((resolve) => {
-            const cmd = 'wmic os get caption,version /value';
-            exec(cmd, { encoding: 'utf-8' }, (error, stdout) => {
-              if (error) {
-                console.error('获取Windows版本失败:', error);
-                resolve('unknown');
-                return;
-              }
-              
-              const matches = stdout.match(/Version=([\d.]+)/);
-              resolve(matches ? matches[1] : 'unknown');
-            });
-            
-            setTimeout(() => {
-              resolve('unknown');
-            }, 5000);
-          });
-        } catch (e) {
-            console.error('异步获取Windows版本失败:', e);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('获取系统信息失败:', error);
-  }
-
-  const systemInfo = {
-    platform,
-    version,
-    isUbuntu: platform === 'linux',
-    isWindows: platform === 'win32'
-  };
-
-  window.systemInfo = systemInfo;
-  await config.set('systemInfo', systemInfo);
-}
+import { puts } from './assets/js/cloud';
 
 function App() {
   const [Component, setComponent] = useState(null);
@@ -99,14 +36,21 @@ function App() {
           console.error('版本检查失败:', error);
         }
       };
-      // checkAppVersion();
-      // ipcRenderer.invoke('get-sys-info').then(info => {
-      //   console.log(info);
-      // });
+      
+      (async () => {
+        const lastSysInfoDate = await config.get('lastSysInfoDate');
+        const today = new Date();
+        const todayStr = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
+        if (!lastSysInfoDate || lastSysInfoDate !== todayStr) {
+          ipcRenderer.invoke('get-sys-info').then(info => {
+            puts('1', '启动程序', JSON.stringify(info));
+            config.set('lastSysInfoDate', todayStr);
+            config.set('systemInfo', info.os.release);
+          });
+        }
+      })();
     }
 
-    // getSystemInfo();
-    
     if (initialized.current) return;
     initialized.current = true;
 
