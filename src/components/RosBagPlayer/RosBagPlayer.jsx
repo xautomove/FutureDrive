@@ -4,8 +4,10 @@ import { PlayCircleOutlined, StopOutlined, FileOutlined } from '@ant-design/icon
 import './RosBagPlayer.css';
 import commandExecutor from '../../assets/js/commandExecutor';
 import { log, LOG_TYPES } from '../../assets/js/utils';
+import { useI18n } from '../../context/I18nContext';
 
 const RosBagPlayer = ({ visible, onClose }) => {
+  const { t } = useI18n();
   const [bagPath, setBagPath] = useState('');
   const [bagInfo, setBagInfo] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -57,7 +59,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
         await getBagInfo(result.filePaths[0]);
       }
     } catch (error) {
-      message.error('选择文件失败：' + error.message);
+      message.error(t('rosbag.selectFileFail', { msg: error.message }));
     }
   };
 
@@ -69,7 +71,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
       setBagInfo(info);
       setTotalDuration(info.durationSeconds);
     } catch (error) {
-      message.error('获取包信息失败：' + error.message);
+      message.error(t('rosbag.getInfoFail', { msg: error.message }));
     } finally {
       setLoading(false);
     }
@@ -121,7 +123,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
 
   const startPlayback = async () => {
     if (!bagPath) {
-      message.warning('请先选择ROS包文件');
+      message.warning(t('rosbag.mustChooseFile'));
       return;
     }
 
@@ -135,7 +137,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
         onStdout: (text) => {
           if (text.includes('closing')) {
             stopPlayback();
-            message.success('ROS包播放完成');
+            message.success(t('rosbag.playDone'));
           }
         },
         onStderr: (text) => {
@@ -150,9 +152,9 @@ const RosBagPlayer = ({ visible, onClose }) => {
 
       startProgressListener();
 
-      message.success('开始回放ROS包');
+      message.success(t('rosbag.playStart'));
     } catch (error) {
-      message.error('启动回放失败：' + error.message);
+      message.error(t('rosbag.playStartFail', { msg: error.message }));
       setIsPlaying(false);
     }
   };
@@ -167,9 +169,9 @@ const RosBagPlayer = ({ visible, onClose }) => {
       stopProgressListener();
       setIsPlaying(false);
       setCurrentTime(0);
-      message.success('回放已停止');
+      message.success(t('rosbag.playStopped'));
     } catch (error) {
-      message.error('停止回放失败：' + error.message);
+      message.error(t('rosbag.playStopFail', { msg: error.message }));
     }
   };
 
@@ -204,7 +206,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
         <div className="ros-bag-player-section">
           <div className="ros-bag-player-path">
             <Input
-              placeholder="选择ROS包文件"
+              placeholder={t('rosbag.pathPlaceholder')}
               value={bagPath}
               onChange={e => setBagPath(e.target.value)}
               className="ros-bag-player-path-input"
@@ -213,7 +215,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
               <Button 
                 icon={<FileOutlined />} 
                 onClick={selectBagFile}
-                title="选择文件"
+                title={t('rosbag.chooseFile')}
                 size="small"
               />
             </div>
@@ -223,43 +225,43 @@ const RosBagPlayer = ({ visible, onClose }) => {
         {loading && (
           <div className="ros-bag-player-loading">
             <Spin size="small" />
-            <span>正在获取包信息...</span>
+            <span>{t('rosbag.loadingInfo')}</span>
           </div>
         )}
 
         {bagInfo && (
           <div className="ros-bag-player-info">
             <div className="ros-bag-player-info-item">
-              <span className="label">文件：</span>
+              <span className="label">{t('rosbag.labelFiles')}</span>
               <span className="value">{bagInfo.files}</span>
             </div>
             {bagInfo.bagSize && (
               <div className="ros-bag-player-info-item">
-                <span className="label">大小：</span>
+                <span className="label">{t('rosbag.labelSize')}</span>
                 <span className="value">{bagInfo.bagSize}</span>
               </div>
             )}
             <div className="ros-bag-player-info-item">
-              <span className="label">时长：</span>
+              <span className="label">{t('rosbag.labelDuration')}</span>
               <span className="value">{bagInfo.duration}</span>
             </div>
             <div className="ros-bag-player-info-item">
-              <span className="label">开始：</span>
+              <span className="label">{t('rosbag.labelStart')}</span>
               <span className="value">{bagInfo.start}</span>
             </div>
             <div className="ros-bag-player-info-item">
-              <span className="label">结束：</span>
+              <span className="label">{t('rosbag.labelEnd')}</span>
               <span className="value">{bagInfo.end}</span>
             </div>
             {bagInfo.messages && (
               <div className="ros-bag-player-info-item">
-                <span className="label">消息数：</span>
+                <span className="label">{t('rosbag.labelMessages')}</span>
                 <span className="value">{bagInfo.messages}</span>
               </div>
             )}
             {bagInfo.topicInfo && (
               <div className="ros-bag-player-info-item">
-                <span className="label">话题信息：</span>
+                <span className="label">{t('rosbag.labelTopicInfo')}</span>
                 <span className="value">{bagInfo.topicInfo}</span>
               </div>
             )}
@@ -286,7 +288,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
               onClick={startPlayback}
               disabled={!bagPath}
             >
-              播放
+              {t('rosbag.play')}
             </Button>
           ) : (
             <Button
@@ -294,7 +296,7 @@ const RosBagPlayer = ({ visible, onClose }) => {
               icon={<StopOutlined />}
               onClick={stopPlayback}
             >
-              停止
+              {t('rosbag.stop')}
             </Button>
           )}
         </div>

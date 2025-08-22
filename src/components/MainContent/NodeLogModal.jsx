@@ -2,17 +2,19 @@ import React from 'react';
 import { Modal, Tabs, Button, Empty, message } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
 import GLOBALS from '../../assets/js/globals';
+import { useI18n } from '../../context/I18nContext';
 
 const NodeLogModal = ({ visible, onClose, uuid }) => {
+  const { t } = useI18n();
   const logs = GLOBALS.nodeLogs || [];
   const log = logs.find(item => item.uuid === uuid);
 
   const handleCopy = (content) => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(content).then(() => {
-        message.success('复制成功');
+        message.success(t('nodeLog.copySuccess'));
       }).catch(() => {
-        message.error('复制失败');
+        message.error(t('nodeLog.copyFailed'));
       });
     } else {
       const textArea = document.createElement('textarea');
@@ -21,16 +23,16 @@ const NodeLogModal = ({ visible, onClose, uuid }) => {
       textArea.select();
       try {
         document.execCommand('copy');
-        message.success('复制成功');
+        message.success(t('nodeLog.copySuccess'));
       } catch (err) {
-        message.error('复制失败');
+        message.error(t('nodeLog.copyFailed'));
       }
       document.body.removeChild(textArea);
     }
   };
 
-  const renderContentWithCopy = (content, title) => {
-    const displayContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : content || '无';
+  const renderContentWithCopy = (content) => {
+    const displayContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : content || t('nodeLog.none');
     
     return (
       <div style={{ position: 'relative' }}>
@@ -48,7 +50,7 @@ const NodeLogModal = ({ visible, onClose, uuid }) => {
             background: 'rgba(0, 0, 0, 0.3)',
             border: '1px solid #444'
           }}
-          title={`复制${title}`}
+          title={t('nodeLog.copyStatusTitle')}
         />
         <pre style={{ 
           maxHeight: 400, 
@@ -67,13 +69,14 @@ const NodeLogModal = ({ visible, onClose, uuid }) => {
   };
 
   const renderStatusWithCopy = () => {
-    const statusContent = `状态: ${log?.status === 'completed' ? '已完成' : log?.status === 'error' ? '执行错误' : '未知状态'}
-开始时间: ${log?.startTime || '未知'}
-结束时间: ${log?.endTime || '未知'}
-运行时长: ${log?.duration || '未知'}
-节点名称: ${log?.label || '未知'}
-UUID: ${log?.uuid || '未知'}
-记录时间: ${log?.time || '未知'}`;
+    const statusText = log?.status === 'completed' ? t('nodeLog.statusCompleted') : log?.status === 'error' ? t('nodeLog.statusError') : t('nodeLog.statusUnknown');
+    const statusContent = `${t('nodeLog.status')} ${statusText}
+${t('nodeLog.startTime')} ${log?.startTime || t('nodeLog.statusUnknown')}
+${t('nodeLog.endTime')} ${log?.endTime || t('nodeLog.statusUnknown')}
+${t('nodeLog.duration')} ${log?.duration || t('nodeLog.statusUnknown')}
+${t('nodeLog.nodeName')} ${log?.label || t('nodeLog.statusUnknown')}
+${t('nodeLog.uuid')} ${log?.uuid || t('nodeLog.statusUnknown')}
+${t('nodeLog.recordTime')} ${log?.time || t('nodeLog.statusUnknown')}`;
 
     return (
       <div style={{ position: 'relative' }}>
@@ -91,7 +94,7 @@ UUID: ${log?.uuid || '未知'}
             background: 'rgba(0, 0, 0, 0.3)',
             border: '1px solid #444'
           }}
-          title="复制状态信息"
+          title={t('nodeLog.copyStatusTitle')}
         />
         <div style={{ 
           background: '#1e1e1e', 
@@ -104,7 +107,7 @@ UUID: ${log?.uuid || '未知'}
           margin: 0
         }}>
           <div style={{ marginBottom: 12 }}>
-            <strong>状态:</strong> 
+            <strong>{t('nodeLog.status')}</strong> 
             <span style={{ 
               color: log?.error ? '#ff4d4f' : '#52c41a',
               marginLeft: 8,
@@ -113,32 +116,32 @@ UUID: ${log?.uuid || '未知'}
               borderRadius: 4,
               border: `1px solid ${log?.error ? '#ff4d4f' : '#52c41a'}`
             }}>
-              {log?.status === 'completed' ? '已完成' : log?.status === 'error' ? '执行错误' : '未知状态'}
+              {log?.status === 'completed' ? t('nodeLog.statusCompleted') : log?.status === 'error' ? t('nodeLog.statusError') : t('nodeLog.statusUnknown')}
             </span>
           </div>
           {log?.startTime && (
             <div style={{ marginBottom: 8 }}>
-              <strong>开始时间:</strong> <span style={{ marginLeft: 8 }}>{log.startTime}</span>
+              <strong>{t('nodeLog.startTime')}</strong> <span style={{ marginLeft: 8 }}>{log.startTime}</span>
             </div>
           )}
           {log?.endTime && (
             <div style={{ marginBottom: 8 }}>
-              <strong>结束时间:</strong> <span style={{ marginLeft: 8 }}>{log.endTime}</span>
+              <strong>{t('nodeLog.endTime')}</strong> <span style={{ marginLeft: 8 }}>{log.endTime}</span>
             </div>
           )}
           {log?.duration && (
             <div style={{ marginBottom: 8 }}>
-              <strong>运行时长:</strong> <span style={{ marginLeft: 8, color: '#1890ff' }}>{log.duration}</span>
+              <strong>{t('nodeLog.duration')}</strong> <span style={{ marginLeft: 8, color: '#1890ff' }}>{log.duration}</span>
             </div>
           )}
           <div style={{ marginBottom: 8 }}>
-            <strong>节点名称:</strong> <span style={{ marginLeft: 8 }}>{log?.label || '未知'}</span>
+            <strong>{t('nodeLog.nodeName')}</strong> <span style={{ marginLeft: 8 }}>{log?.label || t('nodeLog.statusUnknown')}</span>
           </div>
           <div style={{ marginBottom: 8 }}>
-            <strong>UUID:</strong> <span style={{ marginLeft: 8, fontFamily: 'monospace', fontSize: 11 }}>{log?.uuid || '未知'}</span>
+            <strong>{t('nodeLog.uuid')}</strong> <span style={{ marginLeft: 8, fontFamily: 'monospace', fontSize: 11 }}>{log?.uuid || t('nodeLog.statusUnknown')}</span>
           </div>
           <div style={{ marginBottom: 8 }}>
-            <strong>记录时间:</strong> <span style={{ marginLeft: 8 }}>{log?.time || '未知'}</span>
+            <strong>{t('nodeLog.recordTime')}</strong> <span style={{ marginLeft: 8 }}>{log?.time || t('nodeLog.statusUnknown')}</span>
           </div>
         </div>
       </div>
@@ -151,7 +154,7 @@ UUID: ${log?.uuid || '未知'}
         open={visible} 
         onCancel={onClose} 
         footer={null} 
-        title="节点运行日志" 
+        title={t('nodeLog.title')} 
         width={700} 
         className="maincontent-log-modal"
         styles={{
@@ -160,9 +163,9 @@ UUID: ${log?.uuid || '未知'}
           header: { backgroundColor: '#2d2d2d', borderBottom: '1px solid #444' }
         }}
       >
-        <Empty description="暂无该节点运行记录" />
+        <Empty description={t('nodeLog.empty')} />
         <div style={{ textAlign: 'right', marginTop: 24 }}>
-          <Button onClick={onClose}>关闭</Button>
+          <Button onClick={onClose}>{t('nodeLog.close')}</Button>
         </div>
       </Modal>
     );
@@ -173,7 +176,7 @@ UUID: ${log?.uuid || '未知'}
       open={visible} 
       onCancel={onClose} 
       footer={null} 
-      title="节点运行日志" 
+      title={t('nodeLog.title')} 
       width={700} 
       className="maincontent-log-modal"
       styles={{
@@ -185,24 +188,24 @@ UUID: ${log?.uuid || '未知'}
       <Tabs
         defaultActiveKey="input"
       >
-        <Tabs.TabPane tab="运行状态" key="status">
+        <Tabs.TabPane tab={t('nodeLog.tabs.status')} key="status">
           {renderStatusWithCopy()}
         </Tabs.TabPane>
-        <Tabs.TabPane tab="输入信息" key="input">
-          {renderContentWithCopy(log?.input, '输入信息')}
+        <Tabs.TabPane tab={t('nodeLog.tabs.input')} key="input">
+          {renderContentWithCopy(log?.input)}
         </Tabs.TabPane>
-        <Tabs.TabPane tab="输出信息" key="output">
-          {renderContentWithCopy(log?.output, '输出信息')}
+        <Tabs.TabPane tab={t('nodeLog.tabs.output')} key="output">
+          {renderContentWithCopy(log?.output)}
         </Tabs.TabPane>
-        <Tabs.TabPane tab="用户配置" key="config">
-          {renderContentWithCopy(log?.config, '用户配置')}
+        <Tabs.TabPane tab={t('nodeLog.tabs.config')} key="config">
+          {renderContentWithCopy(log?.config)}
         </Tabs.TabPane>
-        <Tabs.TabPane tab="调试信息" key="debug">
-          {renderContentWithCopy(log?.debug, '调试信息')}
+        <Tabs.TabPane tab={t('nodeLog.tabs.debug')} key="debug">
+          {renderContentWithCopy(log?.debug)}
         </Tabs.TabPane>
       </Tabs>
       <div style={{ textAlign: 'right', marginTop: 16 }}>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t('nodeLog.close')}</Button>
       </div>
     </Modal>
   );

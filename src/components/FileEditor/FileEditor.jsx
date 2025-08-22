@@ -6,9 +6,11 @@ import { getFileType } from '../../assets/js/utils';
 import FileController from '../../controller/gui/FileController';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import path from 'path';
+import { useI18n } from '../../context/I18nContext';
 
 const FileEditor = ({ visible, filePath, onClose }) => {
   const [content, setContent] = useState('');
+  const { t } = useI18n();
   const [language, setLanguage] = useState('javascript');
   const [isModified, setIsModified] = useState(false);
   const lastSavedContent = useRef('');
@@ -51,15 +53,15 @@ const FileEditor = ({ visible, filePath, onClose }) => {
       if (result.success) {
         lastSavedContent.current = content;
         log(`保存文件成功: ${filePath}`, LOG_TYPES.SUCCESS);
-        message.success('保存成功');
+        message.success(t('fileEditor.saveSuccess'));
         setIsModified(true);
       } else {
         log(`保存文件失败: ${result.error}`, LOG_TYPES.ERROR);
-        message.error(`保存失败: ${result.error}`);
+        message.error(t('fileEditor.saveFailed', { msg: result.error }));
       }
     } catch (error) {
       log(`保存文件失败: ${error.message}`, LOG_TYPES.ERROR);
-      message.error(`保存失败: ${error.message}`);
+      message.error(t('fileEditor.saveFailed', { msg: error.message }));
     }
   };
 
@@ -93,7 +95,7 @@ const FileEditor = ({ visible, filePath, onClose }) => {
         disabled={!isModified}
         style={{ marginLeft: 'auto' }}
       >
-        保存 (Ctrl+S)
+        {t('fileEditor.saveBtn')}
       </button>
     </div>
   );

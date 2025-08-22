@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, message, Space } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import './ProjectModal.css';
 import { log } from '../../assets/js/utils';
+import { useI18n } from '../../context/I18nContext';
 
 const { TextArea } = Input;
 const { dialog } = window.require('@electron/remote');
@@ -10,6 +11,7 @@ const fs = window.require('fs');
 const path = window.require('path');
 
 const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +31,7 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
 
       const projectDir = values.path;
       if (fs.existsSync(projectDir)) {
-        message.error('项目目录已存在');
+        message.error(t('projectModal.dirExists'));
         return;
       }
 
@@ -46,7 +48,7 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
       const configPath = path.join(projectDir, `${values.name}.proj`);
       fs.writeFileSync(configPath, JSON.stringify(projectConfig, null, 2));
 
-      message.success('项目创建成功');
+      message.success(t('projectModal.createSuccess'));
       onCreate(projectDir);
       resetForm();
       onClose();
@@ -57,11 +59,11 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
         onOpenProject(projectDir);
       } catch (error) {
         log(`打开项目失败: ${error.message}`, 'ERROR');
-        message.error('打开项目失败');
+        message.error(t('projectModal.openFailed'));
       }
     } catch (error) {
       console.error('创建项目失败:', error);
-      message.error(error.message || '项目创建失败');
+      message.error(error.message || t('projectModal.createFail'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
     try {
       const projectName = form.getFieldValue('name');
       if (!projectName) {
-        message.warning('请先填写项目名称');
+        message.warning(t('projectModal.fillNameWarn'));
         return;
       }
       const result = await dialog.showOpenDialog({
@@ -83,13 +85,13 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
       }
     } catch (error) {
       console.error('选择目录失败:', error);
-      message.error('选择目录失败');
+      message.error(t('projectModal.selectDirFail'));
     }
   };
 
   return (
     <Modal
-      title="新建项目"
+      title={t('projectModal.title')}
       open={visible}
       onCancel={handleClose}
       footer={null}
@@ -103,38 +105,38 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
       >
         <Form.Item
           name="name"
-          label="项目名称"
+          label={t('projectModal.name')}
           rules={[
-            { required: true, message: '请输入项目名称' },
-            { pattern: /^[a-zA-Z0-9_-]+$/, message: '项目名称只能包含字母、数字、下划线和连字符' }
+            { required: true, message: t('projectModal.nameRequired') },
+            { pattern: /^[a-zA-Z0-9_-]+$/, message: t('projectModal.namePattern') }
           ]}
         >
-          <Input placeholder="请输入项目名称" />
+          <Input placeholder={t('projectModal.nameRequired')} />
         </Form.Item>
 
         <Form.Item
           name="description"
-          label="项目描述"
+          label={t('projectModal.description')}
         >
           <TextArea
-            placeholder="请输入项目描述"
+            placeholder={t('projectModal.descriptionPlaceholder')}
             autoSize={{ minRows: 3, maxRows: 6 }}
           />
         </Form.Item>
 
         <Form.Item
-          label="项目保存位置"
+          label={t('projectModal.saveLocation')}
           required
         >
           <Space.Compact style={{ width: '100%' }}>
             <Form.Item
               name="path"
               noStyle
-              rules={[{ required: true, message: '请选择项目保存位置' }]}
+              rules={[{ required: true, message: t('projectModal.chooseSaveLocation') }]}
             >
               <Input
                 style={{ width: 'calc(100% - 80px)' }}
-                placeholder="请选择项目保存位置"
+                placeholder={t('projectModal.chooseSaveLocation')}
                 readOnly
               />
             </Form.Item>
@@ -143,19 +145,19 @@ const ProjectModal = ({ visible, onClose, onCreate, onOpenProject }) => {
               onClick={handleSelectPath}
               className="select-path-button"
             >
-              浏览
+              {t('projectModal.browse')}
             </Button>
           </Space.Compact>
         </Form.Item>
 
         <Form.Item className="form-footer">
-          <Button style={{ marginRight: '10px' }} onClick={handleClose}>取消</Button>
+          <Button style={{ marginRight: '10px' }} onClick={handleClose}>{t('projectModal.cancel')}</Button>
           <Button
             type="primary"
             onClick={handleCreate}
             loading={loading}
           >
-            创建项目
+            {t('projectModal.create')}
           </Button>
         </Form.Item>
       </Form>

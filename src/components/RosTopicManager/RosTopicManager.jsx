@@ -7,8 +7,10 @@ import commandExecutor from '../../assets/js/commandExecutor';
 import path from 'path';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import windowController from '../../controller/gui/WindowController';
+import { useI18n } from '../../context/I18nContext';
 
 const RosTopicManager = ({ visible, onClose }) => {
+  const { t } = useI18n();
   const [topics, setTopics] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [contextMenu, setContextMenu] = useState(null);
@@ -27,14 +29,14 @@ const RosTopicManager = ({ visible, onClose }) => {
       const topicList = await rosController.getTopicList();
       setTopics(topicList);
     } catch (error) {
-      message.error(`获取话题列表失败: ${error.message}`);
+      message.error(t('rostopic.fetchFailed', { msg: error.message }));
     }
   };
 
   const copyTopicName = (topic) => {
     navigator.clipboard.writeText(topic).then(
-      () => message.success('话题名称已复制到剪贴板'),
-      () => message.error('复制失败')
+      () => message.success(t('rostopic.copySuccess')),
+      () => message.error(t('rostopic.copyFailed'))
     );
   };
 
@@ -81,11 +83,11 @@ const RosTopicManager = ({ visible, onClose }) => {
 
   const handleRecordConfirm = async () => {
     if (!recordPath) {
-      message.warning('请选择保存路径');
+      message.warning(t('rostopic.choosePathWarn'));
       return;
     }
     if (!recordSelectedTopics.length) {
-      message.warning('请至少选择一个话题');
+      message.warning(t('rostopic.chooseTopicWarn'));
       return;
     }
     const cmd = 'ros2';
@@ -96,7 +98,7 @@ const RosTopicManager = ({ visible, onClose }) => {
           log(text, LOG_TYPES.INFO);
           if (text.includes('Recording...')) {
             setRecordingStarted(true);
-            message.success('录制已开始');
+            message.success(t('rostopic.recordingStarted'));
           }
         },
         onStderr: (text) => {
@@ -105,18 +107,18 @@ const RosTopicManager = ({ visible, onClose }) => {
             if (text.includes("Output folder '") && text.includes("' already exists.")) {
               const match = text.match(/Output folder '(.+)' already exists\./);
               if (match && match[1]) {
-                message.error(`文件已经存在：${match[1]}`);
+                message.error(t('rostopic.fileExists', { path: match[1] }));
               } else {
-                message.error('文件已经存在');
+                message.error(t('rostopic.fileExistsGeneric'));
               }
             }
           } else {
             if (text.includes('Recording...')) {
               setRecordingStarted(true);
               setIsRecording(true);
-              message.success('录制已开始');
+              message.success(t('rostopic.recordingStarted'));
             } else if (text.includes('Recording stopped')) {
-              message.success('录制已停止');
+              message.success(t('rostopic.recordStop'));
             }
           }
         },
@@ -124,7 +126,7 @@ const RosTopicManager = ({ visible, onClose }) => {
       recordProcessRef.current = proc;
       log(`启动录制进程: ${recordPath}`, LOG_TYPES.SUCCESS);
     } catch (e) {
-      message.error('录制启动失败: ' + e.message);
+      message.error(t('rostopic.recordStartFailed', { msg: e.message }));
       log(`录制启动失败: ${e.message}`, LOG_TYPES.ERROR);
     }
   };
@@ -146,7 +148,7 @@ const RosTopicManager = ({ visible, onClose }) => {
         setRecordPath(bagFilePath);
       }
     } catch (error) {
-      message.error('选择目录失败：' + error.message);
+      message.error(t('rostopic.selectDirFailed', { msg: error.message }));
     }
   };
 
@@ -181,16 +183,16 @@ const RosTopicManager = ({ visible, onClose }) => {
       try {
         await commandExecutor.execute('ros2', ['daemon', 'start']);
       } catch (error) {
-        message.warning(`启动daemon失败: ${error.message}`);
+        message.warning(t('rostopic.daemonStartFailed', { msg: error.message }));
       }
-      message.success('重启ROS成功');
+      message.success(t('rostopic.restartSuccess'));
 
       setTimeout(() => {
         fetchTopics();
       }, 2000);
 
     } catch (error) {
-      message.error(`重启ROS失败: ${error.message}`);
+      message.error(t('rostopic.restartFailed', { msg: error.message }));
     }
   };
 
@@ -205,7 +207,7 @@ const RosTopicManager = ({ visible, onClose }) => {
         setIsRecording(false);
         setRecordingStarted(false);
       } catch (e) {
-        message.error('停止录制失败');
+        message.error(t('rostopic.stopRecordFailed'));
       }
     }
   };
@@ -222,7 +224,7 @@ const RosTopicManager = ({ visible, onClose }) => {
         styles={{
           mask: { backgroundColor: 'rgba(0, 0, 0, 0.5)' }
         }}
-        title="话题管理"
+        title={t('rostopic.modalTitle')}
       >
         <div
           className="ros-topic-manager"
@@ -237,33 +239,33 @@ const RosTopicManager = ({ visible, onClose }) => {
             <Button
               icon={<ReloadOutlined />}
               onClick={fetchTopics}
-              title="刷新话题列表"
+              title={t('rostopic.refreshTitle')}
               className="ros-topic-manager-toolbar-btn"
             />
             <Button
               icon={<VideoCameraOutlined />}
               onClick={handleRecordClick}
-              title="录制"
+              title={t('rostopic.recordTitle')}
               className="ros-topic-manager-toolbar-btn"
             />
             <Button
               icon={<PlayCircleOutlined />}
               onClick={handlePlayClick}
-              title="回放ROS包"
+              title={t('rostopic.playbackTitle')}
               className="ros-topic-manager-toolbar-btn play-btn"
             />
             <Popconfirm
-              title="重启ROS"
-              description="这将结束所有ROS节点并重启Daemon，确定要继续吗？"
+              title={t('rostopic.restartTitle')}
+              description={t('rostopic.restartDesc')}
               onConfirm={handleRestartRos}
-              okText="确定"
-              cancelText="取消"
+              okText={t('common.ok')}
+              cancelText={t('common.cancel')}
               placement="bottom"
               overlayClassName="ros-topic-manager-popconfirm"
             >
               <Button
                 icon={<PoweroffOutlined />}
-                title="一键重启ROS"
+                title={t('rostopic.restartBtnTitle')}
                 className="ros-topic-manager-toolbar-btn restart-btn"
               />
             </Popconfirm>
@@ -274,7 +276,7 @@ const RosTopicManager = ({ visible, onClose }) => {
               />
               {searchOpen && (
                 <Input
-                  placeholder="搜索话题..."
+                  placeholder={t('rostopic.searchPlaceholder')}
                   value={searchText}
                   onChange={e => setSearchText(e.target.value)}
                   className="ros-topic-manager-search-input"
@@ -289,7 +291,7 @@ const RosTopicManager = ({ visible, onClose }) => {
             <div className="ros-topic-manager-inline-record">
               <div className="ros-topic-manager-inline-record-path">
                 <Input
-                  placeholder="保存路径，如 /tmp/rosbag"
+                  placeholder={t('rostopic.savePathPlaceholder')}
                   value={recordPath}
                   onChange={e => setRecordPath(e.target.value)}
                   className="ros-topic-manager-record-path-input"
@@ -304,9 +306,9 @@ const RosTopicManager = ({ visible, onClose }) => {
                   style={{ marginRight: 12 }}
                   danger={isRecording}
                 >
-                  {isRecording ? (recordingStarted ? '停止录制' : '正在启动录制...') : '确认录制'}
+                  {isRecording ? (recordingStarted ? t('rostopic.recordStop') : t('rostopic.recordingStarting')) : t('rostopic.recordConfirm')}
                 </Button>
-                <Button onClick={handleRecordCancel}>取消</Button>
+                <Button onClick={handleRecordCancel}>{t('rostopic.cancel')}</Button>
               </div>
             </div>
           )}
@@ -358,12 +360,12 @@ const RosTopicManager = ({ visible, onClose }) => {
               items={[
                 {
                   key: 'view',
-                  label: '查看',
+                  label: t('rostopic.contextView'),
                   style: { color: '#fff' },
                 },
                 {
                   key: 'copy',
-                  label: '复制',
+                  label: t('rostopic.contextCopy'),
                   style: { color: '#fff' },
                 }
               ]}

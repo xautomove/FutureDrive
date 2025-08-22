@@ -5,11 +5,13 @@ import './ProjectExplorer.css';
 import FileController from '../../controller/gui/FileController';
 import { getFileType } from '../../assets/js/utils';
 import FileEditor from '../FileEditor/FileEditor';
+import { useI18n } from '../../context/I18nContext';
 
 const path = window.require('path');
 const fs = window.require('fs');
 
 const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) => {
+  const { t } = useI18n();
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, node: null });
   const [renameInput, setRenameInput] = useState({ visible: false, node: null, value: '' });
   const [newItemInput, setNewItemInput] = useState({ visible: false, type: '', parentPath: '', value: '' });
@@ -60,10 +62,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     e.stopPropagation();
     if (contextMenu.node) {
       Modal.confirm({
-        title: '确认删除',
-        content: `确定要删除 "${contextMenu.node.title}" 吗？`,
-        okText: '确定',
-        cancelText: '取消',
+        title: t('projectExplorer.confirmDeleteTitle'),
+        content: t('projectExplorer.confirmDeleteContent', { name: contextMenu.node.title }),
+        okText: t('common.ok'),
+        cancelText: t('common.cancel'),
         okButtonProps: {
           style: {
             background: '#1976d2',
@@ -81,7 +83,7 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
         onOk: () => {
           const result = FileController.deleteFile(contextMenu.node.key);
           if (result.success) {
-            message.success('删除成功');
+            message.success(t('projectExplorer.deleteSuccess'));
             onTreeDataChange && onTreeDataChange();
           } else {
             message.error(result.error);
@@ -96,10 +98,10 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
     e.stopPropagation();
     if (contextMenu.node) {
       Modal.confirm({
-        title: '确认重命名',
-        content: `确定要重命名 "${contextMenu.node.title}" 吗？`,
-        okText: '确定',
-        cancelText: '取消',
+        title: t('projectExplorer.confirmRenameTitle'),
+        content: t('projectExplorer.confirmRenameContent', { name: contextMenu.node.title }),
+        okText: t('common.ok'),
+        cancelText: t('common.cancel'),
         okButtonProps: {
           style: {
             background: '#1976d2',
@@ -180,7 +182,7 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
         : FileController.createFolder(newPath);
       
       if (result.success) {
-        message.success(`新建${newItemInput.type === 'file' ? '文件' : '文件夹'}成功`);
+        message.success(newItemInput.type === 'file' ? t('projectExplorer.createFileSuccess') : t('projectExplorer.createFolderSuccess'));
         onTreeDataChange && onTreeDataChange();
       } else {
         message.error(result.error);
@@ -286,7 +288,7 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
               onBlur={handleNewItemConfirm}
               onKeyDown={handleNewItemKeyDown}
               autoFocus
-              placeholder={`新建${newItemInput.type === 'file' ? '文件' : '文件夹'}`}
+              placeholder={newItemInput.type === 'file' ? t('projectExplorer.newItemPlaceholderFile') : t('projectExplorer.newItemPlaceholderFolder')}
             />
           </div>
         </>
@@ -333,31 +335,31 @@ const ProjectExplorer = ({ treeData = [], projectName = '', onTreeDataChange }) 
             className="context-menu-item"
             onClick={handleNewFile}
           >
-            新建文件
+            {t('projectExplorer.contextNewFile')}
           </div>
           <div 
             className="context-menu-item"
             onClick={handleNewFolder}
           >
-            新建文件夹
+            {t('projectExplorer.contextNewFolder')}
           </div>
           <div 
             className="context-menu-item"
             onClick={handleRename}
           >
-            重命名
+            {t('projectExplorer.contextRename')}
           </div>
           <div 
             className="context-menu-item"
             onClick={handleDelete}
           >
-            删除
+            {t('projectExplorer.contextDelete')}
           </div>
           <div 
             className="context-menu-item"
             onClick={handleOpenInExplorer}
           >
-            在资源管理器中打开
+            {t('projectExplorer.openInExplorer')}
           </div>
         </div>
       )}

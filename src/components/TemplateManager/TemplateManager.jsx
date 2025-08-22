@@ -5,11 +5,13 @@ import templateManager from '../../controller/gui/TemplateManager';
 import fileController from '../../controller/gui/FileController';
 import path from 'path';
 import './TemplateManager.css';
+import { useI18n } from '../../context/I18nContext';
 
 const { shell } = window.require ? window.require('electron') : require('electron');
 
 const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
   const [templates, setTemplates] = useState([]);
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
       const templateList = templateManager.getTemplateList();
       setTemplates(templateList);
     } catch (error) {
-      message.error('加载模板列表失败');
+      message.error(t('templateManager.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -36,10 +38,10 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
       if (onApplyTemplate) {
         onApplyTemplate(templateData);
         onClose();
-        message.success(`已应用模板: ${template.name}`);
+        message.success(t('templateManager.applied', { name: template.name }));
       }
     } catch (error) {
-      message.error(`应用模板失败: ${error.message}`);
+      message.error(t('templateManager.applyFailed', { msg: error.message }));
     }
   };
 
@@ -61,22 +63,22 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
 
       if (fileController.fileExists(targetPath)) {
         Modal.confirm({
-          title: '文件已存在',
-          content: `模板 "${fileName}" 已存在，是否覆盖？`,
-          okText: '覆盖',
-          cancelText: '取消',
+          title: t('templateManager.fileExistsTitle'),
+          content: t('templateManager.fileExistsContent', { name: fileName }),
+          okText: t('templateManager.overwrite'),
+          cancelText: t('templateManager.cancel'),
           onOk: async () => {
             try {
               const copyResult = fileController.copyFile(result.filePath, targetPath);
               if (!copyResult.success) {
-                message.error(`导入模板失败: ${copyResult.error}`);
+                message.error(t('templateManager.importFailedX', { msg: copyResult.error }));
                 return;
               }
 
               loadTemplates();
-              message.success('模板导入成功');
+              message.success(t('templateManager.importSuccess'));
             } catch (error) {
-              message.error(`导入模板失败: ${error.message}`);
+              message.error(t('templateManager.importFailedX', { msg: error.message }));
             }
           }
         });
@@ -85,14 +87,14 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
 
       const copyResult = fileController.copyFile(result.filePath, targetPath);
       if (!copyResult.success) {
-        message.error(`导入模板失败: ${copyResult.error}`);
+        message.error(t('templateManager.importFailedX', { msg: copyResult.error }));
         return;
       }
 
       loadTemplates();
-      message.success('模板导入成功');
+      message.success(t('templateManager.importSuccess'));
     } catch (error) {
-      message.error(`导入模板失败: ${error.message}`);
+      message.error(t('templateManager.importFailedX', { msg: error.message }));
     }
   };
 
@@ -102,7 +104,7 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
         className="template-manager-modal"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>模板管理</span>
+            <span>{t('templateManager.title')}</span>
           </div>
         }
         open={visible}
@@ -115,7 +117,7 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
               onClick={() => shell.openExternal('https://market.automoves.cn/')}
               style={{ marginLeft: 8 }}
             >
-              市场
+              {t('templateManager.market')}
             </Button>,
           <Button 
             key="import" 
@@ -123,7 +125,7 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
             icon={<ImportOutlined />}
             onClick={handleImportTemplate}
           >
-            导入模板
+            {t('templateManager.importTemplate')}
           </Button>
         ]}
       >
@@ -143,7 +145,7 @@ const TemplateManager = ({ visible, onClose, onApplyTemplate }) => {
                 size="small"
                 onClick={() => handleApplyTemplate(template)}
               >
-                应用
+                {t('templateManager.apply')}
               </Button>
             </div>
           ))}

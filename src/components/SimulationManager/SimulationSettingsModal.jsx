@@ -5,11 +5,13 @@ import SimulationController from '../../controller/gui/SimulationController';
 import GLOBALS from '../../assets/js/globals';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import { shell } from 'electron';
+import { useI18n } from '../../context/I18nContext';
 
 const path = window.require ? window.require('path') : require('path');
 
 const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, onUninstall }) => {
   const [form] = Form.useForm();
+  const { t } = useI18n();
 
   React.useEffect(() => {
     if (visible) {
@@ -54,28 +56,28 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
     if (platform === 'Carla') {
       return (
         <>
-          <Form.Item label="Host" name="host" rules={[{ required: true, message: '请输入Host' }]}> 
+          <Form.Item label={t('simulationSettings.host')} name="host" rules={[{ required: true, message: t('simulationSettings.validateHost') }]}> 
             <Input /> 
           </Form.Item>
-          <Form.Item label="Port" name="port" rules={[{ required: true, message: '请输入Port' }]}> 
+          <Form.Item label={t('simulationSettings.port')} name="port" rules={[{ required: true, message: t('simulationSettings.validatePort') }]}> 
             <Input /> 
           </Form.Item>
-          <Form.Item label="Map" name="map" rules={[{ message: '请输入Map' }]}> 
+          <Form.Item label={t('simulationSettings.map')} name="map" rules={[{ message: t('simulationSettings.validateMap') }]}> 
             <Input /> 
           </Form.Item>
-          <Form.Item label="启动文件" required>
+          <Form.Item label={t('simulationSettings.launchFile')} required>
             <Space.Compact style={{ width: '100%' }}>
-              <Form.Item name="launchFile" noStyle rules={[{ required: true, message: '请选择启动文件' }]}> 
+              <Form.Item name="launchFile" noStyle rules={[{ required: true, message: t('simulationSettings.validateChooseFile') }]}> 
                 <Input
                   readOnly
-                  placeholder="请选择py或sh文件"
+                  placeholder={t('simulationSettings.chooseFilePlaceholder')}
                 />
               </Form.Item>
               <Button
                 icon={<FolderOpenOutlined />}
                 onClick={async () => {
                   const result = await fileController.selectFile({
-                    title: '选择启动文件',
+                    title: t('simulationSettings.chooseFileTitle'),
                     filters: [
                       { name: 'Python/Shell', extensions: ['py', 'sh'] }
                     ]
@@ -84,33 +86,33 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
                     form.setFieldsValue({ launchFile: result.filePath });
                   }
                 }}
-              >选择文件</Button>
+              >{t('simulationSettings.chooseFile')}</Button>
             </Space.Compact>
           </Form.Item>
-          <Form.Item label="启动参数" name="launchArgs">
-            <Input placeholder="可选，追加到命令行，如 --foo bar" />
+          <Form.Item label={t('simulationSettings.launchArgs')} name="launchArgs">
+            <Input placeholder={t('simulationSettings.launchArgsPlaceholder')} />
           </Form.Item>
         </>
       );
     } else if (platform === 'Gazebo') {
       return (
         <>
-          <Form.Item label="Map" name="map" rules={[{ message: '请输入Map' }]}> 
+          <Form.Item label={t('simulationSettings.map')} name="map" rules={[{ message: t('simulationSettings.validateMap') }]}> 
             <Input /> 
           </Form.Item>
-          <Form.Item label="启动文件" required>
+          <Form.Item label={t('simulationSettings.launchFile')} required>
             <Space.Compact style={{ width: '100%' }}>
-              <Form.Item name="launchFile" noStyle rules={[{ pattern: /\.(py|sh)$/i, message: '只允许py或sh文件' }]}> 
+              <Form.Item name="launchFile" noStyle rules={[{ pattern: /\.(py|sh)$/i, message: t('simulationSettings.onlyPySh') }]}> 
                 <Input
                   readOnly
-                  placeholder="请选择py或sh文件（可选）"
+                  placeholder={t('simulationSettings.chooseFileOptionalPlaceholder')}
                 />
               </Form.Item>
               <Button
                 icon={<FolderOpenOutlined />}
                 onClick={async () => {
                   const result = await fileController.selectFile({
-                    title: '选择启动文件',
+                    title: t('simulationSettings.chooseFileTitle'),
                     defaultPath: path.join(GLOBALS.USERDATA_DIR, 'plugins'),
                     filters: [
                       { name: 'Python/Shell', extensions: ['py', 'sh'] }
@@ -120,11 +122,11 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
                     form.setFieldsValue({ launchFile: result.filePath });
                   }
                 }}
-              >选择文件</Button>
+              >{t('simulationSettings.chooseFile')}</Button>
             </Space.Compact>
           </Form.Item>
-          <Form.Item label="启动参数" name="launchArgs">
-            <Input placeholder="可选，追加到命令行，如 --foo bar" />
+          <Form.Item label={t('simulationSettings.launchArgs')} name="launchArgs">
+            <Input placeholder={t('simulationSettings.launchArgsPlaceholder')} />
           </Form.Item>
         </>
       );
@@ -134,7 +136,7 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
 
   return (
     <Modal
-      title={`仿真设置 - ${platform}`}
+      title={t('simulationSettings.title', { platform })}
       open={visible}
       onCancel={onClose}
       footer={null}
@@ -145,12 +147,12 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
       </Form>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Button danger onClick={handleUninstall}>卸载</Button>
-          <Button onClick={handleOpenPluginDir}>插件目录</Button>
+          <Button danger onClick={handleUninstall}>{t('simulationSettings.uninstall')}</Button>
+          <Button onClick={handleOpenPluginDir}>{t('simulationSettings.pluginDir')}</Button>
         </div>
         <div>
-          <Button onClick={onClose} style={{ marginRight: 8 }}>取消</Button>
-          <Button type="primary" onClick={handleOk}>保存</Button>
+          <Button onClick={onClose} style={{ marginRight: 8 }}>{t('simulationSettings.cancel')}</Button>
+          <Button type="primary" onClick={handleOk}>{t('simulationSettings.save')}</Button>
         </div>
       </div>
     </Modal>

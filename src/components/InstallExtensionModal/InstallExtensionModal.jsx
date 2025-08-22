@@ -3,6 +3,7 @@ import { Modal, Input, Select, Button } from 'antd';
 import './InstallExtensionModal.css';
 import GLOBALS from '../../assets/js/globals';
 import fs from 'fs';
+import { useI18n } from '../../context/I18nContext';
 
 const { Option } = Select;
 const path = window.require('path');
@@ -23,6 +24,7 @@ const DIR_MAP = {
 };
 
 const InstallExtensionModal = ({ visible, onClose }) => {
+  const { t } = useI18n();
   const [repo, setRepo] = useState('');
   const [type, setType] = useState('node');
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ const InstallExtensionModal = ({ visible, onClose }) => {
 
   const handleInstall = async () => {
     if (!repo) {
-      setLog('请输入安装指令');
+      setLog(t('installExt.inputPlaceholder'));
       return;
     }
     setLoading(true);
@@ -95,12 +97,12 @@ const InstallExtensionModal = ({ visible, onClose }) => {
       onCancel={onClose}
       footer={null}
       width={600}
-      title="安装扩展"
+      title={t('installExt.title')}
       className="install-extension-modal"
     >
       <div className="install-ext-row">
         <Input
-          placeholder="请输入安装指令"
+          placeholder={t('installExt.inputPlaceholder')}
           value={repo}
           onChange={e => setRepo(e.target.value)}
           style={{ width: '60%' }}
@@ -110,10 +112,10 @@ const InstallExtensionModal = ({ visible, onClose }) => {
           onChange={setType}
           style={{ width: 120, marginLeft: 12 }}
         >
-          <Option value="node">节点</Option>
-          <Option value="template">模板</Option>
-          <Option value="plugin">插件</Option>
-          <Option value="driver">驱动</Option>
+          <Option value="node">{t('installExt.select.node')}</Option>
+          <Option value="template">{t('installExt.select.template')}</Option>
+          <Option value="plugin">{t('installExt.select.plugin')}</Option>
+          <Option value="driver">{t('installExt.select.driver')}</Option>
         </Select>
         <Button
           type="primary"
@@ -121,18 +123,18 @@ const InstallExtensionModal = ({ visible, onClose }) => {
           onClick={handleInstall}
           style={{ marginLeft: 12 }}
         >
-          安装
+          {t('installExt.install')}
         </Button>
         <Button
           type="default"
           onClick={handleOpenMarket}
           style={{ marginLeft: 12 }}
-          title="打开扩展市场"
+          title={t('installExt.openMarket')}
         >
-          市场
+          {t('installExt.market')}
         </Button>
       </div>
-      <div className="install-ext-log-title">执行日志：</div>
+      <div className="install-ext-log-title">{t('installExt.logTitle')}</div>
       <div className="install-ext-log-box">
         <pre>{log}</pre>
       </div>

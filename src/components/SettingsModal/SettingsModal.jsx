@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Menu, Form, Input, Switch, InputNumber, Button, message } from 'antd';
+import { Modal, Menu, Form, Input, Switch, InputNumber, Button, message, Select } from 'antd';
 import './SettingsModal.css';
 import config from '../../assets/js/config';
 import RedisController from '../../controller/node/RedisController';
+import { useI18n } from '../../context/I18nContext';
 
 const settingsList = [
-  { key: 'general', label: '通用' },
-  { key: 'node', label: '节点' },
-  { key: 'api', label: 'API' },
-  { key: 'redis', label: 'Redis' },
-  { key: 'other', label: '其他' },
-  { key: 'framework', label: '框架' },
+  { key: 'general', label: 'general' },
+  { key: 'node', label: 'node' },
+  { key: 'api', label: 'api' },
+  { key: 'redis', label: 'redis' },
+  { key: 'other', label: 'other' },
+  { key: 'framework', label: 'framework' },
 ];
 
 const SettingsModal = ({ visible, onClose }) => {
@@ -28,6 +29,7 @@ const SettingsModal = ({ visible, onClose }) => {
   const [otherForm] = Form.useForm();
   const [frameworkForm] = Form.useForm();
   const [environmentForm] = Form.useForm();
+  const { t, setLanguage } = useI18n();
 
   useEffect(() => {
     if (visible) {
@@ -39,6 +41,7 @@ const SettingsModal = ({ visible, onClose }) => {
           const otherConfig = config.get('other') || {};
           const frameworkConfig = config.get('framework') || {};
           const environmentConfig = config.get('environment') || {};
+          const currentLanguage = config.get('language') || 'zh-CN';
 
           setTimeout(() => {
             nodeForm.setFieldsValue({
@@ -75,7 +78,8 @@ const SettingsModal = ({ visible, onClose }) => {
             setFrameworkPath(frameworkConfig.path || '');
 
             environmentForm.setFieldsValue({
-              listUrl: environmentConfig.listUrl || 'https://future.api.automoves.cn/api/environments/list'
+              listUrl: environmentConfig.listUrl || 'https://future.api.automoves.cn/api/environments/list',
+              language: currentLanguage
             });
           }, 0);
         } catch (error) {
@@ -105,19 +109,19 @@ const SettingsModal = ({ visible, onClose }) => {
       });
 
       if (connected) {
-        message.success('Redis 连接测试成功！');
+        message.success(t('settings.redis.connectSuccess'));
         await redisController.set('test:connection', 'success', 10);
         const testValue = await redisController.get('test:connection');
         if (testValue === 'success') {
-          message.success('Redis 读写测试成功！');
+          message.success(t('settings.redis.readWriteSuccess'));
         }
         await redisController.disconnect();
       } else {
-        message.error('Redis 连接测试失败，请检查配置！');
+        message.error(t('settings.redis.connectFailed'));
       }
     } catch (error) {
       console.error('Redis 测试失败:', error);
-      message.error(`Redis 连接测试失败: ${error.message}`);
+      message.error(`${t('settings.redis.connectionTestFailed')}: ${error.message}`);
     } finally {
       setTestingRedis(false);
     }
@@ -126,8 +130,7 @@ const SettingsModal = ({ visible, onClose }) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      console.log('保存设置');
-      
+
       const nodeValues = nodeForm.getFieldsValue();
       const apiValues = apiForm.getFieldsValue();
       const redisValues = redisForm.getFieldsValue();
@@ -174,8 +177,10 @@ const SettingsModal = ({ visible, onClose }) => {
         ...environmentValues,
         listUrl: environmentValues.listUrl || 'https://future.api.automoves.cn/api/environments/list'
       });
+
+      await config.set('language', environmentValues.language || 'zh-CN');
+      setLanguage(environmentValues.language || 'zh-CN');
       
-      console.log('设置保存成功');
       await new Promise(resolve => setTimeout(resolve, 500));
       onClose();
     } catch (error) {
@@ -190,7 +195,16 @@ const SettingsModal = ({ visible, onClose }) => {
       case 'general':
         return (
           <Form layout="vertical" className="settings-form" form={environmentForm}>
-            <Form.Item name="listUrl" label="环境列表地址 URL">
+            <Form.Item name="language" label={t('settings.general.language')}>
+              <Select
+                style={{ width: 200 }}
+                options={[
+                  { value: 'zh-CN', label: '中文' },
+                  { value: 'en-US', label: 'English' }
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="listUrl" label={t('settings.general.environmentListUrl')}>
               <Input placeholder="https://future.api.automoves.cn/api/environments/list" style={{ width: 400 }} />
             </Form.Item>
           </Form>
@@ -198,35 +212,35 @@ const SettingsModal = ({ visible, onClose }) => {
       case 'node':
         return (
           <Form layout="vertical" className="settings-form" form={nodeForm}>
-            <Form.Item name="delay" label="节点执行延迟 (ms)">
-              <InputNumber min={0} placeholder="请输入延迟（毫秒）" style={{ width: 200 }} />
+            <Form.Item name="delay" label={t('settings.node.delay')}>
+              <InputNumber min={0} placeholder={t('settings.node.delayPlaceholder')} style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item name="timeout" label="节点超时时间 (ms)">
-              <InputNumber min={0} placeholder="请输入超时时间（毫秒）" style={{ width: 200 }} />
+            <Form.Item name="timeout" label={t('settings.node.timeout')}>
+              <InputNumber min={0} placeholder={t('settings.node.timeoutPlaceholder')} style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item name="reportUrl" label="节点上报地址 URL">
-              <Input placeholder="请输入上报地址 URL" style={{ width: 400 }} />
+            <Form.Item name="reportUrl" label={t('settings.node.reportUrl')}>
+              <Input placeholder={t('settings.node.reportUrlPlaceholder')} style={{ width: 400 }} />
             </Form.Item>
-            <Form.Item name="pythonPath" label="Python路径">
-              <Input placeholder="自定义python路径" style={{ width: 400 }} />
+            <Form.Item name="pythonPath" label={t('settings.node.pythonPath')}>
+              <Input placeholder={t('settings.node.pythonPathPlaceholder')} style={{ width: 400 }} />
             </Form.Item>
           </Form>
         );
       case 'api':
         return (
           <Form layout="vertical" className="settings-form" form={apiForm}>
-            <Form.Item name="host" label="API 主机">
+            <Form.Item name="host" label={t('settings.api.host')}>
               <Input placeholder="127.0.0.1" style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item name="port" label="API 端口">
+            <Form.Item name="port" label={t('settings.api.port')}>
               <InputNumber min={1} max={65535} placeholder="2200" style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item label="是否启用 Token">
+            <Form.Item label={t('settings.api.tokenEnabled')}>
               <Switch checked={apiTokenEnabled} onChange={setApiTokenEnabled} />
             </Form.Item>
             {apiTokenEnabled && (
-              <Form.Item label="Token 值">
-                <Input placeholder="请输入 Token（可为空）" style={{ width: 400 }} value={apiToken} onChange={e => setApiToken(e.target.value)} />
+              <Form.Item label={t('settings.api.token')}>
+                <Input placeholder={t('settings.api.tokenPlaceholder')} style={{ width: 400 }} value={apiToken} onChange={e => setApiToken(e.target.value)} />
               </Form.Item>
             )}
           </Form>
@@ -234,19 +248,19 @@ const SettingsModal = ({ visible, onClose }) => {
       case 'redis':
         return (
           <Form layout="vertical" className="settings-form" form={redisForm}>
-            <Form.Item label="是否启用 Redis">
+            <Form.Item label={t('settings.redis.enabled')}>
               <Switch checked={redisEnabled} onChange={setRedisEnabled} />
             </Form.Item>
-            <Form.Item name="host" label="Redis 主机">
+            <Form.Item name="host" label={t('settings.redis.host')}>
               <Input placeholder="localhost" style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item name="port" label="Redis 端口">
+            <Form.Item name="port" label={t('settings.redis.port')}>
               <InputNumber min={1} max={65535} placeholder="6379" style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item name="password" label="Redis 密码">
-              <Input.Password placeholder="请输入密码（可为空）" style={{ width: 200, backgroundColor: 'transparent', borderColor: '#ffffff54' }} />
+            <Form.Item name="password" label={t('settings.redis.password')}>
+              <Input.Password placeholder={t('settings.redis.passwordPlaceholder')} style={{ width: 200, backgroundColor: 'transparent', borderColor: '#ffffff54' }} />
             </Form.Item>
-            <Form.Item name="db" label="Redis 数据库">
+            <Form.Item name="db" label={t('settings.redis.db')}>
               <InputNumber min={0} max={15} placeholder="0" style={{ width: 200 }} />
             </Form.Item>
             <Form.Item>
@@ -256,24 +270,18 @@ const SettingsModal = ({ visible, onClose }) => {
                 loading={testingRedis}
                 style={{ marginRight: 8 }}
               >
-                测试连接
+                {t('settings.redis.testConnection')}
               </Button>
             </Form.Item>
             <div style={{ padding: 12}}>
-              <p style={{ margin: 0, fontSize: 12, color: '#666' }}>
-                <strong>说明：</strong>
-                <br />• 启用 Redis 后，应用将使用 Redis 进行缓存存储
-                <br />• 如果 Redis 连接失败，系统会自动使用内存缓存
-                <br />• 修改配置后需要重启应用才能生效
-                <br />• 建议在保存配置前先测试连接
-              </p>
+              <p style={{ margin: 0, fontSize: 12, color: '#666' }}>{t('settings.redis.notes')}</p>
             </div>
           </Form>
         );
       case 'other':
         return (
           <Form layout="vertical" className="settings-form" form={otherForm}>
-            <Form.Item label="是否无 UI 启动">
+            <Form.Item label={t('settings.other.noUi')}>
               <Switch checked={noUi} onChange={setNoUi} />
             </Form.Item>
           </Form>
@@ -281,8 +289,8 @@ const SettingsModal = ({ visible, onClose }) => {
       case 'framework':
         return (
           <Form layout="vertical" className="settings-form" form={frameworkForm}>
-            <Form.Item label="框架路径">
-              <Input placeholder="请输入框架路径" style={{ width: 400 }} value={path} onChange={e => setFrameworkPath(e.target.value)} />
+            <Form.Item label={t('settings.framework.path')}>
+              <Input placeholder={t('settings.framework.pathPlaceholder')} style={{ width: 400 }} value={path} onChange={e => setFrameworkPath(e.target.value)} />
             </Form.Item>
           </Form>
         );
@@ -297,7 +305,7 @@ const SettingsModal = ({ visible, onClose }) => {
       onCancel={onClose}
       footer={null}
       width={800}
-      title="设置"
+      title={t('menubar.settings')}
       className="settings-modal"
       styles={{
         body: { maxHeight: 'calc(80vh - 110px)', overflow: 'hidden' }
@@ -309,7 +317,10 @@ const SettingsModal = ({ visible, onClose }) => {
           selectedKeys={[selectedKey]}
           onClick={handleMenuClick}
           className="settings-menu"
-          items={settingsList}
+          items={settingsList.map(item => ({
+            ...item,
+            label: t(`settings.tabs.${item.label}`)
+          }))}
         />
         <div className="settings-form-container">
           <div className="settings-form-content">
@@ -317,7 +328,7 @@ const SettingsModal = ({ visible, onClose }) => {
           </div>
           <div className="settings-footer">
             <Button type="primary" onClick={handleSave} loading={loading}>
-              保存
+              {t('common.save')}
             </Button>
           </div>
         </div>

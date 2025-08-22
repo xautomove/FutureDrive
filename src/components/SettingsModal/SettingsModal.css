@@ -9,6 +9,39 @@
 .settings-modal .ant-modal-title {
   color: #fff;
 }
+.settings-modal .ant-select-selector{
+  background: transparent !important;
+  color: white !important;
+  border-color: #444 !important;
+}
+
+.settings-modal .ant-select:hover .ant-select-selector,
+.settings-modal .ant-select-focused .ant-select-selector {
+  border-color: #1890ff !important;
+  box-shadow: none !important;
+}
+
+.settings-modal .ant-select-arrow {
+  color: #e0e0e0 !important;
+}
+
+.settings-modal .ant-select-dropdown {
+  background: #23272e !important;
+  border: 1px solid #444 !important;
+}
+
+.settings-modal .ant-select-item {
+  color: #e0e0e0 !important;
+}
+
+.settings-modal .ant-select-item-option-selected {
+  background: #1890ff !important;
+  color: #fff !important;
+}
+
+.settings-modal .ant-select-item-option-active {
+  background: #333 !important;
+}
 .settings-modal-content {
   display: flex;
   flex-direction: row;

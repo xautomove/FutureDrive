@@ -27,9 +27,11 @@ import { ChromePicker } from 'react-color';
 import ReactDOM from 'react-dom';
 import NodeLogModal from './NodeLogModal';
 import { v4 as uuidv4 } from 'uuid';
+import { useI18n } from '../../context/I18nContext';
 
 
 const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorChange, onPriorityChange }) => {
+  const { t } = useI18n();
   const [showDescription, setShowDescription] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [hasBackgroundProcess, setHasBackgroundProcess] = useState(false);
@@ -53,10 +55,10 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
 
   const handleBgStop = () => {
     Modal.confirm({
-      title: '退出后台进程',
-      content: '是否要退出后台进程？',
-      okText: '是',
-      cancelText: '否',
+      title: t('main.bgExitTitle'),
+      content: t('main.bgExitContent'),
+      okText: t('common.ok'),
+      cancelText: t('common.cancel'),
       className: 'dark-modal',
       onOk: async () => {
         await GLOBALS.redisController.set(`task_stop:${uuid}`, '1');
@@ -86,19 +88,19 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
               if (isRunning) {
                 try {
                   process.kill(-Number(singlePid), 'SIGKILL');
-                  log(`已终止后台进程组 (PGID: ${singlePid})`, LOG_TYPES.SUCCESS);
+                  log(t('main.logs.killedPg', { pgid: singlePid }), LOG_TYPES.SUCCESS);
                 } catch (e) {
                   process.kill(Number(singlePid), 'SIGKILL');
-                  log(`已终止后台进程 (PID: ${singlePid})`, LOG_TYPES.SUCCESS);
+                  log(t('main.logs.killedPid', { pid: singlePid }), LOG_TYPES.SUCCESS);
                 }
                 killedCount++;
               }
             }
             if (killedCount === 0) {
-              log('未找到正在运行的后台进程PID', LOG_TYPES.INFO);
+              log(t('main.logs.notFoundRunningPgids'), LOG_TYPES.INFO);
             }
           } else {
-            log('未找到后台进程PID', LOG_TYPES.INFO);
+            log(t('main.logs.notFoundPid'), LOG_TYPES.INFO);
           }
 
           const logEntry = GLOBALS.nodeLogs.find(item => item.uuid === uuid);
@@ -107,7 +109,7 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
           }
           GLOBALS.stopDebugWatcher(uuid);
         } catch (e) {
-          log(`终止后台进程时出错: ${e.message}`, LOG_TYPES.ERROR);
+          log(t('main.logs.bgKillError', { msg: e.message }), LOG_TYPES.ERROR);
         }
       }
     });
@@ -122,13 +124,13 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
         align="center"
       >
         <div className="node-toolbar-floating">
-          <button className="node-toolbar-btn" title="设置" onClick={() => onOpenConfig(id)}>
+          <button className="node-toolbar-btn" title={t('main.nodeToolbar.settings')} onClick={() => onOpenConfig(id)}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="8" cy="8" r="7" stroke="#fff" strokeWidth="1.5" fill="none" />
               <path d="M8 5.5V8L10 9" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
           </button>
-          <button className="node-toolbar-btn" title="设置颜色" onClick={handleColorBtnClick}>
+          <button className="node-toolbar-btn" title={t('main.nodeToolbar.setColor')} onClick={handleColorBtnClick}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="8" cy="8" r="7" stroke="#fff" strokeWidth="1.5" fill="none" />
               <circle cx="6" cy="7" r="1" fill="#1976d2" />
@@ -146,11 +148,11 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
               <button
                 style={{ marginTop: 8, width: '100%' }}
                 onClick={() => setShowColorPicker(false)}
-              >关闭</button>
+              >{t('common.close')}</button>
             </div>,
             document.body
           )}
-          <button className="node-toolbar-btn" title="删除节点" onClick={() => onDelete(id)}>
+          <button className="node-toolbar-btn" title={t('main.nodeToolbar.deleteNode')} onClick={() => onDelete(id)}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="3" y="6" width="10" height="7" rx="1" fill="#fff" fillOpacity="0.8" />
               <rect x="6" y="2" width="4" height="2" rx="1" fill="#fff" fillOpacity="0.8" />
@@ -176,7 +178,7 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
               {hasBackgroundProcess && (
                 <span 
                   className="node-bg-process"
-                  title="后台进程运行中，点击可退出"
+                  title={t('main.nodeToolbar.bgRunningTip')}
                   style={{
                     background: 'rgba(255, 193, 7, 0.2)',
                     color: '#ffc107',
@@ -194,15 +196,15 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
               )}
               <span 
                 className="node-priority"
-                title="点击修改优先级"
+                title={t('main.setPriority')}
                 onClick={(e) => {
                   e.stopPropagation();
                   let inputValue = data.priority || 0;
                   Modal.confirm({
-                    title: '设置优先级',
+                    title: t('main.setPriority'),
                     content: (
                       <div>
-                        <p>请输入优先级 (数字越大优先级越高):</p>
+                        <p>{t('main.priorityHint')}</p>
                         <Input
                           type="number"
                           defaultValue={inputValue}
@@ -214,21 +216,21 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
                               onPriorityChange(id, inputValue);
                               Modal.destroyAll();
                             } else {
-                              message.error('请输入有效的数字');
+                              message.error(t('main.invalidNumber'));
                             }
                           }}
                           autoFocus
                         />
                       </div>
                     ),
-                    okText: '确定',
-                    cancelText: '取消',
+                    okText: t('common.ok'),
+                    cancelText: t('common.cancel'),
                     className: 'dark-modal',
                     onOk: () => {
                       if (!isNaN(inputValue)) {
                         onPriorityChange(id, inputValue);
                       } else {
-                        message.error('请输入有效的数字');
+                        message.error(t('main.invalidNumber'));
                         return Promise.reject();
                       }
                     }
@@ -261,7 +263,7 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
                   <div className="port-info">
                     <span className="port-type">{input.type}</span>
                     {input.default_value !== undefined && input.default_value !== '' && input.default_value !== null && (
-                      <span className="port-default-value" title={`默认值: ${input.default_value}`}>
+                      <span className="port-default-value" title={`${t('main.portDefaultHint')}: ${input.default_value}`}>
                         {input.default_value}
                       </span>
                     )}
@@ -288,7 +290,7 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
                   <div className="port-info">
                     <span className="port-type">{output.type}</span>
                     {output.default_value !== undefined && (
-                      <span className="port-default-value" title={`默认值: ${output.default_value}`}>
+                      <span className="port-default-value" title={`${t('main.portDefaultHint')}: ${output.default_value}`}>
                         {output.default_value}
                       </span>
                     )}
@@ -308,6 +310,7 @@ const NODE_HEIGHT = 150;
 const NODE_OFFSET = 60; 
 
 const MainContent = ({ onTreeDataChange }) => {
+  const { t } = useI18n();
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [nodeList, setNodeList] = useState([]);
@@ -371,7 +374,7 @@ const MainContent = ({ onTreeDataChange }) => {
           ...selectedNode,
           data: { ...selectedNode.data }
         });
-        message.success('节点已复制');
+        message.success(t('main.nodeToolbar.nodeCopied'));
         return;
       }
 
@@ -386,7 +389,7 @@ const MainContent = ({ onTreeDataChange }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedNode, copiedNode]);
+  }, [selectedNode, copiedNode, t]);
 
   const handlePasteNode = () => {
     if (!copiedNode) return;
@@ -413,7 +416,7 @@ const MainContent = ({ onTreeDataChange }) => {
 
     setNodes(nds => [...nds, newNode]);
     setSelectedNode(newNode);
-    message.success('节点已粘贴');
+    message.success(t('main.nodeToolbar.nodePasted'));
   };
 
   const handleRunStop = async () => {
@@ -445,14 +448,14 @@ const MainContent = ({ onTreeDataChange }) => {
         } else {
           await GLOBALS.nodeController.stop();
         }
-        log('流程已强制停止', LOG_TYPES.INFO);
+        log(t('main.logs.flowStopped'), LOG_TYPES.INFO);
       } catch (error) {
-        log(`停止流程失败：${error.message}`, LOG_TYPES.ERROR);
+        log(`${t('main.logs.stopFlowError')}: ${error.message}`, LOG_TYPES.ERROR);
       }
     } else {
       const redisConfig = config.get('redis') || {};
       if (!redisConfig.enabled) {
-        message.warning('请先在设置中启用 Redis 缓存功能');
+        message.warning(t('main.redisDisabledWarning'));
         return;
       }
 
@@ -461,16 +464,16 @@ const MainContent = ({ onTreeDataChange }) => {
         const edges = window.flowEdges || [];
 
         if (nodes.length === 0) {
-          log('没有可执行的节点', LOG_TYPES.WARNING);
+          log(t('main.logs.noNodesToRun'), LOG_TYPES.WARNING);
           return;
         }
 
         setIsStarting(true);
         
-        log('开始执行流程...', LOG_TYPES.INFO);
+        log(t('main.logs.flowStarting'), LOG_TYPES.INFO);
         await GLOBALS.nodeController.start(nodes, edges);
       } catch (error) {
-        console.log(`流程执行失败`, error);
+        console.log(`${t('main.logs.flowExecutionError')}:`, error);
         setIsStarting(false);
       }
     }
@@ -498,7 +501,7 @@ const MainContent = ({ onTreeDataChange }) => {
         setNodeList(guiController.getNodeList());
         setIsInitialized(true);
       } catch (error) {
-        log(`GUI初始化失败: ${error.message}`, LOG_TYPES.ERROR);
+        log(`${t('main.logs.guiInitError')}: ${error.message}`, LOG_TYPES.ERROR);
         setIsInitialized(true);
       }
     };
@@ -535,10 +538,10 @@ const MainContent = ({ onTreeDataChange }) => {
           id: `edge-${params.source}-${params.sourceHandle}-${params.target}-${params.targetHandle}-${Date.now()}`
         }]);
       } else {
-        log(`连接失败: 类型不匹配 (${sourceOutput?.type} -> ${targetInput?.type})`, LOG_TYPES.WARNING);
+        log(`${t('main.logs.connectionFailedTypeMismatch')}: (${sourceOutput?.type} -> ${targetInput?.type})`, LOG_TYPES.WARNING);
       }
     }
-  }, [nodes]);
+  }, [nodes, t]);
 
   const handleAddNode = () => {
     setIsModalOpen(true);
@@ -550,11 +553,11 @@ const MainContent = ({ onTreeDataChange }) => {
   }, []);
 
   const handleOpenConfig = useCallback((id) => {
-    log(`打开配置: ${id}`, LOG_TYPES.INFO);
+    log(`${t('main.logs.openConfig')}: ${id}`, LOG_TYPES.INFO);
     const node = nodesRef.current.find(n => n.id === id);
     setConfigNode(node);
     setConfigModalOpen(true);
-  }, []);
+  }, [t]);
 
   const handleColorChange = useCallback((nodeId, color) => {
     setNodes(nds =>
@@ -574,8 +577,8 @@ const MainContent = ({ onTreeDataChange }) => {
           : node
       )
     );
-    log(`节点 ${nodeId} 优先级设置为: ${priority}`, LOG_TYPES.INFO);
-  }, []);
+    log(`${t('main.logs.nodePrioritySet')}: ${nodeId}`, LOG_TYPES.INFO);
+  }, [t]);
 
   const nodeTypes = useMemo(
     () => ({
@@ -629,7 +632,7 @@ const MainContent = ({ onTreeDataChange }) => {
         return newNodes;
       });
       setIsModalOpen(false);
-      log(`添加节点: ${node.data.name}`, LOG_TYPES.INFO);
+      log(`${t('main.logs.addNode')}: ${node.data.name}`, LOG_TYPES.INFO);
     } else if (nodeType === '任务') {
       let x = 100, y = 100;
       while (isOverlapping(x, y, nodesRef.current)) {
@@ -659,7 +662,7 @@ const MainContent = ({ onTreeDataChange }) => {
         return newNodes;
       });
       setIsModalOpen(false);
-      log(`添加任务节点: ${node.data.name}`, LOG_TYPES.INFO);
+      log(`${t('main.logs.addTaskNode')}: ${node.data.name}`, LOG_TYPES.INFO);
     }
   };
 
@@ -771,22 +774,22 @@ const MainContent = ({ onTreeDataChange }) => {
           ...selectedNode,
           data: { ...selectedNode.data }
         });
-        message.success('节点已复制');
+        message.success(t('main.nodeToolbar.nodeCopied'));
       }
     } else if (key === 'paste') {
       if (copiedNode) {
         handlePasteNode();
       } else {
-        message.warning('没有可粘贴的节点');
+        message.warning(t('main.nodeToolbar.noNodeToPaste'));
       }
     } else if (key === 'priority') {
       if (selectedNode) {
         let inputValue = selectedNode.data.priority || 0;
         Modal.confirm({
-          title: '设置优先级',
+          title: t('main.setPriority'),
           content: (
             <div>
-              <p>请输入优先级 (数字越大优先级越高):</p>
+              <p>{t('main.priorityHint')}</p>
               <Input
                 type="number"
                 defaultValue={inputValue}
@@ -798,21 +801,21 @@ const MainContent = ({ onTreeDataChange }) => {
                     handlePriorityChange(selectedNode.id, inputValue);
                     Modal.destroyAll();
                   } else {
-                    message.error('请输入有效的数字');
+                    message.error(t('main.invalidNumber'));
                   }
                 }}
                 autoFocus
               />
             </div>
           ),
-          okText: '确定',
-          cancelText: '取消',
+          okText: t('common.ok'),
+          cancelText: t('common.cancel'),
           className: 'dark-modal',
           onOk: () => {
             if (!isNaN(inputValue)) {
               handlePriorityChange(selectedNode.id, inputValue);
             } else {
-              message.error('请输入有效的数字');
+              message.error(t('main.invalidNumber'));
               return Promise.reject();
             }
           }
@@ -821,9 +824,9 @@ const MainContent = ({ onTreeDataChange }) => {
     } else if (key === 'info') {
       if (selectedNode) {
         Modal.info({
-          title: '节点介绍',
-          content: selectedNode.data?.description || '无介绍',
-          okText: '确定',
+          title: t('main.nodeToolbar.nodeInfo'),
+          content: selectedNode.data?.description || t('main.noDescription'),
+          okText: t('common.ok'),
           className: 'dark-modal',
         });
       }
@@ -834,7 +837,7 @@ const MainContent = ({ onTreeDataChange }) => {
       }
     }
     setContextMenu(null);
-  }, [selectedNode, copiedNode, handleAddNode, handleDeleteNode, handlePriorityChange, handlePasteNode]);
+  }, [selectedNode, copiedNode, handleAddNode, handleDeleteNode, handlePriorityChange, handlePasteNode, t]);
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -849,21 +852,21 @@ const MainContent = ({ onTreeDataChange }) => {
   const handleExportTemplate = () => {
     if (nodes.length === 0) {
       Modal.warning({
-        title: '无法导出模板',
-        content: '当前画布中没有节点，请先添加节点后再导出。',
-        okText: '确定',
+        title: t('main.exportTemplate.cannotExportTitle'),
+        content: t('main.exportTemplate.noNodesWarning'),
+        okText: t('common.ok'),
         className: 'dark-modal'
       });
       return;
     }
 
     Modal.confirm({
-      title: '导出模板',
+      title: t('main.exportTemplate.exportTitle'),
       content: (
         <div>
-          <p>请输入模板名称：</p>
+          <p>{t('main.exportTemplate.inputTemplateName')}</p>
           <Input
-            placeholder="请输入模板名称"
+            placeholder={t('main.exportTemplate.templateNamePlaceholder')}
             onChange={(e) => {
               Modal.confirm.data = e.target.value;
             }}
@@ -871,18 +874,18 @@ const MainContent = ({ onTreeDataChange }) => {
           />
         </div>
       ),
-      okText: '确定',
-      cancelText: '取消',
+      okText: t('common.ok'),
+      cancelText: t('common.cancel'),
       className: 'dark-modal',
       onOk: async () => {
         try {
-          const templateName = Modal.confirm.data || '未命名模板';
+          const templateName = Modal.confirm.data || t('main.exportTemplate.unnamedTemplate');
           const templateDir = templateManager.getTemplateDir();
           const templatePath = path.join(templateDir, `${templateName}.json`);
 
           const templateData = {
             name: templateName,
-            description: '自定义导出模板',
+            description: t('main.exportTemplate.customExportTemplate'),
             version: '1.0.0',
             created: new Date().toISOString(),
             nodes: nodes.map(node => {
@@ -922,27 +925,27 @@ const MainContent = ({ onTreeDataChange }) => {
           if (exists) {
             return new Promise((resolve) => {
               Modal.confirm({
-                title: '文件已存在',
-                content: `模板 "${templateName}" 已存在，是否覆盖？`,
-                okText: '覆盖',
-                cancelText: '取消',
+                title: t('main.exportTemplate.fileExistsTitle'),
+                content: `${t('main.exportTemplate.templateExists')}: "${templateName}" ${t('main.exportTemplate.overwriteConfirm')}.`,
+                okText: t('main.exportTemplate.overwrite'),
+                cancelText: t('common.cancel'),
                 className: 'dark-modal',
                 onOk: async () => {
                   try {
                     await templateManager.saveTemplate(templateName, templateData);
                     Modal.success({
-                      title: '导出成功',
-                      content: '模板已成功导出。',
-                      okText: '确定',
+                      title: t('main.exportTemplate.exportSuccessTitle'),
+                      content: t('main.exportTemplate.templateExported'),
+                      okText: t('common.ok'),
                       className: 'dark-modal'
                     });
                     onTreeDataChange();
                     resolve();
                   } catch (error) {
                     Modal.error({
-                      title: '导出失败',
-                      content: `导出模板时发生错误：${error.message}`,
-                      okText: '确定',
+                      title: t('main.exportTemplate.exportErrorTitle'),
+                      content: `${t('main.exportTemplate.templateExportError')}: ${error.message}`,
+                      okText: t('common.ok'),
                       className: 'dark-modal'
                     });
                     resolve();
@@ -956,18 +959,18 @@ const MainContent = ({ onTreeDataChange }) => {
           } else {
             await templateManager.saveTemplate(templateName, templateData);
             Modal.success({
-              title: '导出成功',
-              content: '模板已成功导出。',
-              okText: '确定',
+              title: t('main.exportTemplate.exportSuccessTitle'),
+              content: t('main.exportTemplate.templateExported'),
+              okText: t('common.ok'),
               className: 'dark-modal'
             });
             onTreeDataChange();
           }
         } catch (error) {
           Modal.error({
-            title: '导出失败',
-            content: `导出模板时发生错误：${error.message}`,
-            okText: '确定',
+            title: t('main.exportTemplate.exportErrorTitle'),
+            content: `${t('main.exportTemplate.templateExportError')}: ${error.message}`,
+            okText: t('common.ok'),
             className: 'dark-modal'
           });
         }
@@ -1028,10 +1031,10 @@ const MainContent = ({ onTreeDataChange }) => {
 
   const handleAutoLayout = () => {
     Modal.confirm({
-      title: '自动排版',
-      content: '确定要对当前画布进行自动排版吗？',
-      okText: '确定',
-      cancelText: '取消',
+      title: t('main.autoLayoutTitle'),
+      content: t('main.autoLayoutContent'),
+      okText: t('common.ok'),
+      cancelText: t('common.cancel'),
       className: 'dark-modal',
       onOk: () => {
         const LAYOUT_CONFIG = {
@@ -1201,10 +1204,10 @@ const MainContent = ({ onTreeDataChange }) => {
 
   const handleClearCanvas = () => {
     Modal.confirm({
-      title: '清空画布',
-      content: '确定要清空当前画布吗？此操作不可恢复。',
-      okText: '确定',
-      cancelText: '取消',
+      title: t('main.clearCanvasTitle'),
+      content: t('main.clearCanvasContent'),
+      okText: t('common.ok'),
+      cancelText: t('common.cancel'),
       className: 'dark-modal',
       onOk: () => {
         setNodes([]);
@@ -1237,7 +1240,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 e.stopPropagation();
                 setIsToolbarCollapsed(!isToolbarCollapsed);
               }}
-              title={isToolbarCollapsed ? "展开工具栏" : "收起工具栏"}
+              title={isToolbarCollapsed ? t('main.toolbar.expand') : t('main.toolbar.collapse')}
             >
               {isToolbarCollapsed ? (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1254,7 +1257,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className={`toolbar-button ${isRunning ? 'danger' : 'primary'}`}
                   onClick={handleRunStop}
-                  title={isStarting ? "正在启动..." : isRunning ? "停止运行" : "运行流程"}
+                  title={isStarting ? t('main.toolbar.starting') : isRunning ? t('main.toolbar.stop') : t('main.toolbar.run')}
                   disabled={isStarting}
                 >
                   {isRunning ? (
@@ -1271,7 +1274,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className="toolbar-button"
                   onClick={() => setIsTemplateManagerVisible(true)}
-                  title="模板管理"
+                  title={t('main.toolbar.templateManager')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                     <path fillRule="evenodd" d="M1.5 6.375c0-1.036.84-1.875 1.875-1.875h17.25c1.035 0 1.875.84 1.875 1.875v3.026a.75.75 0 0 1-.375.65 2.249 2.249 0 0 0 0 3.898.75.75 0 0 1 .375.65v3.026c0 1.035-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 0 1 1.5 17.625v-3.026a.75.75 0 0 1 .374-.65 2.249 2.249 0 0 0 0-3.898.75.75 0 0 1-.374-.65V6.375Zm15-1.125a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm.75 4.5a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Zm-.75 3a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-1.5 0v-.75a.75.75 0 0 1 .75-.75Zm.75 4.5a.75.75 0 0 0-1.5 0V18a.75.75 0 0 0 1.5 0v-.75ZM6 12a.75.75 0 0 1 .75-.75H12a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 12Zm.75 2.25a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clipRule="evenodd" />
@@ -1281,7 +1284,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className="toolbar-button"
                   onClick={handleExportTemplate}
-                  title="导出模板"
+                  title={t('main.toolbar.exportTemplate')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                     <path d="M9.97.97a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1-1.06 1.06l-1.72-1.72v3.44h-1.5V3.31L8.03 5.03a.75.75 0 0 1-1.06-1.06l3-3ZM9.75 6.75v6a.75.75 0 0 0 1.5 0v-6h3a3 3 0 0 1 3 3v7.5a3 3 0 0 1-3 3h-7.5a3 3 0 0 1-3-3v-7.5a3 3 0 0 1 3-3h3Z" />
@@ -1292,7 +1295,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className="toolbar-button"
                   onClick={handleAutoLayout}
-                  title="自动排版"
+                  title={t('main.toolbar.autoLayout')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                     <path fillRule="evenodd" d="M11.622 1.602a.75.75 0 0 1 .756 0l2.25 1.313a.75.75 0 0 1-.756 1.295L12 3.118 10.128 4.21a.75.75 0 1 1-.756-1.295l2.25-1.313ZM5.898 5.81a.75.75 0 0 1-.27 1.025l-1.14.665 1.14.665a.75.75 0 1 1-.756 1.295L3.75 8.806v.944a.75.75 0 0 1-1.5 0V7.5a.75.75 0 0 1 .372-.648l2.25-1.312a.75.75 0 0 1 1.026.27Zm12.204 0a.75.75 0 0 1 1.026-.27l2.25 1.312a.75.75 0 0 1 .372.648v2.25a.75.75 0 0 1-1.5 0v-.944l-1.122.654a.75.75 0 1 1-.756-1.295l1.14-.665-1.14-.665a.75.75 0 0 1-.27-1.025Zm-9 5.25a.75.75 0 0 1 1.026-.27L12 11.882l1.872-1.092a.75.75 0 1 1 .756 1.295l-1.878 1.096V15a.75.75 0 0 1-1.5 0v-1.82l-1.878-1.095a.75.75 0 0 1-.27-1.025ZM3 13.5a.75.75 0 0 1 .75.75v1.82l1.878 1.095a.75.75 0 1 1-.756 1.295l-2.25-1.312a.75.75 0 0 1-.372-.648v-2.25A.75.75 0 0 1 3 13.5Zm18 0a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-.372.648l-2.25 1.312a.75.75 0 1 1-.756-1.295l1.878-1.096V14.25a.75.75 0 0 1 .75-.75Zm-9 5.25a.75.75 0 0 1 .75.75v.944l1.122-.654a.75.75 0 1 1 .756 1.295l-2.25 1.313a.75.75 0 0 1-.756 0l-2.25-1.313a.75.75 0 1 1 .756-1.295l1.122.654V19.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
@@ -1302,7 +1305,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className="toolbar-button"
                   onClick={handleClearCanvas}
-                  title="清空画布"
+                  title={t('main.toolbar.clearCanvas')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                     <path fillRule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z" clipRule="evenodd" />
@@ -1312,7 +1315,7 @@ const MainContent = ({ onTreeDataChange }) => {
                 <button
                   className="toolbar-button"
                   onClick={handleAddNode}
-                  title="添加节点"
+                  title={t('main.toolbar.addNode')}
                 >
                   <svg width="25" height="25" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 3V13M3 8H13" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
@@ -1380,24 +1383,24 @@ const MainContent = ({ onTreeDataChange }) => {
               items={[
                 {
                   key: 'add',
-                  label: '添加节点',
+                  label: t('main.nodeToolbar.addNode'),
                   style: { color: '#fff' },
                 },
                 {
                   key: 'copy',
-                  label: '复制节点',
+                  label: t('main.nodeToolbar.copyNode'),
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },
                 {
                   key: 'paste',
-                  label: '粘贴节点',
+                  label: t('main.nodeToolbar.pasteNode'),
                   style: { color: copiedNode ? '#fff' : '#888' },
                   disabled: !copiedNode,
                 },
                 {
                   key: 'delete',
-                  label: '删除节点',
+                  label: t('main.nodeToolbar.deleteNode'),
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },
@@ -1406,19 +1409,19 @@ const MainContent = ({ onTreeDataChange }) => {
                 },
                 {
                   key: 'priority',
-                  label: '设置优先级',
+                  label: t('main.nodeToolbar.setPriority'),
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },
                 {
                   key: 'info',
-                  label: '查看介绍',
+                  label: t('main.nodeToolbar.viewInfo'),
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },
                 {
                   key: 'view-log',
-                  label: '查看运行记录',
+                  label: t('main.nodeToolbar.viewLog'),
                   style: { color: selectedNode ? '#fff' : '#888' },
                   disabled: !selectedNode,
                 },

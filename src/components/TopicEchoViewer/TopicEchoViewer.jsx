@@ -6,8 +6,10 @@ import fileController from '../../controller/gui/FileController';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import { message } from 'antd';
 import './TopicEchoViewer.css';
+import { useI18n } from '../../context/I18nContext';
 
 const TopicEchoViewer = ({ topic }) => {
+  const { t } = useI18n();
   const [output, setOutput] = useState('');
   const [filter, setFilter] = useState('');
   const [isAutoScroll, setIsAutoScroll] = useState(false);
@@ -211,7 +213,7 @@ const TopicEchoViewer = ({ topic }) => {
         echoProcRef.current = proc;
       }
       if (!proc) {
-        message.error('获取数据失败');
+        message.error(t('topicEcho.fetchFailed'));
       }
     } catch (error) {
       console.error('获取数据失败:', error);
@@ -222,24 +224,24 @@ const TopicEchoViewer = ({ topic }) => {
   return (
     <div className="topic-echo-viewer-root">
       <div className="topic-echo-viewer-toolbar">
-        <span className="topic-echo-viewer-title">话题: {topic}</span>
+        <span className="topic-echo-viewer-title">{t('topicEcho.title', { topic })}</span>
         <Space>
           <Select
             value={mode}
             onChange={setMode}
             style={{ width: 90 }}
             options={[
-              { value: 'echo', label: '输出' },
-              { value: 'delay', label: '延迟' },
-              { value: 'hz', label: '频率' },
-              { value: 'info', label: '信息' },
-              { value: 'type', label: '类型' },
+              { value: 'echo', label: t('topicEcho.modeEcho') },
+              { value: 'delay', label: t('topicEcho.modeDelay') },
+              { value: 'hz', label: t('topicEcho.modeHz') },
+              { value: 'info', label: t('topicEcho.modeInfo') },
+              { value: 'type', label: t('topicEcho.modeType') },
             ]}
             size="small"
           />
           <Input
             className="topic-echo-viewer-filter"
-            placeholder="过滤内容..."
+            placeholder={t('topicEcho.filterPlaceholder')}
             value={filter}
             onChange={e => setFilter(e.target.value)}
             prefix={<SearchOutlined />}
@@ -265,14 +267,14 @@ const TopicEchoViewer = ({ topic }) => {
               checked={isAutoScroll}
               onChange={e => setIsAutoScroll(e.target.checked)}
             >
-              自动更新
+              {t('topicEcho.autoScroll')}
             </Checkbox>
           )}
           <Button
             icon={<ExportOutlined />}
             onClick={handleExport}
           >
-            导出
+            {t('topicEcho.export')}
           </Button>
         </Space>
       </div>

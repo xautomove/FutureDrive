@@ -4,9 +4,11 @@ import EnvController from '../../controller/gui/EnvController';
 import './EnvManager.css';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import config from '../../assets/js/config';
+import { useI18n } from '../../context/I18nContext';
 
 const EnvManager = () => {
   const [environments, setEnvironments] = useState([]);
+  const { t } = useI18n();
   const [selectedVersions, setSelectedVersions] = useState({});
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
@@ -22,7 +24,7 @@ const EnvManager = () => {
       const envs = await EnvController.getEnvironmentList();
       setEnvironments(envs);
     } catch (error) {
-      message.error('获取环境列表失败');
+      message.error(t('envManager.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,7 @@ const EnvManager = () => {
   return (
     <Card 
       className="env-manager-card"
-      title="环境管理"
+      title={t('envManager.title')}
       extra={
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button
@@ -55,14 +57,14 @@ const EnvManager = () => {
             loading={loading}
             type="default"
           >
-            获取最新
+            {t('envManager.getLatest')}
           </Button>
           <Button 
             onClick={() => loadEnvironments(true,false)}
             loading={loading}
             type="primary"
           >
-            刷新状态
+            {t('envManager.refreshStatus')}
           </Button>
         </div>
       }
@@ -79,7 +81,7 @@ const EnvManager = () => {
               </div>
               <div className="env-manager-env-actions">
                 <div className="env-manager-env-version">
-                  <span> {env.installed ? '当前' : '推荐'}版本: {env.version}</span>
+                  <span> {env.installed ? t('envManager.current') : t('envManager.recommended')}{t('envManager.version')}: {env.version}</span>
                 </div>
                 {(() => {
                   const raw = process.platform === 'win32' ? env.install_url_windows : env.install_url_ubuntu;
@@ -91,7 +93,7 @@ const EnvManager = () => {
                         onClick={() => handleInstall(env, urls[0] || raw)}
                         disabled={env.installed}
                       >
-                        {env.installed ? '已安装' : '安装'}
+                        {env.installed ? t('envManager.installed') : t('envManager.install')}
                       </Button>
                     );
                   }
@@ -104,7 +106,7 @@ const EnvManager = () => {
                           onClick={() => handleInstall(env, u)}
                           disabled={env.installed}
                         >
-                          {env.installed ? `已安装` : `安装${idx + 1}`}
+                          {env.installed ? t('envManager.installed') : `${t('envManager.install')}${idx + 1}`}
                         </Button>
                       ))}
                     </div>
@@ -112,9 +114,9 @@ const EnvManager = () => {
                 })()}
                 <span className="env-manager-env-status">
                   {env.installed ? (
-                    <span style={{ color: '#4caf50' }}>✓ 已安装</span>
+                    <span style={{ color: '#4caf50' }}>✓ {t('envManager.installed')}</span>
                   ) : (
-                    <span style={{ color: '#f44336' }}>× 未安装</span>
+                    <span style={{ color: '#f44336' }}>× {t('envManager.notInstalled')}</span>
                   )}
                 </span>
               </div>

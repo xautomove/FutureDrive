@@ -4,11 +4,13 @@ import { addLogListener, removeLogListener, LOG_TYPES } from '../../assets/js/ut
 import './DebugConsole.css';
 import { SearchOutlined } from '@ant-design/icons';
 import IpcController from '../../controller/gui/IpcController';
+import { useI18n } from '../../context/I18nContext';
 
 const MAX_LOGS = 1000;
 
 const DebugConsole = () => {
   const [debugLogs, setDebugLogs] = useState([]);
+  const { t } = useI18n();
   const [filterType, setFilterType] = useState('all');
   const [searchText, setSearchText] = useState('');
   const [isScrollLocked, setIsScrollLocked] = useState(true);
@@ -119,10 +121,10 @@ const DebugConsole = () => {
   };
 
   const filterItems = [
-    { key: 'all', label: '全部' },
-    { key: LOG_TYPES.INFO, label: '信息' },
-    { key: LOG_TYPES.WARNING, label: '警告' },
-    { key: LOG_TYPES.ERROR, label: '错误' },
+    { key: 'all', label: t('debugConsole.filterAll') },
+    { key: LOG_TYPES.INFO, label: t('debugConsole.filterInfo') },
+    { key: LOG_TYPES.WARNING, label: t('debugConsole.filterWarning') },
+    { key: LOG_TYPES.ERROR, label: t('debugConsole.filterError') },
   ];
 
   const handleFilterClick = ({ key }) => {
@@ -155,9 +157,9 @@ const DebugConsole = () => {
     if (contextMenu.selectedLog) {
       const logText = `[${contextMenu.selectedLog.timestamp}] ${contextMenu.selectedLog.type.toUpperCase()}: ${contextMenu.selectedLog.message}`;
       navigator.clipboard.writeText(logText).then(() => {
-        message.success('日志已复制到剪贴板');
+        message.success(t('debugConsole.copySuccess'));
       }).catch(() => {
-        message.error('复制失败');
+        message.error(t('debugConsole.copyFailed'));
       });
     }
     closeContextMenu();
@@ -189,7 +191,7 @@ const DebugConsole = () => {
   return (
     <div className="debug-console">
       <div className="console-header">
-        <div className="console-title">输出控制台</div>
+        <div className="console-title">{t('debugConsole.title')}</div>
         <Space>
           <div className={`console-search-wrapper${searchOpen ? ' open' : ''}`}> 
             {!searchOpen && (
@@ -200,7 +202,7 @@ const DebugConsole = () => {
                 ref={searchInputRef}
                 type="text"
                 className="console-search-input"
-                placeholder="搜索日志..."
+                placeholder={t('debugConsole.searchPlaceholder')}
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
                 onBlur={() => setSearchOpen(false)}
@@ -210,7 +212,7 @@ const DebugConsole = () => {
           <span 
             className={`console-scroll-lock ${isScrollLocked ? 'locked' : ''}`}
             onClick={handleScrollLock}
-            title={isScrollLocked ? '取消锁定滚动' : '锁定滚动'}
+            title={isScrollLocked ? t('debugConsole.scrollLockOn') : t('debugConsole.scrollLockOff')}
           >
             {isScrollLocked ? (
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -222,7 +224,7 @@ const DebugConsole = () => {
               </svg>
             )}
           </span>
-          <span className="console-clear" onClick={handleClear}>清除</span>
+          <span className="console-clear" onClick={handleClear}>{t('debugConsole.clear')}</span>
           <Dropdown
             menu={{
               items: filterItems,
@@ -232,9 +234,9 @@ const DebugConsole = () => {
             trigger={['click']}
           >
             <span className="console-filter">
-              筛选 {filterType === 'all' ? '全部' : 
-                filterType === LOG_TYPES.INFO ? '信息' :
-                filterType === LOG_TYPES.WARNING ? '警告' : '错误'}
+              {t('debugConsole.filter')} {filterType === 'all' ? t('debugConsole.filterAll') : 
+                filterType === LOG_TYPES.INFO ? t('debugConsole.filterInfo') :
+                filterType === LOG_TYPES.WARNING ? t('debugConsole.filterWarning') : t('debugConsole.filterError')}
             </span>
           </Dropdown>
         </Space>
@@ -286,7 +288,7 @@ const DebugConsole = () => {
             onMouseOver={(e) => e.currentTarget.style.background = '#3d3d3d'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            复制
+            {t('debugConsole.copy')}
           </div>
           <div 
             className="context-menu-item"
@@ -302,7 +304,7 @@ const DebugConsole = () => {
             onMouseOver={(e) => e.currentTarget.style.background = '#3d3d3d'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            导出所有日志
+            {t('debugConsole.exportAll')}
           </div>
         </div>
       )}

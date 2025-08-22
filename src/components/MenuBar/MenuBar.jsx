@@ -13,10 +13,12 @@ import windowController from '../../controller/gui/WindowController';
 const { shell } = require('electron');
 import { message } from 'antd';
 import config from '../../assets/js/config';
+import { useI18n } from '../../context/I18nContext';
 
 const DOCUMENTATION_URL = 'https://futuer.automoves.cn/docs/';
 
 const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
+  const { t } = useI18n();
   const [isRosTopicManagerVisible, setIsRosTopicManagerVisible] = useState(false);
   const [isEnvManagerVisible, setIsEnvManagerVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
@@ -46,10 +48,10 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         break;
       case 'documentation':
         Modal.confirm({
-          title: '打开文档',
-          content: '是否在浏览器中打开文档？',
-          okText: '确定',
-          cancelText: '取消',
+          title: t('menubar.docOpenTitle'),
+          content: t('menubar.docOpenContent'),
+          okText: t('common.ok'),
+          cancelText: t('common.cancel'),
           className: 'menu-bar-modal',
           onOk: async () => {
             try {
@@ -105,9 +107,9 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         setIsDebugMode(newDebug);
         GLOBALS.isDebug = newDebug;
         await config.set('debug', { enabled: newDebug });
-        const debugStatus = newDebug ? '开启' : '关闭';
-        log(`调试模式已${debugStatus}`, newDebug ? LOG_TYPES.INFO : LOG_TYPES.SUCCESS);
-        message.success(`调试模式已${debugStatus}`);
+        const debugStatus = newDebug ? t('common.on') : t('common.off');
+        log(`调试模式已${newDebug ? '开启' : '关闭'}`, newDebug ? LOG_TYPES.INFO : LOG_TYPES.SUCCESS);
+        message.success(`${t('menubar.debug')} ${debugStatus}`);
         break;
       case 'rostool':
         setIsRosTopicManagerVisible(true);
@@ -138,40 +140,40 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
   const menuItems = [
     {
       key: 'project',
-      label: '项目',
+      label: t('menubar.project'),
       children: [
-        { key: 'new', label: '新建项目' },
-        { key: 'open', label: '打开项目' },
-        { key: 'close', label: '关闭项目' },
+        { key: 'new', label: t('menubar.new') },
+        { key: 'open', label: t('menubar.open') },
+        { key: 'close', label: t('menubar.close') },
       ],
     },
     {
       key: 'run',
-      label: '运行',
+      label: t('menubar.run'),
       children: [
-        { key: 'start', label: '开始运行' },
-        { key: 'stop', label: '停止运行' },
-        { key: 'debug', label: `调试模式 ${isDebugMode ? '(开启)' : '(关闭)'}` },
+        { key: 'start', label: t('menubar.start') },
+        { key: 'stop', label: t('menubar.stop') },
+        { key: 'debug', label: `${t('menubar.debug')} (${isDebugMode ? t('common.on') : t('common.off')})` },
       ],
     },
     {
       key: 'tools',
-      label: '工具',
+      label: t('menubar.tools'),
       children: [
-        { key: 'settings', label: '设置' },
-        { key: 'rostool', label: '话题管理' },
-        { key: 'env', label: '环境管理' },
-        { key: 'simulation', label: '仿真管理' },
-        { key: 'maptool', label: '地图工具' },
-        { key: 'install_ext', label: '安装扩展' },
+        { key: 'settings', label: t('menubar.settings') },
+        { key: 'rostool', label: t('menubar.rostool') },
+        { key: 'env', label: t('menubar.env') },
+        { key: 'simulation', label: t('menubar.simulation') },
+        { key: 'maptool', label: t('menubar.maptool') },
+        { key: 'install_ext', label: t('menubar.installExt') },
       ],
     },
     {
       key: 'help',
-      label: '帮助',
+      label: t('menubar.help'),
       children: [
-        { key: 'documentation', label: '文档' },
-        { key: 'about', label: '关于' },
+        { key: 'documentation', label: t('menubar.documentation') },
+        { key: 'about', label: t('menubar.about') },
       ],
     },
   ];
@@ -193,7 +195,7 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
         onCancel={() => setIsEnvManagerVisible(false)}
         footer={null}
         width={700}
-        title="环境管理"
+        title={t('envManager.title')}
         className="env-manager-modal"
       >
         <EnvManager />

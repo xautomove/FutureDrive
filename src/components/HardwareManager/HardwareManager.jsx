@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Tree, Button, Space, Modal, Form, Input, Select, Switch, Tabs, message } from 'antd';
 import './HardwareManager.css';
 import HardwareController from '../../controller/gui/HardwareController';
+import { useI18n } from '../../context/I18nContext';
 const { dialog } = window.require('@electron/remote');
 const path = window.require('path');
 const fs = window.require('fs');
 let hc = null
 
 const DeviceModal = ({ visible, onOk, onCancel, onTreeDataChange, mode = 'add', device = null }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [deviceType, setDeviceType] = useState(device?.device_type || 'sensor');
   const [scriptDir, setScriptDir] = useState(device?.custom_driver?.script_directory || '');
@@ -104,15 +106,15 @@ const DeviceModal = ({ visible, onOk, onCancel, onTreeDataChange, mode = 'add', 
 
   return (
     <Modal
-      title={mode === 'add' ? "添加硬件" : "编辑硬件"}
+      title={mode === 'add' ? t('hardwareManager.addDevice') : t('hardwareManager.editDevice')}
       open={visible}
       onOk={() => form.submit()}
       onCancel={handleCancel}
       destroyOnClose={true}
       width={520}
       className="add-device-modal"
-      okText={mode === 'add' ? "添加硬件" : "保存"}
-      cancelText="取消"
+      okText={mode === 'add' ? t('hardwareManager.okAdd') : t('hardwareManager.okSave')}
+      cancelText={t('hardwareManager.cancel')}
       maskClosable={false}
     >
       <Form
@@ -136,16 +138,16 @@ const DeviceModal = ({ visible, onOk, onCancel, onTreeDataChange, mode = 'add', 
           activeKey={deviceType}
           onChange={setDeviceType}
           items={[
-            { label: '传感器', key: 'sensor' },
-            { label: '其他', key: 'other' }
+            { label: t('hardwareManager.tabSensor'), key: 'sensor' },
+            { label: t('hardwareManager.tabOther'), key: 'other' }
           ]}
         />
-        <Form.Item label="硬件名称" name="name" rules={[{ required: true, message: '请输入硬件名称' }]}>
+        <Form.Item label={t('hardwareManager.name')} name="name" rules={[{ required: true, message: t('hardwareManager.nameRequired') }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="硬件型号" name="model" rules={[{ required: true, message: '请选择硬件型号' }]}>
+        <Form.Item label={t('hardwareManager.model')} name="model" rules={[{ required: true, message: t('hardwareManager.modelRequired') }]}> 
           <Select
-            placeholder="请选择硬件型号"
+            placeholder={t('hardwareManager.modelPlaceholder')}
             onChange={value => {
               const driver = driverList.find(d => d.model === value);
               if (driver && driver.topic) {
@@ -162,23 +164,23 @@ const DeviceModal = ({ visible, onOk, onCancel, onTreeDataChange, mode = 'add', 
                 {driver.brand} - {driver.model}（v{driver.version}）
               </Select.Option>
             ))}
-            <Select.Option value="other">其他</Select.Option>
+            <Select.Option value="other">{t('hardwareManager.modelOther')}</Select.Option>
           </Select>
         </Form.Item>
-        <Form.Item label="话题" name="topic">
+        <Form.Item label={t('hardwareManager.topic')} name="topic">
           <Input />
         </Form.Item>
-        <Form.Item label="启用" name="enabled" valuePropName="checked">
+        <Form.Item label={t('hardwareManager.enabled')} name="enabled" valuePropName="checked">
           <Switch />
         </Form.Item>
-        <Form.Item label="备注" name="remark">
+        <Form.Item label={t('hardwareManager.remark')} name="remark">
           <Input.TextArea rows={3} />
         </Form.Item>
         {deviceType === 'other' && (
-          <Form.Item label="驱动脚本" name="custom_driver">
+          <Form.Item label={t('hardwareManager.driverScript')} name="custom_driver">
             <Space.Compact style={{ width: '100%' }}>
-              <Input value={scriptDir} readOnly placeholder="请选择目录" style={{ minWidth: 0, backgroundColor: 'rgb(136, 136, 136)', color: '#fff' }} />
-              <Button onClick={handleSelectDir}>选择目录</Button>
+              <Input value={scriptDir} readOnly placeholder={t('hardwareManager.selectDirPlaceholder')} style={{ minWidth: 0, backgroundColor: 'rgb(136, 136, 136)', color: '#fff' }} />
+              <Button onClick={handleSelectDir}>{t('hardwareManager.selectDir')}</Button>
             </Space.Compact>
           </Form.Item>
         )}
@@ -188,6 +190,7 @@ const DeviceModal = ({ visible, onOk, onCancel, onTreeDataChange, mode = 'add', 
 };
 
 const HardwareManager = ({ onTreeDataChange }) => {
+  const { t } = useI18n();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState('add');
   const [selectedDevice, setSelectedDevice] = useState(null);
@@ -214,7 +217,7 @@ const HardwareManager = ({ onTreeDataChange }) => {
       return true;
     } catch (error) {
       console.error('初始化硬件配置失败:', error);
-      message.error('初始化硬件配置失败');
+      message.error(t('hardwareManager.initFailed'));
       return false;
     }
   };
@@ -240,11 +243,11 @@ const HardwareManager = ({ onTreeDataChange }) => {
       const devices = config.devices || [];
       const treeData = [
         {
-          title: '硬件列表',
+          title: t('hardwareManager.listRoot'),
           key: 'root',
           children: [
             {
-              title: '传感器',
+              title: t('hardwareManager.listSensors'),
               key: 'sensors',
               children: devices
                 .filter(device => device.device_type === 'sensor')
@@ -256,7 +259,7 @@ const HardwareManager = ({ onTreeDataChange }) => {
                 }))
             },
             {
-              title: '其他硬件',
+              title: t('hardwareManager.listOthers'),
               key: 'others',
               children: devices
                 .filter(device => device.device_type === 'other')
@@ -275,7 +278,7 @@ const HardwareManager = ({ onTreeDataChange }) => {
       setExpandedKeys(['root', 'sensors', 'others']);
     } catch (error) {
       console.error('加载硬件配置失败:', error);
-      message.error('加载硬件配置失败');
+      message.error(t('hardwareManager.initFailed'));
     }
   };
 
@@ -321,10 +324,10 @@ const HardwareManager = ({ onTreeDataChange }) => {
     e.stopPropagation();
     if (contextMenu.node) {
       Modal.confirm({
-        title: '确认删除',
-        content: `确定要删除硬件 "${contextMenu.node.title}" 吗？`,
-        okText: '确定',
-        cancelText: '取消',
+        title: t('hardwareManager.confirmDelete'),
+        content: t('hardwareManager.confirmDeleteContent', { name: contextMenu.node.title }),
+        okText: t('common.ok'),
+        cancelText: t('common.cancel'),
         okButtonProps: {
           style: {
             background: '#1976d2',
@@ -343,7 +346,7 @@ const HardwareManager = ({ onTreeDataChange }) => {
           try {
             const projectPath = window.currentProject?.path;
             if (!projectPath) {
-              message.error('需要先打开项目');
+              message.error(t('hardwareManager.needOpenProject'));
               return;
             }
 
@@ -358,12 +361,12 @@ const HardwareManager = ({ onTreeDataChange }) => {
             if (deviceIndex !== -1) {
               devices.splice(deviceIndex, 1);
               hc.writeConfig({ ...config, devices });
-              message.success('删除成功');
+              message.success(t('hardwareManager.deleteSuccess'));
               loadTreeData(); 
             }
           } catch (error) {
             console.error('删除硬件失败:', error);
-            message.error('删除硬件失败');
+            message.error(t('hardwareManager.deleteFailed'));
           }
         }
       });
@@ -404,7 +407,7 @@ const HardwareManager = ({ onTreeDataChange }) => {
               size="small"
               onClick={handleAdd}
             >
-              添加硬件
+              {t('hardwareManager.addDevice')}
             </Button>
           </Space>
         )}
@@ -446,13 +449,13 @@ const HardwareManager = ({ onTreeDataChange }) => {
             className="context-menu-item"
             onClick={handleEdit}
           >
-            编辑
+            {t('hardwareManager.editDevice')}
           </div>
           <div
             className="context-menu-item"
             onClick={handleDelete}
           >
-            删除
+            {t('hardwareManager.delete')}
           </div>
         </div>
       )}

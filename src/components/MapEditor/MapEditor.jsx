@@ -14,6 +14,7 @@ import {
   ImportOutlined
 } from '@ant-design/icons';
 import FileController from '../../controller/gui/FileController';
+import { useI18n } from '../../context/I18nContext';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader';
@@ -28,6 +29,7 @@ const pencilCursor =
   'url("data:image/svg+xml;utf8,<svg xmlns=\\"http://www.w3.org/2000/svg\\" viewBox=\\"0 0 24 24\\" fill=\\"currentColor\\" class=\\"size-6\\"><path d=\\"M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z\\"/></svg>") 0 32, auto'
 
 const MapEditor = () => {
+  const { t } = useI18n();
   const [selectedTool, setSelectedTool] = useState(null);
   const [layers, setLayers] = useState([
     { id: 100, name: '道路线', visible: true, type: 'line', isLane: true },
@@ -143,12 +145,12 @@ const MapEditor = () => {
   }, []);
 
   const tools = [
-    { key: 'import', icon: <ImportOutlined />, tooltip: '导入PCD文件' },
-    { key: 'line', icon: <LineOutlined />, tooltip: '画线工具' },
-    { key: 'polygon', icon: <AppstoreOutlined />, tooltip: '画多边形工具' },
-    { key: 'point', icon: <PushpinOutlined />, tooltip: '添加点工具' },
-    { key: 'delete', icon: <DeleteOutlined />, tooltip: '删除工具' },
-    { key: 'undo', icon: <UndoOutlined />, tooltip: '撤销工具' }
+    { key: 'import', icon: <ImportOutlined />, tooltip: t('mapEditor.importPCD') },
+    { key: 'line', icon: <LineOutlined />, tooltip: t('mapEditor.drawLine') },
+    { key: 'polygon', icon: <AppstoreOutlined />, tooltip: t('mapEditor.drawPolygon') },
+    { key: 'point', icon: <PushpinOutlined />, tooltip: t('mapEditor.addPoint') },
+    { key: 'delete', icon: <DeleteOutlined />, tooltip: t('mapEditor.deleteTool') },
+    { key: 'undo', icon: <UndoOutlined />, tooltip: t('mapEditor.undoTool') }
   ];
 
   const handleToolSelect = (tool) => {
@@ -173,9 +175,9 @@ const MapEditor = () => {
   const handleImportPCD = async () => {
     try {
       const result = await FileController.selectFile({
-        title: '选择PCD文件',
+        title: t('mapEditor.choosePCDTitle'),
         filters: [
-          { name: 'PCD文件', extensions: ['pcd'] }
+          { name: t('mapEditor.pcdFilterName'), extensions: ['pcd'] }
         ]
       });
       
@@ -183,7 +185,7 @@ const MapEditor = () => {
         loadPCDFile(result.filePath);
       }
     } catch (error) {
-      message.error('文件导入失败');
+      message.error(t('mapEditor.fileImportFailed'));
       console.error('导入PCD文件失败:', error);
     }
   };
@@ -198,7 +200,7 @@ const MapEditor = () => {
       const points = loader.parse(buffer, filePath);
       
       if (!points || !points.geometry || !points.geometry.attributes || !points.geometry.attributes.position) {
-        throw new Error('点云数据格式不正确');
+        throw new Error(t('mapEditor.invalidPointCloud'));
       }
 
       if (sceneRef.current) {
@@ -226,7 +228,7 @@ const MapEditor = () => {
       }
 
       if (filteredPositions.length === 0) {
-        message.error('过滤后没有可用的点云数据');
+        message.error(t('mapEditor.noPointsAfterFilter'));
         return;
       }
 
@@ -259,12 +261,12 @@ const MapEditor = () => {
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
 
-      message.success('点云文件加载成功');
+      message.success(t('mapEditor.loadSuccess'));
     } catch (error) {
-      message.error('点云文件加载失败');
+      message.error(t('mapEditor.loadFailed'));
       console.error('加载PCD文件失败:', error);
       console.error('错误堆栈:', error.stack);
-      message.error('点云文件加载失败');
+      message.error(t('mapEditor.loadFailed'));
     }
   };
   
@@ -317,7 +319,7 @@ const MapEditor = () => {
 
   const redrawCanvas = () => {
     if (!drawCanvasRef.current || !cameraRef.current) {
-      console.log('绘制失败：canvas 或 camera 不存在');
+      console.log(t('mapEditor.drawFailed'));
       return;
     }
     
@@ -540,7 +542,7 @@ const MapEditor = () => {
           {showLayers ? (
             <>
               <div className="map-editor-layers-header">
-                <h3>图层列表</h3>
+                <h3>{t('mapEditor.layersTitle')}</h3>
                 <Button
                   type="text"
                   icon={<CloseOutlined />}
@@ -563,31 +565,31 @@ const MapEditor = () => {
             </>
           ) : (
             <>
-              <h3>属性面板</h3>
+              <h3>{t('mapEditor.propertiesTitle')}</h3>
               {selectedElement && (
                 <Form
                   form={form}
                   layout="vertical"
                   onValuesChange={handlePropertiesUpdate}
                 >
-                  <Form.Item label="ID" name="id">
+                  <Form.Item label={t('mapEditor.id')} name="id">
                     <Input disabled />
                   </Form.Item>
-                  <Form.Item label="类型" name="type">
+                  <Form.Item label={t('mapEditor.type')} name="type">
                     <Select>
-                      <Option value="line">车道线</Option>
-                      <Option value="polygon">停车区</Option>
-                      <Option value="point">路口</Option>
+                      <Option value="line">{t('mapEditor.lane')}</Option>
+                      <Option value="polygon">{t('mapEditor.park')}</Option>
+                      <Option value="point">{t('mapEditor.junction')}</Option>
                     </Select>
                   </Form.Item>
-                  <Form.Item label="限速" name="speedLimit">
+                  <Form.Item label={t('mapEditor.speedLimit')} name="speedLimit">
                     <Input type="number" />
                   </Form.Item>
-                  <Form.Item label="方向" name="direction">
+                  <Form.Item label={t('mapEditor.direction')} name="direction">
                     <Select>
-                      <Option value="forward">正向</Option>
-                      <Option value="backward">反向</Option>
-                      <Option value="both">双向</Option>
+                      <Option value="forward">{t('mapEditor.forward')}</Option>
+                      <Option value="backward">{t('mapEditor.backward')}</Option>
+                      <Option value="both">{t('mapEditor.both')}</Option>
                     </Select>
                   </Form.Item>
                 </Form>

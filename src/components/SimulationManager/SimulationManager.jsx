@@ -9,9 +9,11 @@ import commandExecutor from '../../assets/js/commandExecutor';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
+import { useI18n } from '../../context/I18nContext';
 
 const SimulationManager = ({ visible, onClose }) => {
   const [simulations, setSimulations] = useState([]);
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [installing, setInstalling] = useState({});
   const [installed, setInstalled] = useState({});
@@ -28,7 +30,7 @@ const SimulationManager = ({ visible, onClose }) => {
       }
       setInstalled(status);
     } catch (error) {
-      message.error('获取仿真平台列表失败');
+      message.error(t('simulationManager.fetchListFailed'));
     } finally {
       setLoading(false);
     }
@@ -47,7 +49,7 @@ const SimulationManager = ({ visible, onClose }) => {
         downloadPath = window.require('os').tmpdir();
       } else {
         const result = await fileController.selectDirectory({
-          title: '选择下载目录',
+          title: t('simulationManager.selectDirTitle'),
           defaultPath: process.env.HOME
         });
         if (!result.success) return;
@@ -56,24 +58,24 @@ const SimulationManager = ({ visible, onClose }) => {
       const key = `install-${sim.name}`;
       setInstalling(prev => ({ ...prev, [sim.name]: true }));
       if (!isScript) {
-        message.loading({ content: '正在下载...', key, duration: 0 });
+        message.loading({ content: t('simulationManager.downloading'), key, duration: 0 });
       }
       await SimulationController.installSimulation(sim.name, {
         downloadPath,
         onProgress: (progress) => {
           if (!isScript) {
-            message.loading({ content: `正在下载...${progress}%`, key, duration: 0 });
+            message.loading({ content: t('simulationManager.downloadProgress', { progress }), key, duration: 0 });
           }
         }
       });
       if (!isScript) {
-        message.success({ content: '安装完成', key });
+        message.success({ content: t('simulationManager.installDone'), key });
       } else {
-        message.success('安装完成');
+        message.success(t('simulationManager.installDone'));
       }
       fetchSimulations();
     } catch (error) {
-      message.error(`安装失败: ${error.message}`);
+      message.error(t('simulationManager.installFailed', { msg: error.message }));
       console.log(error);
     } finally {
       setInstalling(prev => ({ ...prev, [sim.name]: false }));
@@ -82,10 +84,10 @@ const SimulationManager = ({ visible, onClose }) => {
 
   const handleStopInstall = async (sim) => {
     Modal.confirm({
-      title: '确认停止下载',
-      content: '当前下载进度仍在进行中，是否中断下载？',
-      okText: '确认',
-      cancelText: '取消',
+      title: t('simulationManager.confirmStopTitle'),
+      content: t('simulationManager.confirmStopContent'),
+      okText: t('common.ok'),
+      cancelText: t('common.cancel'),
       okButtonProps: { danger: true },
       className: 'dark-modal',
       onOk: async () => {
@@ -93,9 +95,9 @@ const SimulationManager = ({ visible, onClose }) => {
           const key = `install-${sim.name}`;
           await stopDownload();
           message.destroy(key);
-          message.info('下载已停止');
+          message.info(t('simulationManager.stopped'));
         } catch (error) {
-          message.error('停止下载失败');
+          message.error(t('simulationManager.stopFailed'));
         } finally {
           setInstalling(prev => ({ ...prev, [sim.name]: false }));
         }
@@ -106,18 +108,18 @@ const SimulationManager = ({ visible, onClose }) => {
   const handleManualInstall = async (sim) => {
     try {
       const result = await fileController.selectFile({
-        title: `选择${sim.name}的启动脚本`,
+        title: `${t('simulationManager.settings')}: ${sim.name}`,
         filters: [
           { name: 'Shell Scripts', extensions: ['sh'] }
         ]
       });
       if (result.success) {
         await SimulationController.setManualInstall(sim.name, result.filePath);
-        message.success('已记录启动脚本，标记为已安装');
+        message.success(t('simulationManager.manualSetDone'));
         fetchSimulations();
       }
     } catch (error) {
-      message.error('选择文件失败');
+      message.error(t('simulationManager.selectFileFailed'));
     }
   };
 
@@ -128,25 +130,25 @@ const SimulationManager = ({ visible, onClose }) => {
 
   const handleSaveSettings = async (values) => {
     await SimulationController.setSimulationConfig(settingsModal.platform, values);
-    message.success('配置已保存');
+    message.success(t('common.save'));
     setSettingsModal({ ...settingsModal, visible: false });
   };
 
   const handleStart = async (sim) => {
     try {
       await SimulationController.startSimulation(sim.name);
-      message.success(`${sim.name} 启动成功`);
+      message.success(t('simulationManager.startSuccess', { name: sim.name }));
     } catch (error) {
-      message.error(`${sim.name} 启动失败: ${error.message}`);
+      message.error(t('simulationManager.startFailed', { name: sim.name, msg: error.message }));
     }
   };
 
   const handleControl = async (sim) => {
     try {
       await SimulationController.controlSimulation(sim.name);
-      message.success(`${sim.name} 控制脚本已启动`);
+      message.success(t('simulationManager.controlStarted', { name: sim.name }));
     } catch (error) {
-      message.error(`${sim.name} 控制失败: ${error.message}`);
+      message.error(t('simulationManager.controlFailed', { name: sim.name, msg: error.message }));
     }
   };
 
@@ -154,13 +156,13 @@ const SimulationManager = ({ visible, onClose }) => {
     try {
       exec('rqt', (error) => {
         if (error) {
-          message.error('启动rqt失败，请确保已安装ROS和rqt');
+          message.error(t('simulationManager.rqtStartFailed'));
         } else {
-          message.success('rqt启动成功');
+          message.success(t('simulationManager.rqtStarted'));
         }
       });
     } catch (error) {
-      message.error('启动rqt失败');
+      message.error(t('simulationManager.rqtStartFailed'));
     }
   };
 
@@ -169,19 +171,19 @@ const SimulationManager = ({ visible, onClose }) => {
       
       exec('rviz2', (error) => {
         if (error) {
-          message.error('启动rviz失败，请确保已安装ROS和rviz');
+          message.error(t('simulationManager.rvizStartFailed'));
         } else {
-          message.success('rviz启动成功');
+          message.success(t('simulationManager.rvizStarted'));
         }
       });
     } catch (error) {
-      message.error('启动rviz失败');
+      message.error(t('simulationManager.rvizStartFailed'));
     }
   };
 
   const handleViewTf = async () => {
     try {
-      message.loading({ content: '正在生成TF树...', key: 'view-tf', duration: 0 });
+      message.loading({ content: t('simulationManager.tfGenerating'), key: 'view-tf', duration: 0 });
       
       const result = await commandExecutor.execute('ros2', ['run', 'tf2_tools', 'view_frames'], {
         cwd: '/tmp',
@@ -207,9 +209,9 @@ const SimulationManager = ({ visible, onClose }) => {
           
           exec(`xdg-open "${pdfPath}"`, (error) => {
             if (error) {
-              message.error('无法打开PDF文件');
+              message.error(t('simulationManager.pdfOpenFailed'));
             } else {
-              message.success('TF树已生成并打开');
+              message.success(t('simulationManager.tfOpened'));
               
               setTimeout(() => {
                 try {
@@ -226,20 +228,20 @@ const SimulationManager = ({ visible, onClose }) => {
             }
           });
         } else {
-          message.warning('未找到生成的PDF文件');
+          message.warning(t('simulationManager.tfPdfNotFound'));
         }
       } else {
-        message.error('生成TF树失败');
+        message.error(t('simulationManager.tfFailed'));
       }
     } catch (error) {
       message.destroy('view-tf');
-      message.error(`查看TF失败: ${error.message}`);
+      message.error(t('simulationManager.viewTfFailed', { msg: error.message }));
     }
   };
 
   return (
     <Modal
-      title="仿真管理"
+      title={t('simulationManager.title')}
       open={visible}
       onCancel={onClose}
       footer={
@@ -283,24 +285,24 @@ const SimulationManager = ({ visible, onClose }) => {
                 <div className="env-manager-env-info">
                   <div className="env-manager-env-name">{sim.name}</div>
                   <div className="env-manager-env-desc">{sim.description}</div>
-                  <div className="env-manager-env-version">版本: {sim.version}</div>
+                  <div className="env-manager-env-version">{t('simulationManager.version')}: {sim.version}</div>
                 </div>
                 <div className="env-manager-env-actions">
                   {installed[sim.name] ? (
                     <>
-                      <Button onClick={() => handleOpenSettings(sim)}>设置</Button>
+                      <Button onClick={() => handleOpenSettings(sim)}>{t('simulationManager.settings')}</Button>
                       {sim.dualLaunch ? (
                         <>
-                          <Button type="primary" onClick={() => handleStart(sim)}>仿真</Button>
-                          <Button type="default" onClick={() => handleControl(sim)}>控制</Button>
+                          <Button type="primary" onClick={() => handleStart(sim)}>{t('simulationManager.simulation')}</Button>
+                          <Button type="default" onClick={() => handleControl(sim)}>{t('simulationManager.control')}</Button>
                         </>
                       ) : (
-                        <Button type="primary" onClick={() => handleStart(sim)}>仿真</Button>
+                        <Button type="primary" onClick={() => handleStart(sim)}>{t('simulationManager.simulation')}</Button>
                       )}
                     </>
                   ) : (
                     <>
-                      <Button onClick={() => handleManualInstall(sim)}>我已安装</Button>
+                      <Button onClick={() => handleManualInstall(sim)}>{t('simulationManager.manualInstall')}</Button>
                       <Button
                         type={installing[sim.name] ? 'default' : 'primary'}
                         danger={installing[sim.name]}
@@ -310,7 +312,7 @@ const SimulationManager = ({ visible, onClose }) => {
                             : handleInstall(sim)
                         }
                       >
-                        {installing[sim.name] ? '停止' : '安装'}
+                        {installing[sim.name] ? t('simulationManager.stop') : t('simulationManager.install')}
                       </Button>
                     </>
                   )}

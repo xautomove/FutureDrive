@@ -7,7 +7,6 @@ require('@electron/remote/main').initialize()
 let mainWindow = null;
 
 const createWindow = (width, height, page = '', params = []) => {
-  // 动态获取屏幕宽高，默认80%
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
   const winWidth = width || Math.floor(screenWidth * 0.8);
   const winHeight = height || Math.floor(screenHeight * 0.8);
@@ -77,9 +76,7 @@ const createWindow = (width, height, page = '', params = []) => {
   Menu.setApplicationMenu(null);
   return win;
 }
-
 setCreateWindowFunction(createWindow);
-
 app.whenReady().then(async () => {
   try {
     await startServer();

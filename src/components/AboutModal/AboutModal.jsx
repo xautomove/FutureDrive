@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { remote } from 'electron';
 import { message } from 'antd';
+import { useI18n } from '../../context/I18nContext';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -18,6 +19,7 @@ const localVersion = '1.1.0';
 const GITHUB_RELEASES_URL = 'https://api.github.com/repos/xautomove/FutureDrive/releases';
 
 const AboutModal = ({ visible, onClose }) => {
+  const { t } = useI18n();
   const handleOpenUrl = async (url) => {
     try {
       await shell.openExternal(url);
@@ -40,7 +42,7 @@ const AboutModal = ({ visible, onClose }) => {
   async function downloadAndOpen(url, filename) {
     const { dialog } = remote;
     const savePath = dialog.showSaveDialogSync({
-      title: '保存新版本',
+      title: t('about.checkUpdate'),
       defaultPath: path.join(remote.app.getPath('downloads'), filename)
     });
     if (!savePath) return;
@@ -48,7 +50,7 @@ const AboutModal = ({ visible, onClose }) => {
     const writer = fs.createWriteStream(savePath);
     let received = 0;
     let total = 0;
-    let hideLoading = message.loading('正在下载...', 0);
+    let hideLoading = message.loading(t('about.downloading'), 0);
 
     try {
       const response = await axios({
@@ -61,7 +63,7 @@ const AboutModal = ({ visible, onClose }) => {
         received += chunk.length;
         if (total) {
           hideLoading();
-          hideLoading = message.loading(`下载进度：${((received / total) * 100).toFixed(1)}%`, 0);
+          hideLoading = message.loading(t('about.downloadProgress', { percent: ((received / total) * 100).toFixed(1) }), 0);
         }
       });
       response.data.pipe(writer);
@@ -71,54 +73,54 @@ const AboutModal = ({ visible, onClose }) => {
         writer.on('error', reject);
       });
       hideLoading();
-      message.success('下载完成');
+      message.success(t('about.downloadDone'));
       shell.showItemInFolder(savePath);
     } catch (e) {
       hideLoading();
-      message.error('下载失败: ' + e.message);
+      message.error(t('about.downloadFailed', { msg: e.message }));
     }
   }
 
   const handleCheckUpdate = async () => {
     let hideLoading;
     try {
-      hideLoading = message.loading('正在检查更新...', 0);
+      hideLoading = message.loading(t('about.checkingUpdate'), 0);
       const { data } = await axios.get(GITHUB_RELEASES_URL, { timeout: 10000 });
       if (!Array.isArray(data) || data.length === 0) {
         hideLoading();
-        message.info('未找到可用的版本信息');
+        message.info(t('about.noReleaseInfo'));
         return;
       }
       const latest = data[0];
       const latestVersion = latest.tag_name.replace(/^v/, '');
       if (compareVersion(localVersion, latestVersion) >= 0) {
         hideLoading();
-        message.success('当前已是最新版本');
+        message.success(t('about.isLatest'));
         return;
       }
       const asset = latest.assets.find(a => a.name.endsWith('.AppImage'));
       if (!asset) {
         hideLoading();
-        message.error('未找到可用的安装包');
+        message.error(t('about.noInstaller'));
         return;
       }
       hideLoading();
       Modal.confirm({
-        title: '发现新版本',
-        content: `检测到新版本 v${latestVersion}，是否下载更新？`,
-        okText: '下载',
-        cancelText: '取消',
+        title: t('about.newVersionTitle'),
+        content: t('about.newVersionContent', { version: latestVersion }),
+        okText: t('about.download'),
+        cancelText: t('about.cancel'),
         onOk: () => downloadAndOpen(asset.browser_download_url, asset.name)
       });
     } catch (e) {
       hideLoading && hideLoading();
-      message.error('检查更新失败: ' + e.message);
+      message.error(t('about.checkFailed', { msg: e.message }));
     }
   };
 
   return (
     <Modal
-      title="关于 FutureDrive"
+      title={t('about.modalTitle')}
       open={visible}
       onCancel={onClose}
       footer={null}
@@ -128,47 +130,47 @@ const AboutModal = ({ visible, onClose }) => {
       <div className="about-content">
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div className="version-section">
-            <Title level={3}>FutureDrive 自动驾驶</Title>
+            <Title level={3}>{t('about.productTitle')}</Title>
             <Space>
-              <Text strong>版本 {localVersion} 免费版</Text>
+              <Text strong>{t('about.versionFree', { version: localVersion })}</Text>
               <Button 
                 type="primary" 
                 icon={<SyncOutlined />} 
                 onClick={handleCheckUpdate}
               >
-                检查更新
+                {t('about.checkUpdate')}
               </Button>
             </Space>
           </div>
 
           <div className="company-info">
             <Paragraph>
-              <Text strong>开发团队：</Text> FutureDrive 自动驾驶团队
+              <Text strong>{t('about.teamLabel')}</Text> {t('about.teamValue')}
             </Paragraph>
             <Paragraph>
-              <Text strong>公司：</Text> 安徽灵元机器人科技有限公司
+              <Text strong>{t('about.companyLabel')}</Text> {t('about.companyValue')}
             </Paragraph>
             <Paragraph>
-              <Text strong>联系方式：</Text> xautomove@foxmail.com
+              <Text strong>{t('about.contactLabel')}</Text> {t('about.contactValue')}
             </Paragraph>
           </div>
 
           <div className="legal-section">
             <Space direction="vertical" size="small">
-              <Tooltip title="点击查看许可协议">
+              <Tooltip title={t('about.licenseTip')}>
                 <Text 
                   className="clickable-text"
                   onClick={() => handleOpenUrl(LICENSE_URL)}
                 >
-                  许可协议
+                  {t('about.license')}
                 </Text>
               </Tooltip>
-              <Tooltip title="点击查看法律声明">
+              <Tooltip title={t('about.legalTip')}>
                 <Text 
                   className="clickable-text"
                   onClick={() => handleOpenUrl(LEGAL_URL)}
                 >
-                  法律免责声明
+                  {t('about.legal')}
                 </Text>
               </Tooltip>
             </Space>

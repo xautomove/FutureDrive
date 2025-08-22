@@ -19,10 +19,12 @@ import NodeController from '../../controller/node/NodeController';
 import GLOBALS from '../../assets/js/globals';
 import config from '../../assets/js/config';
 import { log, LOG_TYPES } from '../../assets/js/utils';
+import { useI18n } from '../../context/I18nContext';
 
 const { ipcRenderer } = window.require('electron');
 
 const Layout = () => {
+  const { t } = useI18n();
   const [leftWidth, setLeftWidth] = useState(250);
   const [rightWidth, setRightWidth] = useState(250);
   const [debugHeight, setDebugHeight] = useState(200);
@@ -70,8 +72,8 @@ const Layout = () => {
     try {
       const sys = config.get('systemInfo');
       const text = typeof sys === 'string' ? sys : JSON.stringify(sys || {});
-      if (text && !text.includes('22.04.5')) {
-        message.warning('检测到系统版本非推荐版本，建议使用Ubuntu22.04.5');
+      if (text && !text.includes('22.04.5') && text != '{}') {
+        message.warning(t('layout.versionWarning', { version: 'Ubuntu22.04.5' }));
       }
     } catch (e) {}
   }, []);

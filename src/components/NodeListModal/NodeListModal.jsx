@@ -6,10 +6,12 @@ import './NodeListModal.css';
 import GLOBALS from '../../assets/js/globals';
 import NodeScanner from '../../controller/node/NodeScanner';
 import { message } from 'antd'; 
+import { useI18n } from '../../context/I18nContext';
 const { shell } = window.require ? window.require('electron') : require('electron');
 const path = window.require('path');
 
 const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
+  const { t } = useI18n();
   const [tabs, setTabs] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchText, setSearchText] = useState('');
@@ -23,7 +25,7 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
       const tabItems = [
         {
           key: 'all',
-          label: '全部',
+          label: t('nodeList.tabAll'),
           children: renderNodeList(nodeList)
         },
         ...types.map(type => ({
@@ -63,9 +65,9 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
       setTabs([]);
       setActiveTab('all');
       updateNodeList(newNodes);
-      message.success('节点列表刷新成功');
+      message.success(t('nodeList.refreshSuccess'));
     } catch (error) {
-      message.error('节点列表刷新失败');
+      message.error(t('nodeList.refreshFailed'));
     }
   };
 
@@ -87,7 +89,7 @@ const NodeListModal = ({ isOpen, onClose, nodes, onNodeSelect }) => {
               <span className="node-name">{node.data.name}</span>
               <span className="node-path">{node.data.description}</span>
             </div>
-            <span className="node-type" onClick={() => onNodeSelect(node)}>添加</span>
+            <span className="node-type" onClick={() => onNodeSelect(node)}>{t('nodeList.add')}</span>
           </div>
         ))}
       </div>

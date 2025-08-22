@@ -2,8 +2,10 @@ import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { DeleteOutlined, RocketOutlined } from '@ant-design/icons';
 import './WelcomeScreen.css';
+import { useI18n } from '../../context/I18nContext';
 
 const WelcomeScreen = ({ recentProjects, onOpenProject, onCreateProject }) => {
+  const { t } = useI18n();
   const handleClearRecent = (e) => {
     e.stopPropagation();
     localStorage.removeItem('recentProjects');
@@ -16,25 +18,25 @@ const WelcomeScreen = ({ recentProjects, onOpenProject, onCreateProject }) => {
         <div className="welcome-header">
           <div className="welcome-title">
             <RocketOutlined className="welcome-icon" />
-            <span>欢迎使用 FutureDrive</span>
+            <span>{t('welcome.title')}</span>
           </div>
           <div className="welcome-subtitle">
-          连接 · 控制 · 调试 · 可视，一站式自动驾驶流程化解决方案
+          {t('welcome.subtitle')}
           </div>
         </div>
         <div className="welcome-btns">
           <Button type="primary" size="large" className="welcome-btn" onClick={() => onOpenProject()}>
-            打开项目
+            {t('welcome.openProject')}
           </Button>
           <Button size="large" className="welcome-btn" onClick={onCreateProject}>
-            新建项目
+            {t('welcome.newProject')}
           </Button>
         </div>
         <div className="welcome-recent">
           <div className="welcome-recent-header">
-            <h4>最近打开的项目</h4>
+            <h4>{t('welcome.recentTitle')}</h4>
             {recentProjects.length > 0 && (
-              <Tooltip title="清空最近项目列表">
+              <Tooltip title={t('welcome.clearRecent')}>
                 <DeleteOutlined 
                   className="clear-recent-icon"
                   onClick={handleClearRecent}
@@ -43,7 +45,7 @@ const WelcomeScreen = ({ recentProjects, onOpenProject, onCreateProject }) => {
             )}
           </div>
           <ul className="welcome-recent-list">
-            {recentProjects.length === 0 && <li className="no-recent">暂无最近项目</li>}
+            {recentProjects.length === 0 && <li className="no-recent">{t('welcome.noRecent')}</li>}
             {recentProjects.map((proj, idx) => (
               <li key={idx}>
                 <a href="#" onClick={e => { e.preventDefault(); onOpenProject(proj.path); }}>
@@ -55,7 +57,7 @@ const WelcomeScreen = ({ recentProjects, onOpenProject, onCreateProject }) => {
         </div>
       </div>
       <div style={{ position: 'fixed', left: 0, right: 0, bottom: 16, textAlign: 'center', color: '#888', fontSize: 14, zIndex: 10 }}>
-        安徽灵元机器人科技有限公司
+        {t('welcome.company')}
       </div>
     </div>
   );

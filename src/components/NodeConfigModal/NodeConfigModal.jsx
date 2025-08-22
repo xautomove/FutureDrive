@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './NodeConfigModal.css';
 import { Switch, Button } from 'antd';
 import fileController from '../../controller/gui/FileController';
+import { useI18n } from '../../context/I18nContext';
 
 const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   const [form, setForm] = useState({});
+  const { t } = useI18n();
 
   useEffect(() => {
     if (node && node.data && node.data.config) {
@@ -30,9 +32,9 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   const handleFileSelect = async (name) => {
     try {
       const result = await fileController.selectFile({
-        title: `选择${name}文件`,
+        title: t('nodeConfig.selectFileTitle', { name }),
         filters: [
-          { name: '所有文件', extensions: ['*'] }
+          { name: t('nodeConfig.fileFilterAll'), extensions: ['*'] }
         ]
       });
       if (result.success) {
@@ -95,7 +97,7 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
             <input
               type="text"
               value={form[item.name] ?? ''}
-              placeholder="请选择文件..."
+              placeholder={t('nodeConfig.filePlaceholder')}
               readOnly
               className="file-path-input"
             />
@@ -105,7 +107,7 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
               onClick={() => handleFileSelect(item.name)}
               className="file-select-button"
             >
-              选择文件
+              {t('nodeConfig.chooseFile')}
             </Button>
           </div>
         );
@@ -124,7 +126,7 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
     <div className="node-config-modal-overlay" onClick={onClose}>
       <div className="node-config-modal" onClick={e => e.stopPropagation()}>
         <div className="node-config-modal-header">
-          <h3>节点配置 - {node.data.label}</h3>
+          <h3>{t('nodeConfig.modalTitle', { label: node.data.label })}</h3>
           <button className="node-config-modal-close" onClick={onClose}>×</button>
         </div>
         <form className="node-config-modal-body" onSubmit={handleSubmit}>
@@ -143,8 +145,8 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
             </div>
           ))}
           <div className="node-config-modal-footer">
-            <button type="button" onClick={onClose}>取消</button>
-            <button type="submit">保存</button>
+            <button type="button" onClick={onClose}>{t('simulationSettings.cancel')}</button>
+            <button type="submit">{t('common.save')}</button>
           </div>
         </form>
       </div>
