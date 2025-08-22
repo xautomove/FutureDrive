@@ -14,7 +14,7 @@ const { Text, Title, Paragraph } = Typography;
 const LICENSE_URL = 'https://future.automoves.cn/license';
 const LEGAL_URL = 'https://future.automoves.cn/legal';
 
-const localVersion = '1.0.9';
+const localVersion = '1.1.0';
 const GITHUB_RELEASES_URL = 'https://api.github.com/repos/xautomove/FutureDrive/releases';
 
 const AboutModal = ({ visible, onClose }) => {
