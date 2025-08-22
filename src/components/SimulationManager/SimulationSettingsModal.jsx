@@ -60,7 +60,7 @@ const SimulationSettingsModal = ({ visible, onClose, platform, config, onSave, o
           <Form.Item label="Port" name="port" rules={[{ required: true, message: '请输入Port' }]}> 
             <Input /> 
           </Form.Item>
-          <Form.Item label="Map" name="map" rules={[{ required: true, message: '请输入Map' }]}> 
+          <Form.Item label="Map" name="map" rules={[{ message: '请输入Map' }]}> 
             <Input /> 
           </Form.Item>
           <Form.Item label="启动文件" required>

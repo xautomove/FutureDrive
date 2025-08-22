@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { download } from '../../assets/js/http';
 import os from 'os';
+import { message } from 'antd';
 
 const simulationList = [
   {
@@ -262,20 +263,70 @@ read -p \"按任意键退出...\"`;
       }
       const { host = '127.0.0.1', port = '2000', map = 'Town01', launchArgs = '' } = platformConfig;
       const filePath = platformConfig.launchFile;
-      const ext = filePath.split('.').pop();
+      const ext = filePath.split('.').pop().toLowerCase();
+
       let pythonPath = 'python3';
+      let shouldCleanConda = false;
       try {
         const nodeConfig = (await config.get('node')) || {};
-        if (nodeConfig.pythonPath) pythonPath = nodeConfig.pythonPath;
-      } catch (e) {}
-      let command;
-      if (ext === 'py') {
-        command = `gnome-terminal -- bash -c "${pythonPath} '${filePath}' --host ${host} --port ${port} --map ${map} ${launchArgs}; exec bash"`;
-      } else if (ext === 'sh') {
-        command = `gnome-terminal -- bash -c "bash '${filePath}' --host ${host} --port ${port} --map ${map} ${launchArgs}; exec bash"`;
-      } else {
-        throw new Error('仅支持 py 或 sh 脚本');
+        if (nodeConfig.pythonPath) {
+          pythonPath = nodeConfig.pythonPath;
+          shouldCleanConda = true;
+        }
+      } catch (e) {
       }
+
+      if (!['py', 'sh'].includes(ext)) {
+        message.error('仅支持 py 或 sh 脚本');
+        return;
+      }
+
+      const tempDir = path.join(os.tmpdir(), 'futuredrive_sim_launch');
+      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+      const shellScriptPath = path.join(tempDir, `control_${name.toLowerCase()}.sh`);
+
+      const execLine = ext === 'py'
+        ? `"${pythonPath}" "${filePath}" --host ${host} --port ${port} --map ${map} ${launchArgs}`
+        : `bash "${filePath}" --host ${host} --port ${port} --map ${map} ${launchArgs}`;
+
+      const condaCleanBlock = shouldCleanConda ? `
+if [ ! -z "$CONDA_DEFAULT_ENV" ]; then
+  echo "检测到 Conda 环境: $CONDA_DEFAULT_ENV，正在退出..."
+  conda deactivate 2>/dev/null || true
+  while [ ! -z "$CONDA_DEFAULT_ENV" ]; do
+    conda deactivate 2>/dev/null || break
+  done
+  echo "已退出 Conda 环境"
+  # 手动清理 PATH 中的 miniconda/anaconda 路径
+  export PATH=$(echo $PATH | tr ':' '\n' | grep -v 'miniconda3' | grep -v 'anaconda3' | tr '\n' ':' | sed 's/:$//')
+  echo "已清理 PATH 中的 Conda 路径"
+  # 清理 Conda 相关环境变量
+  unset CONDA_DEFAULT_ENV
+  unset CONDA_PREFIX
+  unset CONDA_PREFIX_1
+  unset CONDA_PROMPT_MODIFIER
+  unset CONDA_PYTHON_EXE
+  unset CONDA_SHLVL
+  unset PYTHONPATH
+  echo "已清理 Conda 环境变量"
+fi` : '';
+
+      const rosLoadBlock = `
+if [ -f "/opt/ros/humble/setup.bash" ]; then
+  source /opt/ros/humble/setup.bash
+fi`;
+
+      const shellContent = `#!/bin/bash
+echo "启动 ${name} 控制脚本..."
+${condaCleanBlock}
+${rosLoadBlock}
+${execLine}
+read -p "按任意键退出..."`;
+
+      fs.writeFileSync(shellScriptPath, shellContent, 'utf8');
+      fs.chmodSync(shellScriptPath, 0o755);
+
+      const command = `gnome-terminal -- bash -l -c "${shellScriptPath}; exec bash"`;
       return await SimulationController._runCommand(command);
     } catch (error) {
       console.error(`控制 ${name} 失败:`, error);

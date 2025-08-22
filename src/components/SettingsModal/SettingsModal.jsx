@@ -27,6 +27,7 @@ const SettingsModal = ({ visible, onClose }) => {
   const [redisForm] = Form.useForm();
   const [otherForm] = Form.useForm();
   const [frameworkForm] = Form.useForm();
+  const [environmentForm] = Form.useForm();
 
   useEffect(() => {
     if (visible) {
@@ -37,6 +38,7 @@ const SettingsModal = ({ visible, onClose }) => {
           const redisConfig = config.get('redis') || {};
           const otherConfig = config.get('other') || {};
           const frameworkConfig = config.get('framework') || {};
+          const environmentConfig = config.get('environment') || {};
 
           setTimeout(() => {
             nodeForm.setFieldsValue({
@@ -71,6 +73,10 @@ const SettingsModal = ({ visible, onClose }) => {
             });
 
             setFrameworkPath(frameworkConfig.path || '');
+
+            environmentForm.setFieldsValue({
+              listUrl: environmentConfig.listUrl || 'https://future.api.automoves.cn/api/environments/list'
+            });
           }, 0);
         } catch (error) {
           console.error('加载配置失败:', error);
@@ -127,6 +133,7 @@ const SettingsModal = ({ visible, onClose }) => {
       const redisValues = redisForm.getFieldsValue();
       const otherValues = otherForm.getFieldsValue();
       const frameworkValues = frameworkForm.getFieldsValue();
+      const environmentValues = environmentForm.getFieldsValue();
       
       await config.set('node', {
         ...nodeValues,
@@ -162,6 +169,11 @@ const SettingsModal = ({ visible, onClose }) => {
         ...frameworkValues,
         path: path
       });
+
+      await config.set('environment', {
+        ...environmentValues,
+        listUrl: environmentValues.listUrl || 'https://future.api.automoves.cn/api/environments/list'
+      });
       
       console.log('设置保存成功');
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -177,7 +189,11 @@ const SettingsModal = ({ visible, onClose }) => {
     switch (selectedKey) {
       case 'general':
         return (
-          <div className="settings-empty">暂无设置项</div>
+          <Form layout="vertical" className="settings-form" form={environmentForm}>
+            <Form.Item name="listUrl" label="环境列表地址 URL">
+              <Input placeholder="https://future.api.automoves.cn/api/environments/list" style={{ width: 400 }} />
+            </Form.Item>
+          </Form>
         );
       case 'node':
         return (

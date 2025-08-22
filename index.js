@@ -67,12 +67,12 @@ const createWindow = (width, height, page = '', params = []) => {
     win.show();
   });
 
-  win.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F12') {
-      win.webContents.toggleDevTools();
-      event.preventDefault();
-    }
-  });
+  // win.webContents.on('before-input-event', (event, input) => {
+  //   if (input.key === 'F12') {
+  //     win.webContents.toggleDevTools();
+  //     event.preventDefault();
+  //   }
+  // });
 
   Menu.setApplicationMenu(null);
   return win;
