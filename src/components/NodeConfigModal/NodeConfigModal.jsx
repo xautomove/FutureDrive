@@ -4,6 +4,30 @@ import { Switch, Button } from 'antd';
 import fileController from '../../controller/gui/FileController';
 import { useI18n } from '../../context/I18nContext';
 
+const normalizeConfigValue = (item, rawValue) => {
+  if (!item) return rawValue;
+
+  if (item.type === 'bool') {
+    if (typeof rawValue === 'boolean') return rawValue;
+    if (typeof rawValue === 'number') return rawValue !== 0;
+    if (typeof rawValue === 'string') {
+      const normalized = rawValue.trim().toLowerCase();
+      return ['1', 'true', 'yes', 'on'].includes(normalized);
+    }
+    return false;
+  }
+
+  if (item.type === 'number') {
+    if (rawValue === '' || rawValue === null || rawValue === undefined) {
+      return 0;
+    }
+    const parsed = Number(rawValue);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  return rawValue ?? '';
+};
+
 const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   const [form, setForm] = useState({});
   const { t } = useI18n();
@@ -12,11 +36,7 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
     if (node && node.data && node.data.config) {
       const initial = {};
       node.data.config.forEach(item => {
-        if (item.type === 'bool') {
-          initial[item.name] = item.default_value === 1 ? true : false;
-        } else {
-          initial[item.name] = item.default_value ?? (item.type === 'number' ? 0 : '');
-        }
+        initial[item.name] = normalizeConfigValue(item, item.default_value);
       });
       setForm(initial);
     }
@@ -25,7 +45,8 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   if (!open || !node) return null;
 
   const handleChange = (name, value) => {
-    const processedValue = value === '' ? (node.data.config.find(item => item.name === name)?.type === 'number' ? 0 : '') : value;
+    const configItem = node.data.config.find(item => item.name === name);
+    const processedValue = normalizeConfigValue(configItem, value);
     setForm(f => ({ ...f, [name]: processedValue }));
   };
 
@@ -123,8 +144,8 @@ const NodeConfigModal = ({ open, node, onClose, onSave }) => {
   };
 
   return (
-    <div className="node-config-modal-overlay" onClick={onClose}>
-      <div className="node-config-modal" onClick={e => e.stopPropagation()}>
+    <div className="node-config-modal-overlay">
+      <div className="node-config-modal">
         <div className="node-config-modal-header">
           <h3>{t('nodeConfig.modalTitle', { label: node.data.label })}</h3>
           <button className="node-config-modal-close" onClick={onClose}>×</button>
