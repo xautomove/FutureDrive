@@ -93,17 +93,11 @@ class ProjectController {
   }
 
   async selectAndOpenProject(onOpenProject, log, LOG_TYPES) {
-    const { dialog } = window.require('@electron/remote');
     const fs = window.require('fs');
-    const result = await dialog.showOpenDialog({
-      properties: ['openFile'],
-      filters: [
-        { name: '项目文件', extensions: ['proj'] }
-      ]
-    });
-    if (!result.canceled && result.filePaths && result.filePaths[0]) {
+    const result = await this.selectProjectFile();
+    if (result.success && result.filePath) {
       try {
-        const projContent = fs.readFileSync(result.filePaths[0], 'utf8');
+        const projContent = fs.readFileSync(result.filePath, 'utf8');
         const projectConfig = JSON.parse(projContent);
         if (!fs.existsSync(projectConfig.path)) {
           log && log(`项目路径不存在: ${projectConfig.path}`, LOG_TYPES && LOG_TYPES.ERROR);
@@ -114,6 +108,27 @@ class ProjectController {
         log && log(`打开项目失败: ${error.message}`, LOG_TYPES && LOG_TYPES.ERROR);
       }
     }
+  }
+
+  async selectProjectFile() {
+    const { dialog } = window.require('@electron/remote');
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: '项目文件', extensions: ['proj'] }
+      ]
+    });
+
+    if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+      return { success: false, canceled: true };
+    }
+
+    return {
+      success: true,
+      filePath: result.filePaths[0],
+      filePaths: result.filePaths,
+      canceled: false
+    };
   }
 }
 

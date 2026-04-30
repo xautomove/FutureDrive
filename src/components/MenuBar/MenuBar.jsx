@@ -14,6 +14,7 @@ const { shell } = require('electron');
 import { message } from 'antd';
 import config from '../../assets/js/config';
 import { useI18n } from '../../context/I18nContext';
+import { runWorkflow } from '../../assets/js/workflowRunner';
 
 const DOCUMENTATION_URL = 'https://futuer.automoves.cn/docs/';
 
@@ -68,26 +69,14 @@ const MenuBar = ({ onOpenProject, onCloseProject, onCreateProject }) => {
           log('任务正在运行，请先停止或等待完成', LOG_TYPES.WARNING);
           return;
         }
-
-        const redisConfig = config.get('redis') || {};
-        if (!redisConfig.enabled) {
-          message.warning('请先在设置中启用 Redis 缓存功能');
-          return;
-        }
-
         try {
-          const nodes = window.flowNodes || [];
-          const edges = window.flowEdges || [];
-          
-          if (nodes.length === 0) {
-            log('没有可执行的节点', LOG_TYPES.WARNING);
-            return;
-          }
-
-          log('开始执行流程...', LOG_TYPES.INFO);
-          await GLOBALS.nodeController.start(nodes, edges);
+          await runWorkflow();
         } catch (error) {
-          console.log(`流程执行失败`, error);
+          if (error.message === 'redis_disabled') {
+            message.warning('请先在设置中启用 Redis 缓存功能');
+          } else if (error.message !== 'no_nodes') {
+            console.log(`流程执行失败`, error);
+          }
         }
         break;
       case 'stop':

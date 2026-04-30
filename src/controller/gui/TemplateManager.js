@@ -7,37 +7,20 @@ class TemplateManager {
     constructor() {
     }
 
-    getTemplateDir() {
-        if (!window.currentProject?.path) {
+    getTemplateDir(projectPath = window.currentProject?.path) {
+        if (!projectPath) {
             throw new Error('没有打开的项目');
         }
-        const templateDir = path.join(window.currentProject.path, 'templates');
+        const templateDir = path.join(projectPath, 'templates');
         if (!fs.existsSync(templateDir)) {
             fs.mkdirSync(templateDir, { recursive: true });
         }
         return templateDir;
     }
 
-    async saveTemplate(name, templateData) {
+    getTemplateListByProject(projectPath) {
         try {
-            const templateDir = this.getTemplateDir();
-
-            const fileName = `${name}.json`;
-
-            const filePath = path.join(templateDir, fileName);
-            await fileController.writeFile(filePath, JSON.stringify(templateData, null, 2));
-            
-            log(`模板已保存: ${fileName}`, LOG_TYPES.SUCCESS);
-            return fileName;
-        } catch (error) {
-            log(`保存模板失败: ${error.message}`, LOG_TYPES.ERROR);
-            throw error;
-        }
-    }
-
-    getTemplateList() {
-        try {
-            const templateDir = this.getTemplateDir();
+            const templateDir = this.getTemplateDir(projectPath);
             const files = fs.readdirSync(templateDir);
             return files
                 .filter(file => file.endsWith('.json'))
@@ -58,9 +41,30 @@ class TemplateManager {
         }
     }
 
-    async loadTemplate(fileName) {
+    async saveTemplate(name, templateData) {
         try {
             const templateDir = this.getTemplateDir();
+
+            const fileName = `${name}.json`;
+
+            const filePath = path.join(templateDir, fileName);
+            await fileController.writeFile(filePath, JSON.stringify(templateData, null, 2));
+            
+            log(`模板已保存: ${fileName}`, LOG_TYPES.SUCCESS);
+            return fileName;
+        } catch (error) {
+            log(`保存模板失败: ${error.message}`, LOG_TYPES.ERROR);
+            throw error;
+        }
+    }
+
+    getTemplateList() {
+        return this.getTemplateListByProject(window.currentProject?.path);
+    }
+
+    async loadTemplate(fileName, projectPath = window.currentProject?.path) {
+        try {
+            const templateDir = this.getTemplateDir(projectPath);
             const filePath = path.join(templateDir, fileName);
             const content = await fs.promises.readFile(filePath, 'utf8');
             const templateData = JSON.parse(content);

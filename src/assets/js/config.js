@@ -62,6 +62,26 @@ class Config {
                 "db": 0,
                 "enabled": false
             },
+            "api": {
+                "host": "127.0.0.1",
+                "port": 2200,
+                "tokenEnabled": false,
+                "token": ""
+            },
+            "startup": {
+                "autoLaunchFutureDrive": false,
+                "autoRunWorkflow": false,
+                "projectPath": "",
+                "projectFile": "",
+                "templateFile": "",
+                "ui": {
+                    "enabled": false,
+                    "executablePath": ""
+                }
+            },
+            "other": {
+                "noUi": false
+            },
             'api_server':{
                 "host": "https://future.api.automoves.cn",
                 "logs_add":"/api/logs/add"
@@ -95,7 +115,7 @@ class Config {
     async load() {
         try {
             const data = await fs.promises.readFile(this.configPath, 'utf8');
-            this.data = JSON.parse(data);
+            this.data = this.normalizeConfig(JSON.parse(data));
             this.cache.clear();
             this.cache.set('workflow', this.data.workflow);
         } catch (error) {
@@ -170,6 +190,34 @@ class Config {
         this.data = this.getDefaultConfig();
         this.cache.clear();
         await this.save();
+    }
+
+    normalizeConfig(rawConfig = {}) {
+        const defaultConfig = this.getDefaultConfig();
+        const startupConfig = rawConfig.startup || {};
+        const legacyCarUi = startupConfig.carUi || {};
+        const uiConfig = startupConfig.ui || {};
+
+        return {
+            ...defaultConfig,
+            ...rawConfig,
+            startup: {
+                ...defaultConfig.startup,
+                ...startupConfig,
+                projectPath: startupConfig.projectPath || '',
+                projectFile: startupConfig.projectFile || '',
+                templateFile: startupConfig.templateFile || '',
+                ui: {
+                    ...defaultConfig.startup.ui,
+                    enabled: Boolean(uiConfig.enabled ?? legacyCarUi.enabled ?? false),
+                    executablePath: uiConfig.executablePath || legacyCarUi.command || ''
+                }
+            },
+            other: {
+                ...defaultConfig.other,
+                ...(rawConfig.other || {})
+            }
+        };
     }
 }
 

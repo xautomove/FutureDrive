@@ -4,7 +4,8 @@ const fsPromises = require('fs').promises;
 const { net } = require('electron');
 const si = require('systeminformation');
 const path = require('path');
-const { startServer, stopServer, restartServer, setProjectPath: setApiProjectPath } = require('../api/server');
+const { startServer, stopServer, restartServer, setProjectPath: setApiProjectPath, mergeRuntimeState, getRuntimeState } = require('../api/server');
+const { syncUbuntuAutostart } = require('../system/ubuntuAutostart');
 
 let currentDownload = null;
 
@@ -275,6 +276,31 @@ ipcMain.handle('restart-server', async () => {
     return { success: true };
   } catch (error) {
     console.error('重启服务器失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('update-runtime-state', async (event, partialState) => {
+  try {
+    const state = mergeRuntimeState(partialState || {});
+    return { success: true, state };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-runtime-state', async () => {
+  try {
+    return { success: true, state: getRuntimeState() };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('sync-ubuntu-autostart', async (event, enabled) => {
+  try {
+    return await syncUbuntuAutostart(Boolean(enabled), process.execPath);
+  } catch (error) {
     return { success: false, error: error.message };
   }
 });

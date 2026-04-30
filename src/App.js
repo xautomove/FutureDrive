@@ -20,6 +20,7 @@ import { ReactFlowProvider } from 'reactflow';
 import RedisController from './controller/node/RedisController';
 import GLOBALS from './assets/js/globals';
 import { puts } from './assets/js/cloud';
+import { runWorkflowFromAutoStart } from './assets/js/workflowRunner';
 
 function App() {
   const [Component, setComponent] = useState(null);
@@ -78,13 +79,90 @@ function App() {
             event.sender.send('get-config-reply', value);
           });
 
+          ipcRenderer.removeAllListeners('start-task');
+          ipcRenderer.on('start-task', async (event, payload) => {
+            try {
+              GLOBALS.currentTaskContext = {
+                mode: payload?.mode || '',
+                modeLabel: payload?.modeLabel || '未命名任务',
+                startedAt: new Date().toISOString()
+              };
+
+              await GLOBALS.updateRuntimeState({
+                task: {
+                  mode: payload?.mode || '',
+                  modeLabel: payload?.modeLabel || '未命名任务',
+                  status: 'starting',
+                  message: `FutureDrive 正在启动${payload?.modeLabel || '任务'}`,
+                  updatedAt: new Date().toISOString()
+                }
+              });
+
+              await runWorkflowFromAutoStart();
+
+              event.sender.send('start-task-reply', {
+                success: true
+              });
+            } catch (error) {
+              await GLOBALS.updateRuntimeState({
+                task: {
+                  mode: payload?.mode || '',
+                  modeLabel: payload?.modeLabel || '未命名任务',
+                  status: 'error',
+                  message: `任务启动失败: ${error.message}`,
+                  updatedAt: new Date().toISOString()
+                }
+              });
+
+              event.sender.send('start-task-reply', {
+                success: false,
+                error: error.message
+              });
+            }
+          });
+
+          GLOBALS.updateRuntimeState = async (partialState) => {
+            try {
+              return await ipcRenderer.invoke('update-runtime-state', partialState);
+            } catch (error) {
+              console.error('更新运行状态失败:', error);
+              return { success: false, error: error.message };
+            }
+          };
+
+          GLOBALS.syncUbuntuAutostart = async (enabled) => {
+            try {
+              return await ipcRenderer.invoke('sync-ubuntu-autostart', enabled);
+            } catch (error) {
+              console.error('同步 Ubuntu 自启动失败:', error);
+              return { success: false, error: error.message };
+            }
+          };
+
           try {
-            const serverConfig = config.get('server') || {
+            const serverConfig = config.get('api') || {
               port: 2200,
-              host: 'localhost'
+              host: '127.0.0.1'
             };
             
             await ipcRenderer.invoke('start-server', serverConfig);
+            await GLOBALS.updateRuntimeState({
+              service: {
+                status: 'service_connected',
+                message: 'FutureDrive service online',
+                startedAt: new Date().toISOString()
+              },
+              workflow: {
+                status: 'idle',
+                message: '工作流待启动',
+                updatedAt: new Date().toISOString()
+              },
+              vehicle: {
+                status: 'service_connected',
+                message: '通讯已连接，等待工作流启动',
+                updatedAt: new Date().toISOString()
+              }
+            });
             console.log('服务器启动成功');
           } catch (error) {
             console.error('启动服务器失败:', error);
@@ -113,6 +191,13 @@ function App() {
 
               if (connected) {
                 GLOBALS.redisController = redisController;
+                await GLOBALS.updateRuntimeState({
+                  service: {
+                    status: 'service_connected',
+                    message: 'FutureDrive service online, Redis connected',
+                    updatedAt: new Date().toISOString()
+                  }
+                });
                 console.log('Redis 连接成功');
                 message.success('Redis 连接成功');
               } else {

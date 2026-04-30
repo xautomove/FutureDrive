@@ -47,14 +47,89 @@ class NodeExecutor {
         this.executionOrder = [];
         this.pythonExecutor = new PythonNodeExecutor();
         this.pollingInterval = null;
+        this.telemetryInterval = null;
         this.isPolling = false;
         this.activeProcesses = [];
+    }
+
+    isVehicleTelemetryPayload(payload) {
+        return Boolean(
+            payload &&
+            typeof payload === 'object' &&
+            (
+                Object.prototype.hasOwnProperty.call(payload, 'speed_kph') ||
+                Object.prototype.hasOwnProperty.call(payload, 'steer_deg') ||
+                Object.prototype.hasOwnProperty.call(payload, 'gear') ||
+                Object.prototype.hasOwnProperty.call(payload, 'vehicle_status')
+            )
+        );
+    }
+
+    getVehicleTelemetryNodeUuid() {
+        if (!this.nodes || !Array.isArray(this.nodes)) {
+            return null;
+        }
+
+        const node = this.nodes.find((item) => item.path === 'car_controller');
+        return node?.data?.uuid || null;
+    }
+
+    async syncVehicleTelemetry() {
+        if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return;
+        }
+
+        try {
+            const vehicleNodeUuid = this.getVehicleTelemetryNodeUuid();
+            if (!vehicleNodeUuid) {
+                return;
+            }
+
+            const latestTelemetry = await GLOBALS.redisController.get(`task_result:${vehicleNodeUuid}`);
+
+            if (!this.isVehicleTelemetryPayload(latestTelemetry)) {
+                return;
+            }
+
+            await GLOBALS.updateRuntimeState({
+                vehicle: {
+                    telemetry: {
+                        speedKph: Number(latestTelemetry.speed_kph || 0),
+                        steerDeg: Number(latestTelemetry.steer_deg || 0),
+                        gear: latestTelemetry.gear || 'UNKNOWN',
+                        vehicleStatus: latestTelemetry.vehicle_status || 'UNKNOWN',
+                        telemetryUpdatedAt: new Date().toISOString()
+                    },
+                    updatedAt: new Date().toISOString()
+                }
+            });
+        } catch (error) {
+            log(`sync telemetry failed: ${error.message}`, LOG_TYPES.ERROR);
+        }
+    }
+
+    startTelemetryBridge() {
+        if (this.telemetryInterval) {
+            return;
+        }
+
+        this.telemetryInterval = setInterval(async () => {
+            await this.syncVehicleTelemetry();
+        }, 500);
+    }
+
+    stopTelemetryBridge() {
+        if (this.telemetryInterval) {
+            clearInterval(this.telemetryInterval);
+            this.telemetryInterval = null;
+        }
     }
 
     buildExecutionOrder(nodes, edges) {
         const nodeMap = new Map(nodes.map(node => [node.id, node]));
         const edgeMap = new Map();
         const inDegree = new Map();
+        const autoStartNodes = nodes.filter(node => Boolean(node?.data?.autoStart));
 
         nodes.forEach(node => inDegree.set(node.id, 0));
 
@@ -68,8 +143,14 @@ class NodeExecutor {
 
         const executionOrder = [];
         const queue = [];
+        const allowedNodeIds = autoStartNodes.length === 1
+            ? this.collectReachableNodeIds(autoStartNodes[0].id, edgeMap)
+            : null;
 
         nodes.forEach(node => {
+            if (allowedNodeIds && !allowedNodeIds.has(node.id)) {
+                return;
+            }
             if (inDegree.get(node.id) === 0) {
                 queue.push(node);
             }
@@ -87,6 +168,9 @@ class NodeExecutor {
 
             const outEdges = edgeMap.get(node.id) || [];
             for (const edge of outEdges) {
+                if (allowedNodeIds && !allowedNodeIds.has(edge.target)) {
+                    continue;
+                }
                 const targetId = edge.target;
                 inDegree.set(targetId, inDegree.get(targetId) - 1);
                 
@@ -108,16 +192,57 @@ class NodeExecutor {
         return executionOrder;
     }
 
+    collectReachableNodeIds(startNodeId, edgeMap) {
+        const visited = new Set();
+        const queue = [startNodeId];
+
+        while (queue.length > 0) {
+            const nodeId = queue.shift();
+            if (visited.has(nodeId)) {
+                continue;
+            }
+            visited.add(nodeId);
+
+            const outEdges = edgeMap.get(nodeId) || [];
+            outEdges.forEach((edge) => {
+                if (!visited.has(edge.target)) {
+                    queue.push(edge.target);
+                }
+            });
+        }
+
+        return visited;
+    }
+
     async executeFlow(nodes, edges) {
         try {
             this.nodes = nodes;
             this.edges = edges;
             this.nodeMap = new Map(nodes.map(node => [node.id, node]));
+            await GLOBALS.updateRuntimeState({
+                workflow: {
+                    status: 'workflow_starting',
+                    message: '工作流启动中',
+                    updatedAt: new Date().toISOString()
+                },
+                vehicle: {
+                    status: 'service_connected',
+                    message: '通讯已连接，等待关键节点就绪',
+                    updatedAt: new Date().toISOString()
+                }
+            });
             
             this.executionOrder = this.buildExecutionOrder(nodes, edges);
             
             if (this.executionOrder.length === 0) {
                 log('没有可执行的节点', LOG_TYPES.WARNING);
+                await GLOBALS.updateRuntimeState({
+                    workflow: {
+                        status: 'idle',
+                        message: '没有可执行节点',
+                        updatedAt: new Date().toISOString()
+                    }
+                });
                 return;
             }
             
@@ -126,7 +251,8 @@ class NodeExecutor {
             }
             
             this.startPollingService();
-            
+            this.startTelemetryBridge();
+
             await this.executeNextNode();
             
         } catch (error) {
@@ -216,7 +342,13 @@ class NodeExecutor {
     }
 
     async prepareNodeInput(node) {
-        const inputData = {};
+        const inputData = {
+            _future_task: {
+                mode: GLOBALS.currentTaskContext?.mode || '',
+                modeLabel: GLOBALS.currentTaskContext?.modeLabel || '',
+                startedAt: GLOBALS.currentTaskContext?.startedAt || ''
+            }
+        };
         
         for (const edge of this.edges || []) {
             if (edge.target === node.id) {
@@ -268,6 +400,7 @@ class NodeExecutor {
             clearInterval(this.pollingInterval);
             this.pollingInterval = null;
         }
+        this.stopTelemetryBridge();
         this.isPolling = false;
         if(GLOBALS.isDebug){
             log('轮询服务已停止', LOG_TYPES.INFO);
@@ -331,6 +464,23 @@ class NodeExecutor {
             
             if (this.executionOrder.length === 0) {
                 this.stopPollingService();
+                await GLOBALS.updateRuntimeState({
+                    workflow: {
+                        status: 'completed',
+                        message: '工作流执行完成',
+                        updatedAt: new Date().toISOString()
+                    },
+                    vehicle: {
+                        status: 'vehicle_ready',
+                        message: '车辆准备就绪',
+                        updatedAt: new Date().toISOString()
+                    },
+                    task: {
+                        status: 'running',
+                        message: '任务链路已启动，车辆准备就绪',
+                        updatedAt: new Date().toISOString()
+                    }
+                });
                 log('所有节点执行完成', LOG_TYPES.SUCCESS);
             }
         } catch (error) {
@@ -374,6 +524,26 @@ class NodeExecutor {
         for (const { node, uuid } of errorNodes) {
             await this.handleNodeResult(node, uuid, 'error');
         }
+
+        if (errorNodes.length > 0) {
+            await GLOBALS.updateRuntimeState({
+                workflow: {
+                    status: 'error',
+                    message: '工作流存在节点异常',
+                    updatedAt: new Date().toISOString()
+                },
+                vehicle: {
+                    status: 'error',
+                    message: '关键节点异常',
+                    updatedAt: new Date().toISOString()
+                },
+                task: {
+                    status: 'error',
+                    message: '任务执行过程中出现节点异常',
+                    updatedAt: new Date().toISOString()
+                }
+            });
+        }
         
         if (this.executionOrder.length > 0) {
             await this.executeNextNode();
@@ -382,9 +552,28 @@ class NodeExecutor {
 
     async forceStop() {
         this.stopPollingService();
+        this.stopTelemetryBridge();
         this.pythonExecutor.killActiveProcess();
         GLOBALS.clearProcesses();
         GLOBALS.stopAllDebugWatchers();
+        GLOBALS.currentTaskContext = null;
+        await GLOBALS.updateRuntimeState({
+            workflow: {
+                status: 'stopped',
+                message: '工作流已停止',
+                updatedAt: new Date().toISOString()
+            },
+            vehicle: {
+                status: 'service_connected',
+                message: '通讯已连接，等待重新启动工作流',
+                updatedAt: new Date().toISOString()
+            },
+            task: {
+                status: 'idle',
+                message: '任务已停止，等待重新下发',
+                updatedAt: new Date().toISOString()
+            }
+        });
     }
 }
 

@@ -28,9 +28,10 @@ import ReactDOM from 'react-dom';
 import NodeLogModal from './NodeLogModal';
 import { v4 as uuidv4 } from 'uuid';
 import { useI18n } from '../../context/I18nContext';
+import { runWorkflow } from '../../assets/js/workflowRunner';
 
 
-const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorChange, onPriorityChange }) => {
+const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorChange, onPriorityChange, onAutoStartChange }) => {
   const { t } = useI18n();
   const [showDescription, setShowDescription] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -138,6 +139,17 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
               <circle cx="8" cy="10" r="1" fill="#fbc02d" />
             </svg>
           </button>
+          <button
+            className={`node-toolbar-btn ${data.autoStart ? 'active' : ''}`}
+            title={data.autoStart ? t('main.nodeToolbar.disableAutoStart') : t('main.nodeToolbar.enableAutoStart')}
+            onClick={() => onAutoStartChange(id)}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2.5L12.5 5V11L8 13.5L3.5 11V5L8 2.5Z" stroke="#fff" strokeWidth="1.2" />
+              <path d="M8 5.25V10.75" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M5.75 8H10.25" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </button>
           {showColorPicker && ReactDOM.createPortal(
             <div style={{ position: 'fixed', left: colorPickerPos.left, top: colorPickerPos.top, zIndex: 9999 }}>
               <ChromePicker
@@ -239,6 +251,9 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
               >
                 P: {data.priority || 0}
               </span>
+              {data.autoStart && (
+                <span className="node-autostart-badge">AUTO</span>
+              )}
             </div>
           </div>
           {showDescription && data.description && (
@@ -422,6 +437,18 @@ const MainContent = ({ onTreeDataChange }) => {
   const handleRunStop = async () => {
     if (isRunning) {
       try {
+        await GLOBALS.updateRuntimeState({
+          workflow: {
+            status: 'stopping',
+            message: '工作流停止中',
+            updatedAt: new Date().toISOString()
+          },
+          vehicle: {
+            status: 'service_connected',
+            message: '通讯已连接，车辆任务停止中',
+            updatedAt: new Date().toISOString()
+          }
+        });
         const keys = await GLOBALS.redisController.keys('task_pid*');
         for (const key of keys) {
           try {
@@ -450,29 +477,41 @@ const MainContent = ({ onTreeDataChange }) => {
         }
         log(t('main.logs.flowStopped'), LOG_TYPES.INFO);
       } catch (error) {
+        await GLOBALS.updateRuntimeState({
+          workflow: {
+            status: 'error',
+            message: `停止工作流失败: ${error.message}`,
+            updatedAt: new Date().toISOString()
+          },
+          vehicle: {
+            status: 'error',
+            message: '停止流程失败',
+            updatedAt: new Date().toISOString()
+          }
+        });
         log(`${t('main.logs.stopFlowError')}: ${error.message}`, LOG_TYPES.ERROR);
       }
     } else {
-      const redisConfig = config.get('redis') || {};
-      if (!redisConfig.enabled) {
-        message.warning(t('main.redisDisabledWarning'));
-        return;
-      }
-
       try {
-        const nodes = window.flowNodes || [];
-        const edges = window.flowEdges || [];
-
-        if (nodes.length === 0) {
-          log(t('main.logs.noNodesToRun'), LOG_TYPES.WARNING);
-          return;
-        }
-
         setIsStarting(true);
-        
-        log(t('main.logs.flowStarting'), LOG_TYPES.INFO);
-        await GLOBALS.nodeController.start(nodes, edges);
+        await runWorkflow();
       } catch (error) {
+        if (error.message === 'redis_disabled') {
+          message.warning(t('main.redisDisabledWarning'));
+        } else if (error.message !== 'no_nodes') {
+          await GLOBALS.updateRuntimeState({
+            workflow: {
+              status: 'error',
+              message: `工作流启动失败: ${error.message}`,
+              updatedAt: new Date().toISOString()
+            },
+            vehicle: {
+              status: 'error',
+              message: '启动流程失败',
+              updatedAt: new Date().toISOString()
+            }
+          });
+        }
         console.log(`${t('main.logs.flowExecutionError')}:`, error);
         setIsStarting(false);
       }
@@ -580,11 +619,25 @@ const MainContent = ({ onTreeDataChange }) => {
     log(`${t('main.logs.nodePrioritySet')}: ${nodeId}`, LOG_TYPES.INFO);
   }, [t]);
 
+  const handleAutoStartChange = useCallback((nodeId) => {
+    setNodes((nds) => {
+      const targetNode = nds.find((node) => node.id === nodeId);
+      const nextValue = !Boolean(targetNode?.data?.autoStart);
+      return nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          autoStart: node.id === nodeId ? nextValue : false
+        }
+      }));
+    });
+  }, []);
+
   const nodeTypes = useMemo(
     () => ({
-      custom: (props) => <CustomNode {...props} uuid={props.data.uuid} onDelete={handleDeleteNode} onOpenConfig={handleOpenConfig} onColorChange={handleColorChange} onPriorityChange={handlePriorityChange} />,
+      custom: (props) => <CustomNode {...props} uuid={props.data.uuid} onDelete={handleDeleteNode} onOpenConfig={handleOpenConfig} onColorChange={handleColorChange} onPriorityChange={handlePriorityChange} onAutoStartChange={handleAutoStartChange} />,
     }),
-    [handleDeleteNode, handleOpenConfig, handleColorChange, handlePriorityChange]
+    [handleDeleteNode, handleOpenConfig, handleColorChange, handlePriorityChange, handleAutoStartChange]
   );
 
   function isOverlapping(x, y, nodes) {
@@ -615,18 +668,19 @@ const MainContent = ({ onTreeDataChange }) => {
         type: 'custom',
         position: { x, y },
         path: node.path, 
-        data: {
-          type: node.data.type,
-          label: node.data.name,
-          description: node.data.description,
-          inputs: node.data.parameters?.inputs || [],
-          outputs: node.data.parameters?.outputs || [],
-          config: node.data.config || [], 
-          color: '#2d2d2d',
-          priority: 0,
-          uuid: uuid,
-        },
-      };
+          data: {
+            type: node.data.type,
+            label: node.data.name,
+            description: node.data.description,
+            inputs: node.data.parameters?.inputs || [],
+            outputs: node.data.parameters?.outputs || [],
+            config: node.data.config || [], 
+            color: '#2d2d2d',
+            priority: 0,
+            autoStart: false,
+            uuid: uuid,
+          },
+        };
       setNodes((nds) => {
         const newNodes = [...nds, newNode];
         return newNodes;
@@ -645,18 +699,19 @@ const MainContent = ({ onTreeDataChange }) => {
         type: 'custom',
         position: { x, y },
         path: node.path, 
-        data: {
-          type: node.data.type,
-          label: node.data.name,
-          description: node.data.description,
-          inputs: node.data.parameters?.inputs || [],
-          outputs: node.data.parameters?.outputs || [],
-          config: node.data.config || [], 
-          color: '#2d2d2d',
-          priority: 0, 
-          uuid: uuid, 
-        },
-      };
+          data: {
+            type: node.data.type,
+            label: node.data.name,
+            description: node.data.description,
+            inputs: node.data.parameters?.inputs || [],
+            outputs: node.data.parameters?.outputs || [],
+            config: node.data.config || [], 
+            color: '#2d2d2d',
+            priority: 0, 
+            autoStart: false,
+            uuid: uuid, 
+          },
+        };
       setNodes((nds) => {
         const newNodes = [...nds, newNode];
         return newNodes;
@@ -905,13 +960,14 @@ const MainContent = ({ onTreeDataChange }) => {
                   description: node.data.description,
                   inputs: node.data.inputs,
                   outputs: node.data.outputs,
-                  config: node.data.config,
-                  type: node.data.type,
-                  color: node.data.color,
-                  priority: node.data.priority,
-                  uuid: node.data.uuid
-                }
-              };
+                    config: node.data.config,
+                    type: node.data.type,
+                    color: node.data.color,
+                    priority: node.data.priority,
+                    autoStart: Boolean(node.data.autoStart),
+                    uuid: node.data.uuid
+                  }
+                };
             }),
             edges: edges.map(edge => ({
               source: edge.source,
@@ -992,13 +1048,14 @@ const MainContent = ({ onTreeDataChange }) => {
         ...node,
         id: newId,
         type: 'custom',
-        data: {
-          ...node.data,
-          uuid: uuidv4(), 
-          onDelete: () => handleDeleteNode(newId)
-        }
-      };
-    });
+          data: {
+            ...node.data,
+            autoStart: Boolean(node.data.autoStart),
+            uuid: uuidv4(), 
+            onDelete: () => handleDeleteNode(newId)
+          }
+        };
+      });
     setNodes(newNodes);
 
     const newEdges = templateData.edges.map(edge => ({
@@ -1028,6 +1085,15 @@ const MainContent = ({ onTreeDataChange }) => {
       onTreeDataChange();
     }
   }, [handleDeleteNode, onTreeDataChange, reactFlowInstance]);
+
+  useEffect(() => {
+    GLOBALS.applyStartupTemplate = handleApplyTemplate;
+    return () => {
+      if (GLOBALS.applyStartupTemplate === handleApplyTemplate) {
+        GLOBALS.applyStartupTemplate = null;
+      }
+    };
+  }, [handleApplyTemplate]);
 
   const handleAutoLayout = () => {
     Modal.confirm({

@@ -18,6 +18,7 @@ const en = {
       node: 'Node',
       api: 'API',
       redis: 'Redis',
+      startup: 'Startup',
       other: 'Other',
       framework: 'Framework'
     },
@@ -52,8 +53,26 @@ const en = {
       connectionTestFailed: 'Redis connection test failed',
       notes: '• When enabled, Redis will be used for caching\n• If connection fails, in-memory cache will be used\n• A restart is required after changing config\n• Test connection before saving is recommended'
     },
+    startup: {
+      autoLaunchFutureDrive: 'Auto-launch FutureDrive after Ubuntu login',
+      autoRunWorkflow: 'Auto-run workflow after FutureDrive starts',
+      projectPath: 'Auto-start project path',
+      projectPathPlaceholder: 'Leave empty to use recent project',
+      projectFile: 'Auto-start project file',
+      projectFilePlaceholder: 'Choose a .proj file',
+      selectProject: 'Select Project',
+      templateFile: 'Auto-start template',
+      templateFilePlaceholder: 'Choose project template',
+      projectSelectFailed: 'Failed to select startup project',
+      uiEnabled: 'Enable linked UI launch',
+      uiExecutablePath: 'UI executable path',
+      uiExecutablePathPlaceholder: 'Example: /home/user/app/UI',
+      autostartSyncFailed: 'Failed to sync Ubuntu autostart',
+      autostartVerifyFailed: 'Ubuntu autostart file was written but verification failed'
+    },
     other: {
-      noUi: 'Start without UI'
+      noUi: 'Start without UI',
+      noUiDescription: 'When enabled, FutureDrive starts hidden on next autostart. Press Ctrl+F11 to show or hide the main window.'
     },
     framework: {
       path: 'Framework Path',
@@ -521,6 +540,8 @@ const en = {
     nodeToolbar: {
       settings: 'Settings',
       setColor: 'Set Color',
+      enableAutoStart: 'Mark as auto-start node',
+      disableAutoStart: 'Unset auto-start node',
       deleteNode: 'Delete Node',
       bgRunningTip: 'Background running, click to stop',
       addNode: 'Add Node',

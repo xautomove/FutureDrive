@@ -4,12 +4,19 @@ import './SettingsModal.css';
 import config from '../../assets/js/config';
 import RedisController from '../../controller/node/RedisController';
 import { useI18n } from '../../context/I18nContext';
+import GLOBALS from '../../assets/js/globals';
+import ProjectController from '../../controller/gui/ProjectController';
+import TemplateManager from '../../controller/gui/TemplateManager';
+
+const fs = window.require('fs');
+const path = window.require('path');
 
 const settingsList = [
   { key: 'general', label: 'general' },
   { key: 'node', label: 'node' },
   { key: 'api', label: 'api' },
   { key: 'redis', label: 'redis' },
+  { key: 'startup', label: 'startup' },
   { key: 'other', label: 'other' },
   { key: 'framework', label: 'framework' },
 ];
@@ -23,9 +30,13 @@ const SettingsModal = ({ visible, onClose }) => {
   const [path,setFrameworkPath] = useState('');
   const [redisEnabled, setRedisEnabled] = useState(false);
   const [testingRedis, setTestingRedis] = useState(false);
+  const [startupProjectPath, setStartupProjectPath] = useState('');
+  const [startupProjectFile, setStartupProjectFile] = useState('');
+  const [startupTemplates, setStartupTemplates] = useState([]);
   const [nodeForm] = Form.useForm();
   const [apiForm] = Form.useForm();
   const [redisForm] = Form.useForm();
+  const [startupForm] = Form.useForm();
   const [otherForm] = Form.useForm();
   const [frameworkForm] = Form.useForm();
   const [environmentForm] = Form.useForm();
@@ -38,6 +49,7 @@ const SettingsModal = ({ visible, onClose }) => {
           const nodeConfig = config.get('node') || {};
           const apiConfig = config.get('api') || {};
           const redisConfig = config.get('redis') || {};
+          const startupConfig = config.get('startup') || {};
           const otherConfig = config.get('other') || {};
           const frameworkConfig = config.get('framework') || {};
           const environmentConfig = config.get('environment') || {};
@@ -64,6 +76,24 @@ const SettingsModal = ({ visible, onClose }) => {
             });
 
             setRedisEnabled(redisConfig.enabled || false);
+
+            startupForm.setFieldsValue({
+              autoLaunchFutureDrive: startupConfig.autoLaunchFutureDrive || false,
+              autoRunWorkflow: startupConfig.autoRunWorkflow || false,
+              projectPath: startupConfig.projectPath || '',
+              projectFile: startupConfig.projectFile || '',
+              templateFile: startupConfig.templateFile || '',
+              uiEnabled: startupConfig.ui?.enabled || startupConfig.carUi?.enabled || false,
+              uiExecutablePath: startupConfig.ui?.executablePath || startupConfig.carUi?.command || ''
+            });
+
+            setStartupProjectPath(startupConfig.projectPath || '');
+            setStartupProjectFile(startupConfig.projectFile || '');
+            if (startupConfig.projectPath) {
+              setStartupTemplates(TemplateManager.getTemplateListByProject(startupConfig.projectPath));
+            } else {
+              setStartupTemplates([]);
+            }
 
             otherForm.setFieldsValue({
               noUi: otherConfig.noUi || false
@@ -134,6 +164,7 @@ const SettingsModal = ({ visible, onClose }) => {
       const nodeValues = nodeForm.getFieldsValue();
       const apiValues = apiForm.getFieldsValue();
       const redisValues = redisForm.getFieldsValue();
+      const startupValues = startupForm.getFieldsValue();
       const otherValues = otherForm.getFieldsValue();
       const frameworkValues = frameworkForm.getFieldsValue();
       const environmentValues = environmentForm.getFieldsValue();
@@ -163,6 +194,25 @@ const SettingsModal = ({ visible, onClose }) => {
         enabled: redisEnabled
       });
 
+      await config.set('startup', {
+        autoLaunchFutureDrive: Boolean(startupValues.autoLaunchFutureDrive),
+        autoRunWorkflow: Boolean(startupValues.autoRunWorkflow),
+        projectPath: startupValues.projectPath || '',
+        projectFile: startupValues.projectFile || '',
+        templateFile: startupValues.templateFile || '',
+        ui: {
+          enabled: Boolean(startupValues.uiEnabled),
+          executablePath: startupValues.uiExecutablePath || ''
+        }
+      });
+
+      const autostartResult = await GLOBALS.syncUbuntuAutostart(Boolean(startupValues.autoLaunchFutureDrive));
+      if (autostartResult?.success === false && !autostartResult?.skipped) {
+        message.warning(`${t('settings.startup.autostartSyncFailed')}: ${autostartResult.error || 'unknown error'}`);
+      } else if (autostartResult?.verified === false) {
+        message.warning(t('settings.startup.autostartVerifyFailed'));
+      }
+
       await config.set('other', {
         ...otherValues,
         noUi: noUi
@@ -187,6 +237,32 @@ const SettingsModal = ({ visible, onClose }) => {
       console.error('保存设置失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectStartupProject = async () => {
+    try {
+      const result = await ProjectController.selectProjectFile();
+      if (!result?.success) {
+        return;
+      }
+
+      const projectContent = fs.readFileSync(result.filePath, 'utf8');
+      const projectConfig = JSON.parse(projectContent);
+      const projectDir = projectConfig.path || path.dirname(result.filePath);
+      const templateList = TemplateManager.getTemplateListByProject(projectDir);
+
+      setStartupProjectPath(projectDir);
+      setStartupProjectFile(result.filePath);
+      setStartupTemplates(templateList);
+
+      startupForm.setFieldsValue({
+        projectPath: projectDir,
+        projectFile: result.filePath,
+        templateFile: ''
+      });
+    } catch (error) {
+      message.error(`${t('settings.startup.projectSelectFailed')}: ${error.message}`);
     }
   };
 
@@ -278,12 +354,54 @@ const SettingsModal = ({ visible, onClose }) => {
             </div>
           </Form>
         );
+      case 'startup':
+        return (
+          <Form layout="vertical" className="settings-form" form={startupForm}>
+            <Form.Item name="autoLaunchFutureDrive" label={t('settings.startup.autoLaunchFutureDrive')} valuePropName="checked">
+              <Switch />
+            </Form.Item>
+            <Form.Item name="autoRunWorkflow" label={t('settings.startup.autoRunWorkflow')} valuePropName="checked">
+              <Switch />
+            </Form.Item>
+            <Form.Item name="projectPath" label={t('settings.startup.projectPath')}>
+              <Input placeholder={t('settings.startup.projectPathPlaceholder')} style={{ width: 400 }} readOnly />
+            </Form.Item>
+            <Form.Item name="projectFile" label={t('settings.startup.projectFile')}>
+              <Input placeholder={t('settings.startup.projectFilePlaceholder')} style={{ width: 400 }} readOnly />
+            </Form.Item>
+            <Form.Item>
+              <Button onClick={handleSelectStartupProject}>
+                {t('settings.startup.selectProject')}
+              </Button>
+            </Form.Item>
+            <Form.Item name="templateFile" label={t('settings.startup.templateFile')}>
+              <Select
+                style={{ width: 400 }}
+                placeholder={t('settings.startup.templateFilePlaceholder')}
+                options={startupTemplates.map((template) => ({
+                  value: template.fileName,
+                  label: `${template.name} (${template.fileName})`
+                }))}
+                disabled={!startupProjectPath}
+              />
+            </Form.Item>
+            <Form.Item name="uiEnabled" label={t('settings.startup.uiEnabled')} valuePropName="checked">
+              <Switch />
+            </Form.Item>
+            <Form.Item name="uiExecutablePath" label={t('settings.startup.uiExecutablePath')}>
+              <Input placeholder={t('settings.startup.uiExecutablePathPlaceholder')} style={{ width: 400 }} />
+            </Form.Item>
+          </Form>
+        );
       case 'other':
         return (
           <Form layout="vertical" className="settings-form" form={otherForm}>
             <Form.Item label={t('settings.other.noUi')}>
               <Switch checked={noUi} onChange={setNoUi} />
             </Form.Item>
+            <div style={{ padding: 12 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#666' }}>{t('settings.other.noUiDescription')}</p>
+            </div>
           </Form>
         );
       case 'framework':

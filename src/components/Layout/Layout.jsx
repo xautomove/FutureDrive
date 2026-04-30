@@ -20,6 +20,8 @@ import GLOBALS from '../../assets/js/globals';
 import config from '../../assets/js/config';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import { useI18n } from '../../context/I18nContext';
+import { runWorkflowFromAutoStart } from '../../assets/js/workflowRunner';
+import templateManager from '../../controller/gui/TemplateManager';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -82,6 +84,45 @@ const Layout = () => {
     const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
     setRecentProjects(recents);
   }, []);
+
+  useEffect(() => {
+    if (!currentProjectPath) {
+      return;
+    }
+
+    const startupConfig = config.get('startup') || {};
+    if (!startupConfig.autoRunWorkflow) {
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled) {
+        return;
+      }
+
+      try {
+        if (!GLOBALS.currentTaskContext) {
+          GLOBALS.currentTaskContext = {
+            mode: 'auto_start',
+            modeLabel: '开机自启任务',
+            startedAt: new Date().toISOString()
+          };
+        }
+        await applyStartupTemplateIfNeeded(currentProjectPath);
+        await runWorkflowFromAutoStart();
+      } catch (error) {
+        if (!['redis_disabled', 'redis_not_connected', 'no_nodes', 'no_autostart_node', 'multiple_autostart_nodes'].includes(error.message)) {
+          log(`自动运行工作流失败: ${error.message}`, LOG_TYPES.ERROR);
+        }
+      }
+    }, 1500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [currentProjectPath, applyStartupTemplateIfNeeded]);
 
   useEffect(() => {
     const updateMinWidths = () => {
@@ -152,6 +193,70 @@ const Layout = () => {
       log(`打开项目失败: ${error.message}`, LOG_TYPES.ERROR);
     }
   };
+
+  const applyStartupTemplateIfNeeded = useCallback(async (projectPath) => {
+    const startupConfig = config.get('startup') || {};
+    if (!startupConfig.templateFile || !projectPath || !GLOBALS.applyStartupTemplate) {
+      return;
+    }
+
+    const templateData = await templateManager.loadTemplate(startupConfig.templateFile, projectPath);
+    GLOBALS.applyStartupTemplate(templateData);
+  }, []);
+
+  useEffect(() => {
+    const startupConfig = config.get('startup') || {};
+    if (!startupConfig.autoRunWorkflow) {
+      return;
+    }
+
+    if (currentProjectPath) {
+      return;
+    }
+
+    const startupProjectFile = startupConfig.projectFile || '';
+    let startupProjectPath = startupConfig.projectPath || '';
+
+    if (!startupProjectPath && startupProjectFile) {
+      try {
+        const fs = window.require('fs');
+        const projectContent = fs.readFileSync(startupProjectFile, 'utf8');
+        const projectConfig = JSON.parse(projectContent);
+        startupProjectPath = projectConfig.path || '';
+      } catch (error) {
+        log(`读取启动项目文件失败: ${error.message}`, LOG_TYPES.ERROR);
+      }
+    }
+
+    if (startupProjectPath) {
+      const projectResult = ProjectController.openProject(startupProjectPath);
+      if (!projectResult.success) {
+        GLOBALS.updateRuntimeState({
+          workflow: {
+            status: 'error',
+            message: `启动项目无效: ${projectResult.error}`,
+            updatedAt: new Date().toISOString()
+          },
+          vehicle: {
+            status: 'error',
+            message: '自动启动项目失败',
+            updatedAt: new Date().toISOString()
+          }
+        });
+        log(`自动启动项目失败: ${projectResult.error}`, LOG_TYPES.ERROR);
+        return;
+      }
+      openProjectByPath(startupProjectPath);
+      return;
+    }
+
+    const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
+    if (!recents.length || !recents[0]?.path) {
+      return;
+    }
+
+    openProjectByPath(recents[0].path);
+  }, [currentProjectPath]);
 
   const handleTreeDataChange = () => {
     if (currentProjectPath) {

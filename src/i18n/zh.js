@@ -14,6 +14,7 @@ const zh = {
       node: '节点',
       api: 'API',
       redis: 'Redis',
+      startup: '启动',
       other: '其他',
       framework: '框架'
     },
@@ -48,8 +49,26 @@ const zh = {
       connectionTestFailed: 'Redis 连接测试失败',
       notes: '• 启用 Redis 后，应用将使用 Redis 进行缓存存储\n• 如果 Redis 连接失败，系统会自动使用内存缓存\n• 修改配置后需要重启应用才能生效\n• 建议在保存配置前先测试连接'
     },
+    startup: {
+      autoLaunchFutureDrive: 'Ubuntu 登录后自动启动 FutureDrive',
+      autoRunWorkflow: 'FutureDrive 启动后自动运行工作流',
+      projectPath: '自动启动项目路径',
+      projectPathPlaceholder: '留空则使用最近项目',
+      projectFile: '自动启动项目文件',
+      projectFilePlaceholder: '请选择 .proj 项目文件',
+      selectProject: '选择项目',
+      templateFile: '自动启动模板',
+      templateFilePlaceholder: '请选择项目模板',
+      projectSelectFailed: '选择启动项目失败',
+      uiEnabled: '启用 UI 联动启动',
+      uiExecutablePath: 'UI 可执行文件路径',
+      uiExecutablePathPlaceholder: '例如 /home/user/app/UI',
+      autostartSyncFailed: '同步 Ubuntu 自启动失败',
+      autostartVerifyFailed: 'Ubuntu 自启动文件已写入，但校验未通过'
+    },
     other: {
-      noUi: '是否无 UI 启动'
+      noUi: '是否无 UI 启动',
+      noUiDescription: '开启后，下次自启动时 FutureDrive 将隐藏运行，可通过 Ctrl+F11 显示或隐藏主窗口。'
     },
     framework: {
       path: '框架路径',
@@ -521,6 +540,8 @@ const zh = {
     nodeToolbar: {
       settings: '设置',
       setColor: '设置颜色',
+      enableAutoStart: '设为自启节点',
+      disableAutoStart: '取消自启节点',
       deleteNode: '删除节点',
       bgRunningTip: '后台进程运行中，点击可退出',
       addNode: '添加节点',
