@@ -43,6 +43,7 @@ function createDefaultRuntimeState() {
     task: {
       mode: '',
       modeLabel: '未选择任务',
+      params: {},
       status: 'idle',
       message: '等待任务选择',
       updatedAt: new Date().toISOString()
@@ -154,6 +155,7 @@ apiApp.get('/api/runtime/events', (req, res) => {
 apiApp.post('/api/tasks/start', async (req, res) => {
   const mode = String(req.body?.mode || '').trim();
   const modeLabel = String(req.body?.modeLabel || '').trim() || '未命名任务';
+  const params = req.body?.params && typeof req.body.params === 'object' ? req.body.params : {};
 
   if (!mode) {
     return res.status(400).json({
@@ -177,6 +179,7 @@ apiApp.post('/api/tasks/start', async (req, res) => {
     task: {
       mode,
       modeLabel,
+      params,
       status: 'pending',
       message: `已确认开始${modeLabel}`,
       updatedAt
@@ -187,7 +190,8 @@ apiApp.post('/api/tasks/start', async (req, res) => {
     try {
       const triggerResult = await triggerTaskStartCallback({
         mode,
-        modeLabel
+        modeLabel,
+        params
       });
 
       if (triggerResult?.success === false) {

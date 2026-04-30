@@ -61,6 +61,7 @@ class NodeController {
                 projectName: window.currentProject?.config?.name || '',
                 taskMode: GLOBALS.currentTaskContext?.mode || '',
                 taskModeLabel: GLOBALS.currentTaskContext?.modeLabel || '',
+                taskParams: GLOBALS.currentTaskContext?.params || {},
                 taskStartedAt: GLOBALS.currentTaskContext?.startedAt || '',
                 appPath: app.getAppPath(),
                 userDataPath: app.getPath('userData'),

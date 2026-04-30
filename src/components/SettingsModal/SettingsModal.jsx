@@ -220,7 +220,7 @@ const SettingsModal = ({ visible, onClose }) => {
 
       await config.set('framework', {
         ...frameworkValues,
-        path: path
+        path: frameworkValues.path || ''
       });
 
       await config.set('environment', {

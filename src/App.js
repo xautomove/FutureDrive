@@ -85,6 +85,7 @@ function App() {
               GLOBALS.currentTaskContext = {
                 mode: payload?.mode || '',
                 modeLabel: payload?.modeLabel || '未命名任务',
+                params: payload?.params && typeof payload.params === 'object' ? payload.params : {},
                 startedAt: new Date().toISOString()
               };
 
@@ -92,6 +93,7 @@ function App() {
                 task: {
                   mode: payload?.mode || '',
                   modeLabel: payload?.modeLabel || '未命名任务',
+                  params: payload?.params && typeof payload.params === 'object' ? payload.params : {},
                   status: 'starting',
                   message: `FutureDrive 正在启动${payload?.modeLabel || '任务'}`,
                   updatedAt: new Date().toISOString()
@@ -108,6 +110,7 @@ function App() {
                 task: {
                   mode: payload?.mode || '',
                   modeLabel: payload?.modeLabel || '未命名任务',
+                  params: payload?.params && typeof payload.params === 'object' ? payload.params : {},
                   status: 'error',
                   message: `任务启动失败: ${error.message}`,
                   updatedAt: new Date().toISOString()

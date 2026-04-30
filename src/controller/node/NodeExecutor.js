@@ -346,6 +346,7 @@ class NodeExecutor {
             _future_task: {
                 mode: GLOBALS.currentTaskContext?.mode || '',
                 modeLabel: GLOBALS.currentTaskContext?.modeLabel || '',
+                params: GLOBALS.currentTaskContext?.params || {},
                 startedAt: GLOBALS.currentTaskContext?.startedAt || ''
             }
         };
