@@ -4,13 +4,17 @@ const fs = require('fs')
 const { spawn } = require('child_process');
 const { startServer, setConfigCallback, setTaskStartCallback, mergeRuntimeState } = require('./api/server');
 const { setWindowParams, setCreateWindowFunction } = require('./ipc/handlers');
-const { syncUbuntuAutostart } = require('./system/ubuntuAutostart');
 require('@electron/remote/main').initialize()
 
 let mainWindow = null;
 let uiProcess = null;
 let appShuttingDown = false;
 let startHidden = false;
+let postWindowInitStarted = false;
+
+function getAutostartHelper() {
+  return require('./system/ubuntuAutostart');
+}
 
 function getConfigFilePath() {
   return path.join(app.getPath('userData'), 'FutureDrive', 'config', 'config.json');
@@ -88,10 +92,11 @@ const createWindow = (width, height, page = '', params = []) => {
   }
   
   win.webContents.on('did-finish-load', () => {
-    if (isMainWindow && startHidden) {
-      return;
-    }
     win.show();
+
+    if (isMainWindow) {
+      schedulePostWindowInitialization();
+    }
   });
 
   win.on('close', (event) => {
@@ -157,6 +162,30 @@ async function resolveStartupState() {
     otherConfig,
     shouldStartHidden: Boolean(otherConfig?.noUi)
   };
+}
+
+function schedulePostWindowInitialization() {
+  if (postWindowInitStarted) {
+    return;
+  }
+  postWindowInitStarted = true;
+
+  setTimeout(async () => {
+    try {
+      const startupState = await resolveStartupState();
+      startHidden = startupState.shouldStartHidden;
+
+      registerGlobalShortcuts();
+
+      if (startHidden && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.hide();
+      }
+
+      await launchUiIfEnabled();
+    } catch (error) {
+      console.warn('后置初始化失败:', error.message);
+    }
+  }, 1500);
 }
 
 async function launchUiIfEnabled() {
@@ -273,14 +302,7 @@ app.whenReady().then(async () => {
     console.error('启动 API 服务器失败:', error);
   }
 
-  const startupState = await resolveStartupState();
-  startHidden = startupState.shouldStartHidden;
-
-  registerGlobalShortcuts();
   createWindow()
-  setTimeout(() => {
-    launchUiIfEnabled();
-  }, 1500);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -340,5 +362,5 @@ setTaskStartCallback(triggerTaskStartFromRenderer);
 module.exports = {
   createWindow,
   setConfigRequestHandler: setConfigCallback,
-  syncUbuntuAutostart: (enabled) => syncUbuntuAutostart(enabled, process.execPath)
+  syncUbuntuAutostart: (enabled) => getAutostartHelper().syncUbuntuAutostart(enabled, process.execPath)
 };

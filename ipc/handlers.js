@@ -5,7 +5,6 @@ const { net } = require('electron');
 const si = require('systeminformation');
 const path = require('path');
 const { startServer, stopServer, restartServer, setProjectPath: setApiProjectPath, mergeRuntimeState, getRuntimeState } = require('../api/server');
-const { syncUbuntuAutostart } = require('../system/ubuntuAutostart');
 
 let currentDownload = null;
 
@@ -299,6 +298,7 @@ ipcMain.handle('get-runtime-state', async () => {
 
 ipcMain.handle('sync-ubuntu-autostart', async (event, enabled) => {
   try {
+    const { syncUbuntuAutostart } = require('../system/ubuntuAutostart');
     return await syncUbuntuAutostart(Boolean(enabled), process.execPath);
   } catch (error) {
     return { success: false, error: error.message };
