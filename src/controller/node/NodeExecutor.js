@@ -396,12 +396,14 @@ class NodeExecutor {
         }
     }
 
-    stopPollingService() {
+    stopPollingService(stopTelemetry = false) {
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
             this.pollingInterval = null;
         }
-        this.stopTelemetryBridge();
+        if (stopTelemetry) {
+            this.stopTelemetryBridge();
+        }
         this.isPolling = false;
         if(GLOBALS.isDebug){
             log('轮询服务已停止', LOG_TYPES.INFO);
@@ -492,7 +494,7 @@ class NodeExecutor {
     async checkNodeStatus() {
         if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
             console.log('redis not connected');
-            this.stopPollingService();
+            this.stopPollingService(true);
             return;
         }
         
@@ -552,7 +554,7 @@ class NodeExecutor {
     }
 
     async forceStop() {
-        this.stopPollingService();
+        this.stopPollingService(true);
         this.stopTelemetryBridge();
         this.pythonExecutor.killActiveProcess();
         GLOBALS.clearProcesses();

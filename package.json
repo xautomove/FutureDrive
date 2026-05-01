@@ -18,6 +18,7 @@
     "cors": "^2.8.5",
     "electron-store": "^10.0.1",
     "express": "^5.1.0",
+    "open3d": "^0.2.4",
     "re-resizable": "^6.11.2",
     "react": "^18.2.0",
     "react-color": "^2.19.3",

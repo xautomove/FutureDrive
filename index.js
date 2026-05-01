@@ -172,6 +172,8 @@ function schedulePostWindowInitialization() {
 
   setTimeout(async () => {
     try {
+      // Linux AppImage on Ubuntu 22.04 is sensitive to early main-process work.
+      // Keep startup-only integrations deferred until the first window is loaded.
       const startupState = await resolveStartupState();
       startHidden = startupState.shouldStartHidden;
 
