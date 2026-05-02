@@ -5,3 +5,4 @@
 /node_modules_win
 /node_modules_linux
 /test
+public/bundle.js.LICENSE.txt

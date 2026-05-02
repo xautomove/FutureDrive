@@ -74,6 +74,15 @@ class NodeExecutor {
         return node?.data?.uuid || null;
     }
 
+    getObstacleNodeUuid() {
+        if (!this.nodes || !Array.isArray(this.nodes)) {
+            return null;
+        }
+
+        const node = this.nodes.find((item) => item.path === 'obstacle_avoidance');
+        return node?.data?.uuid || null;
+    }
+
     async syncVehicleTelemetry() {
         if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
             return;
@@ -108,6 +117,55 @@ class NodeExecutor {
         }
     }
 
+    isObstaclePayload(payload) {
+        return Boolean(
+            payload &&
+            typeof payload === 'object' &&
+            (
+                Object.prototype.hasOwnProperty.call(payload, 'obstacle_active') ||
+                Object.prototype.hasOwnProperty.call(payload, 'distance1_cm') ||
+                Object.prototype.hasOwnProperty.call(payload, 'distance2_cm')
+            )
+        );
+    }
+
+    async syncObstacleStatus() {
+        if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return;
+        }
+
+        try {
+            const obstacleNodeUuid = this.getObstacleNodeUuid();
+            if (!obstacleNodeUuid) {
+                return;
+            }
+
+            const obstaclePayload = await GLOBALS.redisController.get(`task_result:${obstacleNodeUuid}`);
+            if (!this.isObstaclePayload(obstaclePayload)) {
+                return;
+            }
+
+            await GLOBALS.updateRuntimeState({
+                vehicle: {
+                    obstacle: {
+                        active: Boolean(obstaclePayload.obstacle_active),
+                        slowdownActive: Boolean(obstaclePayload.slowdown_active),
+                        limitRpm: obstaclePayload.limit_rpm ?? 0,
+                        distance1Cm: obstaclePayload.distance1_cm ?? null,
+                        distance2Cm: obstaclePayload.distance2_cm ?? null,
+                        stopThresholdCm: obstaclePayload.stop_threshold_cm ?? null,
+                        slowdownThresholdCm: obstaclePayload.slowdown_threshold_cm ?? null,
+                        statusText: obstaclePayload.status_text || '',
+                        updatedAt: obstaclePayload.updated_at || new Date().toISOString()
+                    },
+                    updatedAt: new Date().toISOString()
+                }
+            });
+        } catch (error) {
+            log(`sync obstacle failed: ${error.message}`, LOG_TYPES.ERROR);
+        }
+    }
+
     startTelemetryBridge() {
         if (this.telemetryInterval) {
             return;
@@ -115,6 +173,7 @@ class NodeExecutor {
 
         this.telemetryInterval = setInterval(async () => {
             await this.syncVehicleTelemetry();
+            await this.syncObstacleStatus();
         }, 500);
     }
 
