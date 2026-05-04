@@ -1,13 +1,11 @@
 const { app, BrowserWindow, Menu, screen, globalShortcut } = require('electron/main')
 const path = require('path')
 const fs = require('fs')
-const { spawn } = require('child_process');
 const { startServer, setConfigCallback, setTaskStartCallback, mergeRuntimeState } = require('./api/server');
 const { setWindowParams, setCreateWindowFunction } = require('./ipc/handlers');
 require('@electron/remote/main').initialize()
 
 let mainWindow = null;
-let uiProcess = null;
 let appShuttingDown = false;
 let startHidden = false;
 let postWindowInitStarted = false;
@@ -183,117 +181,10 @@ function schedulePostWindowInitialization() {
         mainWindow.hide();
       }
 
-      await launchUiIfEnabled();
     } catch (error) {
       console.warn('后置初始化失败:', error.message);
     }
   }, 1500);
-}
-
-async function launchUiIfEnabled() {
-  if (process.env.NODE_ENV === 'development') {
-    return;
-  }
-
-  if (uiProcess && !uiProcess.killed) {
-    return;
-  }
-
-  const startupConfig = await getConfigValue('startup', {});
-  const uiConfig = startupConfig?.ui || startupConfig?.carUi || {};
-  if (!uiConfig.enabled) {
-    return;
-  }
-
-  const executablePath = String(uiConfig.executablePath || '').trim();
-  if (!executablePath) {
-    mergeRuntimeState({
-      workflow: {
-        status: 'error',
-        message: 'UI 可执行文件路径未配置',
-        updatedAt: new Date().toISOString()
-      },
-      vehicle: {
-        status: 'error',
-        message: 'UI 可执行文件路径未配置',
-        updatedAt: new Date().toISOString()
-      }
-    });
-    return;
-  }
-
-  try {
-    uiProcess = spawn(executablePath, [], {
-      detached: true,
-      stdio: 'ignore',
-      shell: false
-    });
-
-    mergeRuntimeState({
-      service: {
-        status: 'service_connected',
-        message: 'FutureDrive service online, UI launched',
-        updatedAt: new Date().toISOString()
-      }
-    });
-
-    uiProcess.on('error', (error) => {
-      mergeRuntimeState({
-        workflow: {
-          status: 'error',
-          message: `UI 启动失败: ${error.message}`,
-          updatedAt: new Date().toISOString()
-        },
-        vehicle: {
-          status: 'error',
-          message: 'UI 启动失败',
-          updatedAt: new Date().toISOString()
-        }
-      });
-    });
-
-    uiProcess.on('exit', (code) => {
-      if (!appShuttingDown && code && code !== 0) {
-        mergeRuntimeState({
-          workflow: {
-            status: 'error',
-            message: `UI 异常退出: ${code}`,
-            updatedAt: new Date().toISOString()
-          },
-          vehicle: {
-            status: 'error',
-            message: 'UI 异常退出',
-            updatedAt: new Date().toISOString()
-          }
-        });
-      } else if (!appShuttingDown) {
-        mergeRuntimeState({
-          service: {
-            status: 'service_connected',
-            message: 'FutureDrive service online, UI closed',
-            updatedAt: new Date().toISOString()
-          }
-        });
-      }
-      uiProcess = null;
-    });
-
-    uiProcess.unref();
-  } catch (error) {
-    console.error('启动 UI 失败:', error);
-    mergeRuntimeState({
-      workflow: {
-        status: 'error',
-        message: `UI 启动失败: ${error.message}`,
-        updatedAt: new Date().toISOString()
-      },
-      vehicle: {
-        status: 'error',
-        message: 'UI 启动失败',
-        updatedAt: new Date().toISOString()
-      }
-    });
-  }
 }
 
 setCreateWindowFunction(createWindow);

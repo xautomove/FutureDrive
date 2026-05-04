@@ -27,7 +27,7 @@ jobs:
       run: yarn build
 
     - name: Package app
-      run: npx electron-builder --linux --config.asar=false --publish=never
+      run: yarn package
 
     - name: Get version
       id: get_version

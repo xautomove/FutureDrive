@@ -60,9 +60,9 @@ const zh = {
       templateFile: '自动启动模板',
       templateFilePlaceholder: '请选择项目模板',
       projectSelectFailed: '选择启动项目失败',
-      uiEnabled: '启用 UI 联动启动',
-      uiExecutablePath: 'UI 可执行文件路径',
-      uiExecutablePathPlaceholder: '例如 /home/user/app/UI',
+      uiEnabled: '记录外部 UI 启动配置',
+      uiExecutablePath: '外部 UI 可执行文件路径',
+      uiExecutablePathPlaceholder: '例如 /home/user/app/UI，由外部脚本或系统自启动使用',
       autostartSyncFailed: '同步 Ubuntu 自启动失败',
       autostartVerifyFailed: 'Ubuntu 自启动文件已写入，但校验未通过'
     },

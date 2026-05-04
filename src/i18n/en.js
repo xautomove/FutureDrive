@@ -64,9 +64,9 @@ const en = {
       templateFile: 'Auto-start template',
       templateFilePlaceholder: 'Choose project template',
       projectSelectFailed: 'Failed to select startup project',
-      uiEnabled: 'Enable linked UI launch',
-      uiExecutablePath: 'UI executable path',
-      uiExecutablePathPlaceholder: 'Example: /home/user/app/UI',
+      uiEnabled: 'Store external UI launch config',
+      uiExecutablePath: 'External UI executable path',
+      uiExecutablePathPlaceholder: 'Example: /home/user/app/UI, used by external scripts or system autostart',
       autostartSyncFailed: 'Failed to sync Ubuntu autostart',
       autostartVerifyFailed: 'Ubuntu autostart file was written but verification failed'
     },
