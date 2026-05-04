@@ -83,6 +83,15 @@ class NodeExecutor {
         return node?.data?.uuid || null;
     }
 
+    getInfraredTemperatureNodeUuid() {
+        if (!this.nodes || !Array.isArray(this.nodes)) {
+            return null;
+        }
+
+        const node = this.nodes.find((item) => item.path === 'infrared_temperature');
+        return node?.data?.uuid || null;
+    }
+
     async syncVehicleTelemetry() {
         if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
             return;
@@ -166,6 +175,44 @@ class NodeExecutor {
         }
     }
 
+    isInfraredTemperaturePayload(payload) {
+        return Boolean(
+            payload &&
+            typeof payload === 'object' &&
+            Object.prototype.hasOwnProperty.call(payload, 'temperature_c')
+        );
+    }
+
+    async syncInfraredTemperature() {
+        if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return;
+        }
+
+        try {
+            const temperatureNodeUuid = this.getInfraredTemperatureNodeUuid();
+            if (!temperatureNodeUuid) {
+                return;
+            }
+
+            const temperaturePayload = await GLOBALS.redisController.get(`task_result:${temperatureNodeUuid}`);
+            if (!this.isInfraredTemperaturePayload(temperaturePayload)) {
+                return;
+            }
+
+            await GLOBALS.updateRuntimeState({
+                vehicle: {
+                    telemetry: {
+                        bucketTemperatureC: Number(temperaturePayload.temperature_c),
+                        bucketTemperatureUpdatedAt: new Date().toISOString()
+                    },
+                    updatedAt: new Date().toISOString()
+                }
+            });
+        } catch (error) {
+            log(`sync infrared temperature failed: ${error.message}`, LOG_TYPES.ERROR);
+        }
+    }
+
     startTelemetryBridge() {
         if (this.telemetryInterval) {
             return;
@@ -174,6 +221,7 @@ class NodeExecutor {
         this.telemetryInterval = setInterval(async () => {
             await this.syncVehicleTelemetry();
             await this.syncObstacleStatus();
+            await this.syncInfraredTemperature();
         }, 500);
     }
 

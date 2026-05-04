@@ -37,7 +37,9 @@ function createDefaultRuntimeState() {
         steerDeg: 0,
         gear: 'UNKNOWN',
         vehicleStatus: 'UNKNOWN',
-        telemetryUpdatedAt: ''
+        telemetryUpdatedAt: '',
+        bucketTemperatureC: null,
+        bucketTemperatureUpdatedAt: ''
       }
     },
     task: {
