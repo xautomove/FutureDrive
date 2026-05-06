@@ -48,7 +48,7 @@ jobs:
         "${APPIMAGE}" --appimage-extract >/dev/null
 
         set +e
-        timeout 20s xvfb-run -a ./squashfs-root/AppRun --no-sandbox --disable-gpu >/tmp/futuredrive-smoke.log 2>&1
+        APPDIR="$PWD/squashfs-root" timeout 20s xvfb-run -a ./squashfs-root/AppRun --no-sandbox --disable-gpu >/tmp/futuredrive-smoke.log 2>&1
         SMOKE_STATUS=$?
         set -e
         if [ "${SMOKE_STATUS}" -ne 0 ] && [ "${SMOKE_STATUS}" -ne 124 ]; then
