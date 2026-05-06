@@ -710,6 +710,36 @@ class NodeExecutor {
     async forceStop() {
         this.stopPollingService(true);
         this.stopTelemetryBridge();
+        if (GLOBALS.redisController && GLOBALS.redisController.isConnected()) {
+            try {
+                const pidKeys = await GLOBALS.redisController.keys('task_pid:*');
+                for (const key of pidKeys) {
+                    try {
+                        const pidValue = await GLOBALS.redisController.get(key);
+                        if (!pidValue) {
+                            continue;
+                        }
+                        const pidList = String(pidValue)
+                            .split(',')
+                            .map(item => item.trim())
+                            .filter(Boolean);
+                        for (const singlePid of pidList) {
+                            try {
+                                process.kill(-Number(singlePid), 'SIGKILL');
+                            } catch (groupKillError) {
+                                try {
+                                    process.kill(Number(singlePid), 'SIGKILL');
+                                } catch (pidKillError) {
+                                }
+                            }
+                        }
+                    } catch (pidKeyError) {
+                    }
+                }
+                await GLOBALS.redisController.deleteAllTaskKeys();
+            } catch (redisCleanupError) {
+            }
+        }
         this.pythonExecutor.killActiveProcess();
         GLOBALS.clearProcesses();
         GLOBALS.stopAllDebugWatchers();

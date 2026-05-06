@@ -94,6 +94,10 @@ const Layout = () => {
     if (!startupConfig.autoRunWorkflow) {
       return;
     }
+    const otherConfig = config.get('other') || {};
+    if (!otherConfig.noUi) {
+      return;
+    }
 
     let cancelled = false;
     const timer = setTimeout(async () => {

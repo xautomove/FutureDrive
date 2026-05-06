@@ -10,6 +10,7 @@ let appShuttingDown = false;
 let startHidden = false;
 let postWindowInitStarted = false;
 const TOGGLE_WINDOW_SHORTCUT = 'CommandOrControl+Shift+F11';
+let shutdownCleanupStarted = false;
 
 function getAutostartHelper() {
   return require('./system/ubuntuAutostart');
@@ -188,6 +189,22 @@ function schedulePostWindowInitialization() {
   }, 1500);
 }
 
+async function cleanupBeforeQuit() {
+  if (shutdownCleanupStarted) {
+    return;
+  }
+  shutdownCleanupStarted = true;
+
+  try {
+    const cleanupResult = await triggerWorkflowShutdownFromRenderer();
+    if (cleanupResult?.success === false) {
+      console.warn('退出前清理后台节点失败:', cleanupResult.error || 'unknown error');
+    }
+  } catch (error) {
+    console.warn('退出前清理后台节点失败:', error.message);
+  }
+}
+
 setCreateWindowFunction(createWindow);
 app.whenReady().then(async () => {
   try {
@@ -207,17 +224,25 @@ app.whenReady().then(async () => {
   })
 })
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   if (process.platform !== 'darwin') {
     if (startHidden) {
       return;
     }
     appShuttingDown = true;
+    await cleanupBeforeQuit();
     app.quit()
   }
 })
 
-app.on('before-quit', () => {
+app.on('before-quit', async (event) => {
+  if (!shutdownCleanupStarted) {
+    event.preventDefault();
+    appShuttingDown = true;
+    await cleanupBeforeQuit();
+    app.quit();
+    return;
+  }
   appShuttingDown = true;
 });
 
@@ -261,6 +286,20 @@ function triggerActuatorStateFromRenderer(actuatorPayload) {
       resolve(result || { success: false, error: '执行单元状态同步结果为空' });
     });
     mainWindow.webContents.send('set-actuator-state', actuatorPayload);
+  });
+}
+
+function triggerWorkflowShutdownFromRenderer() {
+  return new Promise((resolve) => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return resolve({ success: true });
+    }
+
+    const { ipcMain } = require('electron');
+    ipcMain.once('shutdown-workflow-reply', (event, result) => {
+      resolve(result || { success: false, error: '退出清理结果为空' });
+    });
+    mainWindow.webContents.send('shutdown-workflow');
   });
 }
 

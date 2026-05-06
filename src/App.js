@@ -345,6 +345,25 @@ function App() {
             }
           });
 
+          ipcRenderer.removeAllListeners('shutdown-workflow');
+          ipcRenderer.on('shutdown-workflow', async (event) => {
+            try {
+              if (GLOBALS?.nodeController?.forceStop) {
+                await GLOBALS.nodeController.forceStop();
+              } else if (GLOBALS?.nodeController?.stop) {
+                await GLOBALS.nodeController.stop();
+              }
+              event.sender.send('shutdown-workflow-reply', {
+                success: true
+              });
+            } catch (error) {
+              event.sender.send('shutdown-workflow-reply', {
+                success: false,
+                error: error.message
+              });
+            }
+          });
+
           GLOBALS.updateRuntimeState = async (partialState) => {
             try {
               const result = await ipcRenderer.invoke('update-runtime-state', partialState);
