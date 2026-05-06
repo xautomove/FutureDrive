@@ -502,7 +502,8 @@ class NodeExecutor {
                 modeLabel: GLOBALS.currentTaskContext?.modeLabel || '',
                 params: GLOBALS.currentTaskContext?.params || {},
                 startedAt: GLOBALS.currentTaskContext?.startedAt || ''
-            }
+            },
+            _input_sources: {}
         };
         
         for (const edge of this.edges || []) {
@@ -520,6 +521,12 @@ class NodeExecutor {
                                 if (node.data.inputs[targetInputIndex]) {
                                     const inputName = node.data.inputs[targetInputIndex].name;
                                     inputData[inputName] = outputValue;
+                                    inputData._input_sources[inputName] = {
+                                        uuid: sourceNode.data.uuid || '',
+                                        outputName: sourceNode.data.outputs[sourceOutputIndex]?.name || '',
+                                        nodePath: sourceNode.path || '',
+                                        nodeLabel: sourceNode.data.label || ''
+                                    };
                                 }
                             }
                         }
