@@ -9,12 +9,35 @@ let server = null;
 let currentProjectPath = null;
 let getConfigCallback = null;
 let triggerTaskStartCallback = null;
+let triggerActuatorStateCallback = null;
 const sseClients = new Set();
 
 const DEFAULT_CONFIG = {
   port: 2200,
   host: '127.0.0.1'
 };
+
+const DEFAULT_ACTUATOR_STATE = {
+  frontLaser: false,
+  rearLaser: false,
+  warningLight: false,
+  hotMelt: false,
+  electricParking: true
+};
+
+function normalizeActuatorState(partialState = {}, fallbackState = DEFAULT_ACTUATOR_STATE) {
+  const source = partialState && typeof partialState === 'object'
+    ? (partialState.actuators && typeof partialState.actuators === 'object' ? partialState.actuators : partialState)
+    : {};
+
+  return {
+    frontLaser: source.frontLaser ?? fallbackState.frontLaser,
+    rearLaser: source.rearLaser ?? fallbackState.rearLaser,
+    warningLight: source.warningLight ?? fallbackState.warningLight,
+    hotMelt: source.hotMelt ?? fallbackState.hotMelt,
+    electricParking: source.electricParking ?? fallbackState.electricParking
+  };
+}
 
 function createDefaultRuntimeState() {
   return {
@@ -32,9 +55,13 @@ function createDefaultRuntimeState() {
       status: 'service_connected',
       message: '通讯已连接，等待工作流启动',
       updatedAt: new Date().toISOString(),
+      actuators: {
+        ...DEFAULT_ACTUATOR_STATE
+      },
       telemetry: {
         speedKph: 0,
         steerDeg: 0,
+        travelDistanceM: null,
         gear: 'UNKNOWN',
         vehicleStatus: 'UNKNOWN',
         telemetryUpdatedAt: '',
@@ -176,7 +203,11 @@ apiApp.post('/api/tasks/start', async (req, res) => {
     vehicle: {
       status: 'service_connected',
       message: `任务模式已切换为${modeLabel}，等待执行节点响应`,
-      updatedAt
+      updatedAt,
+      telemetry: {
+        travelDistanceM: 0,
+        telemetryUpdatedAt: updatedAt
+      }
     },
     task: {
       mode,
@@ -230,6 +261,46 @@ apiApp.post('/api/tasks/start', async (req, res) => {
 
   res.json({
     success: true,
+    state: runtimeState
+  });
+});
+
+apiApp.post('/api/actuators/state', async (req, res) => {
+  const currentActuators = normalizeActuatorState(runtimeState.vehicle?.actuators, DEFAULT_ACTUATOR_STATE);
+  const nextActuators = normalizeActuatorState(req.body, currentActuators);
+  const updatedAt = new Date().toISOString();
+
+  if (typeof triggerActuatorStateCallback === 'function') {
+    try {
+      const triggerResult = await triggerActuatorStateCallback({
+        actuators: nextActuators,
+        updatedAt
+      });
+
+      if (triggerResult?.success === false) {
+        return res.status(500).json({
+          success: false,
+          error: triggerResult.error || '执行单元状态同步失败'
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  mergeRuntimeState({
+    vehicle: {
+      actuators: nextActuators,
+      updatedAt
+    }
+  });
+
+  res.json({
+    success: true,
+    actuators: nextActuators,
     state: runtimeState
   });
 });
@@ -390,6 +461,10 @@ function setTaskStartCallback(fn) {
   triggerTaskStartCallback = fn;
 }
 
+function setActuatorStateCallback(fn) {
+  triggerActuatorStateCallback = fn;
+}
+
 module.exports = {
   startServer,
   stopServer,
@@ -397,6 +472,7 @@ module.exports = {
   setProjectPath,
   setConfigCallback,
   setTaskStartCallback,
+  setActuatorStateCallback,
   mergeRuntimeState,
   setRuntimeState,
   getRuntimeState

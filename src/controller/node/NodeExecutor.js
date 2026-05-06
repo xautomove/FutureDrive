@@ -92,6 +92,15 @@ class NodeExecutor {
         return node?.data?.uuid || null;
     }
 
+    getLinePainterNodeUuid() {
+        if (!this.nodes || !Array.isArray(this.nodes)) {
+            return null;
+        }
+
+        const node = this.nodes.find((item) => item.path === 'line_painter');
+        return node?.data?.uuid || null;
+    }
+
     async syncVehicleTelemetry() {
         if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
             return;
@@ -213,6 +222,43 @@ class NodeExecutor {
         }
     }
 
+    isLinePainterPayload(payload) {
+        return Boolean(
+            payload &&
+            typeof payload === 'object' &&
+            Object.prototype.hasOwnProperty.call(payload, 'distance_m')
+        );
+    }
+
+    async syncLinePainterTelemetry() {
+        if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return;
+        }
+
+        try {
+            const linePainterNodeUuid = this.getLinePainterNodeUuid();
+            if (!linePainterNodeUuid) {
+                return;
+            }
+
+            const linePainterPayload = await GLOBALS.redisController.get(`task_result:${linePainterNodeUuid}`);
+            if (!this.isLinePainterPayload(linePainterPayload)) {
+                return;
+            }
+
+            await GLOBALS.updateRuntimeState({
+                vehicle: {
+                    telemetry: {
+                        travelDistanceM: Number(linePainterPayload.distance_m || 0)
+                    },
+                    updatedAt: new Date().toISOString()
+                }
+            });
+        } catch (error) {
+            log(`sync line painter telemetry failed: ${error.message}`, LOG_TYPES.ERROR);
+        }
+    }
+
     startTelemetryBridge() {
         if (this.telemetryInterval) {
             return;
@@ -222,6 +268,7 @@ class NodeExecutor {
             await this.syncVehicleTelemetry();
             await this.syncObstacleStatus();
             await this.syncInfraredTemperature();
+            await this.syncLinePainterTelemetry();
         }, 500);
     }
 

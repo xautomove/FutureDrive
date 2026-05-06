@@ -13,6 +13,7 @@ const GLOBALS = {
   nodeController: null,
   applyStartupTemplate: null,
   currentTaskContext: null,
+  manualActuatorState: null,
   updateRuntimeState: async () => ({ success: false }),
   syncUbuntuAutostart: async () => ({ success: false }),
 

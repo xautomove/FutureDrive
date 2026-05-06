@@ -22,6 +22,28 @@ import GLOBALS from './assets/js/globals';
 import { puts } from './assets/js/cloud';
 import { runWorkflowFromAutoStart } from './assets/js/workflowRunner';
 
+const DEFAULT_MANUAL_ACTUATORS = {
+  frontLaser: false,
+  rearLaser: false,
+  warningLight: false,
+  hotMelt: false,
+  electricParking: true
+};
+
+function normalizeManualActuatorState(partialState = {}, fallbackState = DEFAULT_MANUAL_ACTUATORS) {
+  const source = partialState && typeof partialState === 'object'
+    ? (partialState.actuators && typeof partialState.actuators === 'object' ? partialState.actuators : partialState)
+    : {};
+
+  return {
+    frontLaser: source.frontLaser ?? fallbackState.frontLaser,
+    rearLaser: source.rearLaser ?? fallbackState.rearLaser,
+    warningLight: source.warningLight ?? fallbackState.warningLight,
+    hotMelt: source.hotMelt ?? fallbackState.hotMelt,
+    electricParking: source.electricParking ?? fallbackState.electricParking
+  };
+}
+
 function App() {
   const [Component, setComponent] = useState(null);
   const initialized = useRef(false);
@@ -57,6 +79,75 @@ function App() {
 
     const loadWindowParams = async () => {
       try {
+        GLOBALS.manualActuatorState = normalizeManualActuatorState(GLOBALS.manualActuatorState);
+
+        const syncFutureConfigActuators = async (actuatorPayload) => {
+          const nextActuators = normalizeManualActuatorState(actuatorPayload, GLOBALS.manualActuatorState || DEFAULT_MANUAL_ACTUATORS);
+          GLOBALS.manualActuatorState = nextActuators;
+
+          if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return nextActuators;
+          }
+
+          const currentFutureConfig = await GLOBALS.redisController.get('future_config');
+          const mergedFutureConfig = currentFutureConfig && typeof currentFutureConfig === 'object'
+            ? { ...currentFutureConfig }
+            : {};
+
+          mergedFutureConfig.manualActuators = nextActuators;
+
+          if (!mergedFutureConfig.taskMode && GLOBALS.currentTaskContext?.mode) {
+            mergedFutureConfig.taskMode = GLOBALS.currentTaskContext.mode;
+            mergedFutureConfig.taskModeLabel = GLOBALS.currentTaskContext.modeLabel || '';
+            mergedFutureConfig.taskParams = GLOBALS.currentTaskContext.params || {};
+            mergedFutureConfig.taskStartedAt = GLOBALS.currentTaskContext.startedAt || '';
+          }
+
+          await GLOBALS.redisController.set('future_config', mergedFutureConfig);
+          return nextActuators;
+        };
+
+        const syncFutureConfigRuntime = async (partialState = {}) => {
+          if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return;
+          }
+
+          const currentFutureConfig = await GLOBALS.redisController.get('future_config');
+          const mergedFutureConfig = currentFutureConfig && typeof currentFutureConfig === 'object'
+            ? { ...currentFutureConfig }
+            : {};
+
+          if (partialState.workflow && typeof partialState.workflow === 'object') {
+            mergedFutureConfig.workflowStatus = partialState.workflow.status ?? mergedFutureConfig.workflowStatus ?? 'idle';
+            mergedFutureConfig.workflowMessage = partialState.workflow.message ?? mergedFutureConfig.workflowMessage ?? '';
+            mergedFutureConfig.workflowUpdatedAt = partialState.workflow.updatedAt ?? mergedFutureConfig.workflowUpdatedAt ?? '';
+          }
+
+          if (partialState.task && typeof partialState.task === 'object') {
+            mergedFutureConfig.taskStatus = partialState.task.status ?? mergedFutureConfig.taskStatus ?? 'idle';
+            mergedFutureConfig.taskMessage = partialState.task.message ?? mergedFutureConfig.taskMessage ?? '';
+            mergedFutureConfig.taskUpdatedAt = partialState.task.updatedAt ?? mergedFutureConfig.taskUpdatedAt ?? '';
+            if (partialState.task.mode !== undefined) {
+              mergedFutureConfig.taskMode = partialState.task.mode || '';
+            }
+            if (partialState.task.modeLabel !== undefined) {
+              mergedFutureConfig.taskModeLabel = partialState.task.modeLabel || '';
+            }
+            if (partialState.task.params && typeof partialState.task.params === 'object') {
+              mergedFutureConfig.taskParams = partialState.task.params;
+            }
+          }
+
+          if (partialState.vehicle?.actuators) {
+            mergedFutureConfig.manualActuators = normalizeManualActuatorState(
+              partialState.vehicle.actuators,
+              mergedFutureConfig.manualActuators || GLOBALS.manualActuatorState || DEFAULT_MANUAL_ACTUATORS
+            );
+          }
+
+          await GLOBALS.redisController.set('future_config', mergedFutureConfig);
+        };
+
         const { page, params } = await ipcRenderer.invoke('get-window-params');
 
         window.isMainWindow = page == "" ? 1 : 0;
@@ -97,6 +188,12 @@ function App() {
                   status: 'starting',
                   message: `FutureDrive 正在启动${payload?.modeLabel || '任务'}`,
                   updatedAt: new Date().toISOString()
+                },
+                vehicle: {
+                  telemetry: {
+                    travelDistanceM: 0,
+                    telemetryUpdatedAt: new Date().toISOString()
+                  }
                 }
               });
 
@@ -124,9 +221,27 @@ function App() {
             }
           });
 
+          ipcRenderer.removeAllListeners('set-actuator-state');
+          ipcRenderer.on('set-actuator-state', async (event, payload) => {
+            try {
+              const nextActuators = await syncFutureConfigActuators(payload?.actuators || payload || {});
+              event.sender.send('set-actuator-state-reply', {
+                success: true,
+                actuators: nextActuators
+              });
+            } catch (error) {
+              event.sender.send('set-actuator-state-reply', {
+                success: false,
+                error: error.message
+              });
+            }
+          });
+
           GLOBALS.updateRuntimeState = async (partialState) => {
             try {
-              return await ipcRenderer.invoke('update-runtime-state', partialState);
+              const result = await ipcRenderer.invoke('update-runtime-state', partialState);
+              await syncFutureConfigRuntime(partialState);
+              return result;
             } catch (error) {
               console.error('更新运行状态失败:', error);
               return { success: false, error: error.message };
@@ -194,6 +309,7 @@ function App() {
 
               if (connected) {
                 GLOBALS.redisController = redisController;
+                await syncFutureConfigActuators(GLOBALS.manualActuatorState || DEFAULT_MANUAL_ACTUATORS);
                 await GLOBALS.updateRuntimeState({
                   service: {
                     status: 'service_connected',

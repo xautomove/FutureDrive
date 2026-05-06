@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Menu, screen, globalShortcut } = require('electron/main')
 const path = require('path')
 const fs = require('fs')
-const { startServer, setConfigCallback, setTaskStartCallback, mergeRuntimeState } = require('./api/server');
+const { startServer, setConfigCallback, setTaskStartCallback, setActuatorStateCallback, mergeRuntimeState } = require('./api/server');
 const { setWindowParams, setCreateWindowFunction } = require('./ipc/handlers');
 require('@electron/remote/main').initialize()
 
@@ -9,6 +9,7 @@ let mainWindow = null;
 let appShuttingDown = false;
 let startHidden = false;
 let postWindowInitStarted = false;
+const TOGGLE_WINDOW_SHORTCUT = 'CommandOrControl+Shift+F11';
 
 function getAutostartHelper() {
   return require('./system/ubuntuAutostart');
@@ -142,12 +143,12 @@ function toggleMainWindowVisibility() {
 }
 
 function registerGlobalShortcuts() {
-  const registered = globalShortcut.register('CommandOrControl+F11', () => {
+  const registered = globalShortcut.register(TOGGLE_WINDOW_SHORTCUT, () => {
     toggleMainWindowVisibility();
   });
 
   if (!registered) {
-    console.warn('Ctrl+F11 快捷键注册失败');
+    console.warn(`${TOGGLE_WINDOW_SHORTCUT} 快捷键注册失败`);
   }
 }
 
@@ -249,8 +250,23 @@ function triggerTaskStartFromRenderer(taskPayload) {
   });
 }
 
+function triggerActuatorStateFromRenderer(actuatorPayload) {
+  return new Promise((resolve) => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return resolve({ success: false, error: '主窗口未初始化' });
+    }
+
+    const { ipcMain } = require('electron');
+    ipcMain.once('set-actuator-state-reply', (event, result) => {
+      resolve(result || { success: false, error: '执行单元状态同步结果为空' });
+    });
+    mainWindow.webContents.send('set-actuator-state', actuatorPayload);
+  });
+}
+
 setConfigCallback(requestConfigFromRenderer);
 setTaskStartCallback(triggerTaskStartFromRenderer);
+setActuatorStateCallback(triggerActuatorStateFromRenderer);
 
 module.exports = {
   createWindow,
