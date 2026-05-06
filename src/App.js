@@ -20,7 +20,7 @@ import { ReactFlowProvider } from 'reactflow';
 import RedisController from './controller/node/RedisController';
 import GLOBALS from './assets/js/globals';
 import { puts } from './assets/js/cloud';
-import { runWorkflowFromAutoStart } from './assets/js/workflowRunner';
+import { runWorkflow, runWorkflowFromAutoStart } from './assets/js/workflowRunner';
 
 const DEFAULT_MANUAL_ACTUATORS = {
   frontLaser: false,
@@ -197,7 +197,7 @@ function App() {
                 }
               });
 
-              await runWorkflowFromAutoStart();
+              await runWorkflow();
 
               event.sender.send('start-task-reply', {
                 success: true
