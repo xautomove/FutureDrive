@@ -296,7 +296,11 @@ function triggerWorkflowShutdownFromRenderer() {
     }
 
     const { ipcMain } = require('electron');
+    const timeout = setTimeout(() => {
+      resolve({ success: false, error: '退出清理超时' });
+    }, 5000);
     ipcMain.once('shutdown-workflow-reply', (event, result) => {
+      clearTimeout(timeout);
       resolve(result || { success: false, error: '退出清理结果为空' });
     });
     mainWindow.webContents.send('shutdown-workflow');
