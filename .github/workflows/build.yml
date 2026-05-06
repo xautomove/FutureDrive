@@ -35,12 +35,48 @@ jobs:
         VERSION=$(node -p "require('./package.json').version")
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+    - name: Verify and package artifacts
+      run: |
+        set -euo pipefail
+        APPIMAGE=$(find dist -maxdepth 1 -type f -name '*.AppImage' | head -n 1)
+        if [ -z "${APPIMAGE}" ]; then
+          echo "AppImage not found"
+          exit 1
+        fi
+
+        chmod +x "${APPIMAGE}"
+        "${APPIMAGE}" --appimage-extract >/dev/null
+
+        set +e
+        timeout 20s xvfb-run -a ./squashfs-root/AppRun --no-sandbox --disable-gpu >/tmp/futuredrive-smoke.log 2>&1
+        SMOKE_STATUS=$?
+        set -e
+        if [ "${SMOKE_STATUS}" -ne 0 ] && [ "${SMOKE_STATUS}" -ne 124 ]; then
+          cat /tmp/futuredrive-smoke.log
+          exit "${SMOKE_STATUS}"
+        fi
+
+        rm -rf squashfs-root
+
+        mkdir -p packaged
+        cp "${APPIMAGE}" "packaged/FutureDrive-Linux-${VERSION}.AppImage"
+        sha256sum "packaged/FutureDrive-Linux-${VERSION}.AppImage" > "packaged/FutureDrive-Linux-${VERSION}.AppImage.sha256"
+
+        (
+          cd packaged
+          zip -0 -T "FutureDrive-Linux-${VERSION}.zip" "FutureDrive-Linux-${VERSION}.AppImage" "FutureDrive-Linux-${VERSION}.AppImage.sha256"
+        )
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: FutureDrive-Linux-${{ env.VERSION }}
-        path: dist/*.AppImage
+        path: |
+          packaged/FutureDrive-Linux-${{ env.VERSION }}.zip
+          packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage
+          packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage.sha256
         if-no-files-found: error 
+        compression-level: 0
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -50,6 +86,8 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          dist/*.AppImage
+          packaged/FutureDrive-Linux-${{ env.VERSION }}.zip
+          packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage
+          packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage.sha256
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

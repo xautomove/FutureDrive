@@ -68,6 +68,7 @@
       "public/**/*",
       "api/*",
       "ipc/*",
+      "system/**/*",
       "node_modules/**/*",
       "index.js"
     ],
