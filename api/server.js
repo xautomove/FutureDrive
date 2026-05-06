@@ -9,6 +9,7 @@ let server = null;
 let currentProjectPath = null;
 let getConfigCallback = null;
 let triggerTaskStartCallback = null;
+let triggerTaskStopCallback = null;
 let triggerActuatorStateCallback = null;
 const sseClients = new Set();
 
@@ -24,6 +25,17 @@ const DEFAULT_ACTUATOR_STATE = {
   hotMelt: false,
   electricParking: true
 };
+
+function resolveTaskType(mode = '') {
+  const normalizedMode = String(mode || '').trim();
+  if (['plane_marking', 'vibration_marking', 'short_line_marking'].includes(normalizedMode)) {
+    return 'line';
+  }
+  if (['visual_tracking', 'auto_start'].includes(normalizedMode)) {
+    return 'see';
+  }
+  return '';
+}
 
 function normalizeActuatorState(partialState = {}, fallbackState = DEFAULT_ACTUATOR_STATE) {
   const source = partialState && typeof partialState === 'object'
@@ -71,8 +83,12 @@ function createDefaultRuntimeState() {
     },
     task: {
       mode: '',
+      type: '',
+      state: 'stop',
       modeLabel: '未选择任务',
       params: {},
+      startedAt: '',
+      resetToken: '',
       status: 'idle',
       message: '等待任务选择',
       updatedAt: new Date().toISOString()
@@ -185,6 +201,7 @@ apiApp.post('/api/tasks/start', async (req, res) => {
   const mode = String(req.body?.mode || '').trim();
   const modeLabel = String(req.body?.modeLabel || '').trim() || '未命名任务';
   const params = req.body?.params && typeof req.body.params === 'object' ? req.body.params : {};
+  const taskType = String(req.body?.taskType || resolveTaskType(mode)).trim();
 
   if (!mode) {
     return res.status(400).json({
@@ -194,15 +211,16 @@ apiApp.post('/api/tasks/start', async (req, res) => {
   }
 
   const updatedAt = new Date().toISOString();
+  const resetToken = String(req.body?.resetToken || updatedAt);
   mergeRuntimeState({
     workflow: {
-      status: 'workflow_starting',
-      message: `已收到任务启动请求，准备执行${modeLabel}`,
+      status: 'completed',
+      message: `已切换到${modeLabel}，等待常驻节点响应`,
       updatedAt
     },
     vehicle: {
-      status: 'service_connected',
-      message: `任务模式已切换为${modeLabel}，等待执行节点响应`,
+      status: 'vehicle_ready',
+      message: `任务模式已切换为${modeLabel}，常驻节点执行中`,
       updatedAt,
       telemetry: {
         travelDistanceM: 0,
@@ -211,8 +229,12 @@ apiApp.post('/api/tasks/start', async (req, res) => {
     },
     task: {
       mode,
+      type: taskType,
+      state: 'start',
       modeLabel,
       params,
+      startedAt: updatedAt,
+      resetToken,
       status: 'pending',
       message: `已确认开始${modeLabel}`,
       updatedAt
@@ -223,8 +245,11 @@ apiApp.post('/api/tasks/start', async (req, res) => {
     try {
       const triggerResult = await triggerTaskStartCallback({
         mode,
+        taskType,
         modeLabel,
-        params
+        params,
+        startedAt: updatedAt,
+        resetToken
       });
 
       if (triggerResult?.success === false) {
@@ -258,6 +283,87 @@ apiApp.post('/api/tasks/start', async (req, res) => {
       });
     }
   }
+
+  res.json({
+    success: true,
+    state: runtimeState
+  });
+});
+
+apiApp.post('/api/tasks/stop', async (req, res) => {
+  const currentTask = runtimeState.task || {};
+  const mode = String(req.body?.mode ?? currentTask.mode ?? '').trim();
+  const modeLabel = String(req.body?.modeLabel ?? currentTask.modeLabel ?? '').trim() || '未选择任务';
+  const params = req.body?.params && typeof req.body.params === 'object'
+    ? req.body.params
+    : (currentTask.params && typeof currentTask.params === 'object' ? currentTask.params : {});
+  const taskType = String(req.body?.taskType || currentTask.type || resolveTaskType(mode)).trim();
+  const updatedAt = new Date().toISOString();
+
+  if (typeof triggerTaskStopCallback === 'function') {
+    try {
+      const triggerResult = await triggerTaskStopCallback({
+        mode,
+        taskType,
+        modeLabel,
+        params,
+        stoppedAt: updatedAt
+      });
+
+      if (triggerResult?.success === false) {
+        return res.status(500).json({
+          success: false,
+          error: triggerResult.error || '任务停止触发失败'
+        });
+      }
+    } catch (error) {
+      mergeRuntimeState({
+        workflow: {
+          status: 'error',
+          message: `任务停止失败: ${error.message}`,
+          updatedAt
+        },
+        vehicle: {
+          status: 'error',
+          message: '任务停止失败',
+          updatedAt
+        },
+        task: {
+          status: 'error',
+          message: `任务停止失败: ${error.message}`,
+          updatedAt
+        }
+      });
+
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  mergeRuntimeState({
+    workflow: {
+      status: 'stopped',
+      message: mode ? `${modeLabel}已停止` : '任务已停止',
+      updatedAt
+    },
+    vehicle: {
+      status: 'service_connected',
+      message: '任务已停止，常驻节点待命中',
+      updatedAt
+    },
+    task: {
+      mode,
+      type: taskType,
+      state: 'stop',
+      modeLabel,
+      params,
+      status: 'stopped',
+      message: mode ? `${modeLabel}已停止` : '任务已停止',
+      updatedAt
+    }
+  });
 
   res.json({
     success: true,
@@ -461,6 +567,10 @@ function setTaskStartCallback(fn) {
   triggerTaskStartCallback = fn;
 }
 
+function setTaskStopCallback(fn) {
+  triggerTaskStopCallback = fn;
+}
+
 function setActuatorStateCallback(fn) {
   triggerActuatorStateCallback = fn;
 }
@@ -472,6 +582,7 @@ module.exports = {
   setProjectPath,
   setConfigCallback,
   setTaskStartCallback,
+  setTaskStopCallback,
   setActuatorStateCallback,
   mergeRuntimeState,
   setRuntimeState,

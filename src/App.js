@@ -20,7 +20,7 @@ import { ReactFlowProvider } from 'reactflow';
 import RedisController from './controller/node/RedisController';
 import GLOBALS from './assets/js/globals';
 import { puts } from './assets/js/cloud';
-import { runWorkflow, runWorkflowFromAutoStart } from './assets/js/workflowRunner';
+import { runWorkflowFromAutoStart } from './assets/js/workflowRunner';
 
 const DEFAULT_MANUAL_ACTUATORS = {
   frontLaser: false,
@@ -42,6 +42,17 @@ function normalizeManualActuatorState(partialState = {}, fallbackState = DEFAULT
     hotMelt: source.hotMelt ?? fallbackState.hotMelt,
     electricParking: source.electricParking ?? fallbackState.electricParking
   };
+}
+
+function resolveTaskType(mode = '') {
+  const normalizedMode = String(mode || '').trim();
+  if (['plane_marking', 'vibration_marking', 'short_line_marking'].includes(normalizedMode)) {
+    return 'line';
+  }
+  if (['visual_tracking', 'auto_start'].includes(normalizedMode)) {
+    return 'see';
+  }
+  return '';
 }
 
 function App() {
@@ -127,6 +138,12 @@ function App() {
             mergedFutureConfig.taskStatus = partialState.task.status ?? mergedFutureConfig.taskStatus ?? 'idle';
             mergedFutureConfig.taskMessage = partialState.task.message ?? mergedFutureConfig.taskMessage ?? '';
             mergedFutureConfig.taskUpdatedAt = partialState.task.updatedAt ?? mergedFutureConfig.taskUpdatedAt ?? '';
+            if (partialState.task.type !== undefined) {
+              mergedFutureConfig.taskType = partialState.task.type || '';
+            }
+            if (partialState.task.state !== undefined) {
+              mergedFutureConfig.taskState = partialState.task.state || 'stop';
+            }
             if (partialState.task.mode !== undefined) {
               mergedFutureConfig.taskMode = partialState.task.mode || '';
             }
@@ -135,6 +152,12 @@ function App() {
             }
             if (partialState.task.params && typeof partialState.task.params === 'object') {
               mergedFutureConfig.taskParams = partialState.task.params;
+            }
+            if (partialState.task.startedAt !== undefined) {
+              mergedFutureConfig.taskStartedAt = partialState.task.startedAt || '';
+            }
+            if (partialState.task.resetToken !== undefined) {
+              mergedFutureConfig.taskResetToken = partialState.task.resetToken || '';
             }
           }
 
@@ -173,31 +196,47 @@ function App() {
           ipcRenderer.removeAllListeners('start-task');
           ipcRenderer.on('start-task', async (event, payload) => {
             try {
+              const updatedAt = new Date().toISOString();
+              const taskType = payload?.taskType || resolveTaskType(payload?.mode || '');
+              const resetToken = payload?.resetToken || updatedAt;
               GLOBALS.currentTaskContext = {
                 mode: payload?.mode || '',
+                type: taskType,
+                state: 'start',
                 modeLabel: payload?.modeLabel || '未命名任务',
                 params: payload?.params && typeof payload.params === 'object' ? payload.params : {},
-                startedAt: new Date().toISOString()
+                startedAt: updatedAt,
+                resetToken
               };
 
               await GLOBALS.updateRuntimeState({
+                workflow: {
+                  status: 'completed',
+                  message: `已切换到${payload?.modeLabel || '任务'}，等待常驻节点响应`,
+                  updatedAt
+                },
                 task: {
                   mode: payload?.mode || '',
+                  type: taskType,
+                  state: 'start',
                   modeLabel: payload?.modeLabel || '未命名任务',
                   params: payload?.params && typeof payload.params === 'object' ? payload.params : {},
-                  status: 'starting',
-                  message: `FutureDrive 正在启动${payload?.modeLabel || '任务'}`,
-                  updatedAt: new Date().toISOString()
+                  startedAt: updatedAt,
+                  resetToken,
+                  status: 'pending',
+                  message: `FutureDrive 已下发${payload?.modeLabel || '任务'}控制信号`,
+                  updatedAt
                 },
                 vehicle: {
+                  status: 'vehicle_ready',
+                  message: `任务模式已切换为${payload?.modeLabel || '任务'}，常驻节点执行中`,
+                  updatedAt,
                   telemetry: {
                     travelDistanceM: 0,
-                    telemetryUpdatedAt: new Date().toISOString()
+                    telemetryUpdatedAt: updatedAt
                   }
                 }
               });
-
-              await runWorkflow();
 
               event.sender.send('start-task-reply', {
                 success: true
@@ -215,6 +254,75 @@ function App() {
               });
 
               event.sender.send('start-task-reply', {
+                success: false,
+                error: error.message
+              });
+            }
+          });
+
+          ipcRenderer.removeAllListeners('stop-task');
+          ipcRenderer.on('stop-task', async (event, payload) => {
+            try {
+              const updatedAt = new Date().toISOString();
+              const activeContext = GLOBALS.currentTaskContext || {};
+              const mode = payload?.mode || activeContext.mode || '';
+              const modeLabel = payload?.modeLabel || activeContext.modeLabel || '未选择任务';
+              const params = payload?.params && typeof payload.params === 'object'
+                ? payload.params
+                : (activeContext.params && typeof activeContext.params === 'object' ? activeContext.params : {});
+              const taskType = payload?.taskType || activeContext.type || resolveTaskType(mode);
+
+              GLOBALS.currentTaskContext = {
+                ...activeContext,
+                mode,
+                type: taskType,
+                state: 'stop',
+                modeLabel,
+                params,
+                stoppedAt: updatedAt
+              };
+
+              await GLOBALS.updateRuntimeState({
+                workflow: {
+                  status: 'stopped',
+                  message: mode ? `${modeLabel}已停止` : '任务已停止',
+                  updatedAt
+                },
+                task: {
+                  mode,
+                  type: taskType,
+                  state: 'stop',
+                  modeLabel,
+                  params,
+                  status: 'stopped',
+                  message: mode ? `${modeLabel}已停止` : '任务已停止',
+                  updatedAt
+                },
+                vehicle: {
+                  status: 'service_connected',
+                  message: '任务已停止，常驻节点待命中',
+                  updatedAt
+                }
+              });
+
+              event.sender.send('stop-task-reply', {
+                success: true
+              });
+            } catch (error) {
+              await GLOBALS.updateRuntimeState({
+                workflow: {
+                  status: 'error',
+                  message: `任务停止失败: ${error.message}`,
+                  updatedAt: new Date().toISOString()
+                },
+                task: {
+                  status: 'error',
+                  message: `任务停止失败: ${error.message}`,
+                  updatedAt: new Date().toISOString()
+                }
+              });
+
+              event.sender.send('stop-task-reply', {
                 success: false,
                 error: error.message
               });

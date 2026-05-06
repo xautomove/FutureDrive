@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Menu, screen, globalShortcut } = require('electron/main')
 const path = require('path')
 const fs = require('fs')
-const { startServer, setConfigCallback, setTaskStartCallback, setActuatorStateCallback, mergeRuntimeState } = require('./api/server');
+const { startServer, setConfigCallback, setTaskStartCallback, setTaskStopCallback, setActuatorStateCallback, mergeRuntimeState } = require('./api/server');
 const { setWindowParams, setCreateWindowFunction } = require('./ipc/handlers');
 require('@electron/remote/main').initialize()
 
@@ -264,8 +264,23 @@ function triggerActuatorStateFromRenderer(actuatorPayload) {
   });
 }
 
+function triggerTaskStopFromRenderer(taskPayload) {
+  return new Promise((resolve) => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return resolve({ success: false, error: '主窗口未初始化' });
+    }
+
+    const { ipcMain } = require('electron');
+    ipcMain.once('stop-task-reply', (event, result) => {
+      resolve(result || { success: false, error: '任务停止结果为空' });
+    });
+    mainWindow.webContents.send('stop-task', taskPayload);
+  });
+}
+
 setConfigCallback(requestConfigFromRenderer);
 setTaskStartCallback(triggerTaskStartFromRenderer);
+setTaskStopCallback(triggerTaskStopFromRenderer);
 setActuatorStateCallback(triggerActuatorStateFromRenderer);
 
 module.exports = {
