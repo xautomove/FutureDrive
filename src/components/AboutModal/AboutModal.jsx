@@ -15,7 +15,8 @@ const { Text, Title, Paragraph } = Typography;
 const LICENSE_URL = 'https://future.automoves.cn/license';
 const LEGAL_URL = 'https://future.automoves.cn/legal';
 
-const localVersion = '1.2.0';
+// About 弹窗直接读取应用真实版本，避免每次发布时再维护一份独立硬编码版本号。
+const localVersion = remote.app.getVersion();
 const GITHUB_RELEASES_URL = 'https://api.github.com/repos/xautomove/FutureDrive/releases';
 
 const AboutModal = ({ visible, onClose }) => {

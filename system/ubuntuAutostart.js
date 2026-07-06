@@ -6,7 +6,7 @@ const { execFileSync } = require('child_process');
 const SERVICE_NAME = 'futuredrive.service';
 const SERVICE_DIR = path.join(os.homedir(), '.config', 'systemd', 'user');
 const SERVICE_PATH = path.join(SERVICE_DIR, SERVICE_NAME);
-const DEFAULT_APPIMAGE_NAME = 'FutureDrive-1.2.1.AppImage';
+const DEFAULT_APPIMAGE_NAME = 'FutureDrive-1.2.2.AppImage';
 
 function resolveAppImagePath(execPath = '') {
   if (execPath && fs.existsSync(execPath)) {
