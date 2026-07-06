@@ -1,26 +1,35 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, Button, Typography, Space, Tooltip } from 'antd';
 import { SyncOutlined } from '@ant-design/icons';
-import { shell } from 'electron';
 import './AboutModal.css';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { remote } from 'electron';
 import { message } from 'antd';
 import { useI18n } from '../../context/I18nContext';
+
+const { shell } = window.require('electron');
+const remote = window.require('@electron/remote');
 
 const { Text, Title, Paragraph } = Typography;
 
 const LICENSE_URL = 'https://future.automoves.cn/license';
 const LEGAL_URL = 'https://future.automoves.cn/legal';
-
-// About 弹窗直接读取应用真实版本，避免每次发布时再维护一份独立硬编码版本号。
-const localVersion = remote.app.getVersion();
 const GITHUB_RELEASES_URL = 'https://api.github.com/repos/xautomove/FutureDrive/releases';
 
 const AboutModal = ({ visible, onClose }) => {
   const { t } = useI18n();
+  const localVersion = useMemo(() => {
+    try {
+      // AboutModal 会被菜单栏顶层引入，因此版本读取不能放在模块顶层，
+      // 否则 @electron/remote 异常时会直接把整个主界面渲染链路带崩。
+      return remote?.app?.getVersion?.() || 'unknown';
+    } catch (error) {
+      console.error('[AboutModal] 读取应用版本失败:', error);
+      return 'unknown';
+    }
+  }, []);
+
   const handleOpenUrl = async (url) => {
     try {
       await shell.openExternal(url);

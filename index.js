@@ -125,18 +125,19 @@ const createWindow = (width, height, page = '', params = []) => {
     });
   });
 
-  win.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    if (level < 2) {
+  win.webContents.on('console-message', (details) => {
+    const { level, message, lineNumber, sourceId } = details;
+    if (level === 'info' || level === 'debug') {
       return;
     }
 
-    const levelLabel = level >= 3 ? 'error' : 'warn';
+    const levelLabel = level === 'error' ? 'error' : 'warn';
     console[levelLabel]('[RendererConsole] 渲染进程日志:', {
       windowId: winid,
       page: windowTag,
       level: levelLabel,
       message,
-      line,
+      line: lineNumber,
       sourceId
     });
   });
