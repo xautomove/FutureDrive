@@ -74,7 +74,7 @@ class NodeController {
                     rearLaser: false,
                     warningLight: false,
                     hotMelt: false,
-                    electricParking: true
+                    electricParking: false
                 },
                 appPath: app.getAppPath(),
                 userDataPath: app.getPath('userData'),

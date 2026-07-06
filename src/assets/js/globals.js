@@ -15,7 +15,6 @@ const GLOBALS = {
   currentTaskContext: null,
   manualActuatorState: null,
   updateRuntimeState: async () => ({ success: false }),
-  syncUbuntuAutostart: async () => ({ success: false }),
 
   addProcess(nodeId, process) {
     this.activeProcesses.push({ nodeId, process });

@@ -23,7 +23,7 @@ const DEFAULT_ACTUATOR_STATE = {
   rearLaser: false,
   warningLight: false,
   hotMelt: false,
-  electricParking: true
+  electricParking: false
 };
 
 function resolveTaskType(mode = '') {

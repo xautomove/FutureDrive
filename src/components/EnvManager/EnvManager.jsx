@@ -3,7 +3,6 @@ import { Card, List, Button, message, Spin } from 'antd';
 import EnvController from '../../controller/gui/EnvController';
 import './EnvManager.css';
 import { log, LOG_TYPES } from '../../assets/js/utils';
-import config from '../../assets/js/config';
 import { useI18n } from '../../context/I18nContext';
 
 const EnvManager = () => {
@@ -18,8 +17,8 @@ const EnvManager = () => {
     try {
       if (clearBeforeLoad) setEnvironments([]);
       if (forceUpdate) {
-        config.set('environment.cacheDate', '');
-        config.save?.();
+        localStorage.removeItem('environment.cacheDate');
+        localStorage.removeItem('environment.cache');
       }
       const envs = await EnvController.getEnvironmentList();
       setEnvironments(envs);

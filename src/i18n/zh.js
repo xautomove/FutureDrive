@@ -63,8 +63,8 @@ const zh = {
       uiEnabled: '记录外部 UI 启动配置',
       uiExecutablePath: '外部 UI 可执行文件路径',
       uiExecutablePathPlaceholder: '例如 /home/user/app/UI，由外部脚本或系统自启动使用',
-      autostartSyncFailed: '同步 Ubuntu 自启动失败',
-      autostartVerifyFailed: 'Ubuntu 自启动文件已写入，但校验未通过'
+      autostartSyncFailed: '同步 Ubuntu 服务失败',
+      autostartVerifyFailed: 'Ubuntu 服务文件已写入，但校验未通过'
     },
     other: {
       noUi: '是否无 UI 启动',

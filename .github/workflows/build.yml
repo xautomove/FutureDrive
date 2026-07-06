@@ -60,21 +60,13 @@ jobs:
 
         mkdir -p packaged
         cp "${APPIMAGE}" "packaged/FutureDrive-Linux-${VERSION}.AppImage"
-        sha256sum "packaged/FutureDrive-Linux-${VERSION}.AppImage" > "packaged/FutureDrive-Linux-${VERSION}.AppImage.sha256"
-
-        (
-          cd packaged
-          zip -0 -T "FutureDrive-Linux-${VERSION}.zip" "FutureDrive-Linux-${VERSION}.AppImage" "FutureDrive-Linux-${VERSION}.AppImage.sha256"
-        )
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: FutureDrive-Linux-${{ env.VERSION }}
         path: |
-          packaged/FutureDrive-Linux-${{ env.VERSION }}.zip
           packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage
-          packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage.sha256
         if-no-files-found: error 
         compression-level: 0
 
@@ -86,8 +78,6 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          packaged/FutureDrive-Linux-${{ env.VERSION }}.zip
           packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage
-          packaged/FutureDrive-Linux-${{ env.VERSION }}.AppImage.sha256
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

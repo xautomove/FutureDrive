@@ -1,5 +1,5 @@
 import { get } from '../../assets/js/http';
-import config from '../../assets/js/config';
+import { ENVIRONMENT_LIST_URL } from '../../assets/js/constants';
 import { writeFile, readFile } from './FileController';
 import path from 'path';
 import os from 'os';
@@ -21,21 +21,19 @@ class EnvController {
    */
   async getEnvironmentList() {
     try {
-      var envListUrl = config.get('environment.listUrl');
       var environments = '';
       const cacheKey = 'environment.cache';
       const cacheDateKey = 'environment.cacheDate';
-      const cacheData = config.get(cacheKey);
-      const cacheDate = config.get(cacheDateKey);
+      const cacheData = localStorage.getItem(cacheKey);
+      const cacheDate = localStorage.getItem(cacheDateKey);
       const today = new Date().toISOString().slice(0, 10);
 
       if (cacheData && cacheDate && cacheDate === today) {
-        environments = cacheData;
-      } else if (envListUrl) {
-        environments = await get(envListUrl);
-        config.set(cacheKey, environments);
-        config.set(cacheDateKey, today);
-        await config.save?.();
+        environments = JSON.parse(cacheData);
+      } else if (ENVIRONMENT_LIST_URL) {
+        environments = await get(ENVIRONMENT_LIST_URL);
+        localStorage.setItem(cacheKey, typeof environments === 'string' ? environments : JSON.stringify(environments));
+        localStorage.setItem(cacheDateKey, today);
       }
 
       if (!environments) {

@@ -27,7 +27,7 @@ const DEFAULT_MANUAL_ACTUATORS = {
   rearLaser: false,
   warningLight: false,
   hotMelt: false,
-  electricParking: true
+  electricParking: false
 };
 
 function normalizeManualActuatorState(partialState = {}, fallbackState = DEFAULT_MANUAL_ACTUATORS) {
@@ -371,15 +371,6 @@ function App() {
               return result;
             } catch (error) {
               console.error('更新运行状态失败:', error);
-              return { success: false, error: error.message };
-            }
-          };
-
-          GLOBALS.syncUbuntuAutostart = async (enabled) => {
-            try {
-              return await ipcRenderer.invoke('sync-ubuntu-autostart', enabled);
-            } catch (error) {
-              console.error('同步 Ubuntu 自启动失败:', error);
               return { success: false, error: error.message };
             }
           };

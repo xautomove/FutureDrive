@@ -296,10 +296,14 @@ ipcMain.handle('get-runtime-state', async () => {
   }
 });
 
-ipcMain.handle('sync-ubuntu-autostart', async (event, enabled) => {
+ipcMain.handle('sync-ubuntu-autostart', async (event, enabled, execPath) => {
   try {
+    if (process.platform !== 'linux') {
+      return { success: true, skipped: true, reason: 'not_linux' };
+    }
+
     const { syncUbuntuAutostart } = require('../system/ubuntuAutostart');
-    return await syncUbuntuAutostart(Boolean(enabled), process.execPath);
+    return await syncUbuntuAutostart(Boolean(enabled), execPath || process.execPath);
   } catch (error) {
     return { success: false, error: error.message };
   }

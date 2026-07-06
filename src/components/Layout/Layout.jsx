@@ -37,6 +37,8 @@ const Layout = () => {
   const [projectConfig, setProjectConfig] = useState(null);
   const [projectModalVisible, setProjectModalVisible] = useState(false);
   const [recentProjects, setRecentProjects] = useState([]);
+  const startupAppliedRef = useRef(false);
+  const startupLaunchHandledRef = useRef(false);
   
   const leftTreeRef = useRef(null);
   const rightTreeRef = useRef(null);
@@ -86,49 +88,6 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    if (!currentProjectPath) {
-      return;
-    }
-
-    const startupConfig = config.get('startup') || {};
-    if (!startupConfig.autoRunWorkflow) {
-      return;
-    }
-    const otherConfig = config.get('other') || {};
-    if (!otherConfig.noUi) {
-      return;
-    }
-
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      if (cancelled) {
-        return;
-      }
-
-      try {
-        if (!GLOBALS.currentTaskContext) {
-          GLOBALS.currentTaskContext = {
-            mode: 'auto_start',
-            modeLabel: '开机自启任务',
-            startedAt: new Date().toISOString()
-          };
-        }
-        await applyStartupTemplateIfNeeded(currentProjectPath);
-        await runWorkflowFromAutoStart();
-      } catch (error) {
-        if (!['redis_disabled', 'redis_not_connected', 'no_nodes', 'no_autostart_node', 'multiple_autostart_nodes'].includes(error.message)) {
-          log(`自动运行工作流失败: ${error.message}`, LOG_TYPES.ERROR);
-        }
-      }
-    }, 1500);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [currentProjectPath, applyStartupTemplateIfNeeded]);
-
-  useEffect(() => {
     const updateMinWidths = () => {
       if (leftTreeRef.current) {
         const leftTreeWidth = leftTreeRef.current.scrollWidth;
@@ -157,7 +116,7 @@ const Layout = () => {
     openProjectByPath(projectPath, projectConfig);
   };
 
-  const openProjectByPath = (projectPath, projectConfig) => {
+  const openProjectByPath = (projectPath, projectConfig, options = {}) => {
     try {
       let config = projectConfig;
       if (!config) {
@@ -188,6 +147,9 @@ const Layout = () => {
         const newRecents = [{ name: result.config.name, path: config.path }, ...recents.filter(p => p.path !== config.path)].slice(0, 10);
         localStorage.setItem('recentProjects', JSON.stringify(newRecents));
         setRecentProjects(newRecents);
+        if (options.runStartupSequence) {
+          applyStartupSequence(config.path);
+        }
       } else {
         message.error(`打开项目失败: ${result.error}`);
         log(`打开项目失败: ${result.error}`, LOG_TYPES.ERROR);
@@ -208,16 +170,40 @@ const Layout = () => {
     GLOBALS.applyStartupTemplate(templateData);
   }, []);
 
-  useEffect(() => {
+  const applyStartupSequence = useCallback(async (projectPath) => {
     const startupConfig = config.get('startup') || {};
-    if (!startupConfig.autoRunWorkflow) {
+
+    if (!projectPath || startupAppliedRef.current) {
       return;
     }
 
-    if (currentProjectPath) {
+    startupAppliedRef.current = true;
+    try {
+      if (!GLOBALS.currentTaskContext) {
+        GLOBALS.currentTaskContext = {
+          mode: 'auto_start',
+          modeLabel: '开机自启任务',
+          startedAt: new Date().toISOString()
+        };
+      }
+      await applyStartupTemplateIfNeeded(projectPath);
+      if (startupConfig.autoRunWorkflow) {
+        await runWorkflowFromAutoStart();
+      }
+    } catch (error) {
+      if (!['redis_disabled', 'redis_not_connected', 'no_nodes', 'no_autostart_node', 'multiple_autostart_nodes'].includes(error.message)) {
+        log(`自动运行工作流失败: ${error.message}`, LOG_TYPES.ERROR);
+      }
+    }
+  }, [applyStartupTemplateIfNeeded]);
+
+  useEffect(() => {
+    if (startupLaunchHandledRef.current) {
       return;
     }
+    startupLaunchHandledRef.current = true;
 
+    const startupConfig = config.get('startup') || {};
     const startupProjectFile = startupConfig.projectFile || '';
     let startupProjectPath = startupConfig.projectPath || '';
 
@@ -232,35 +218,15 @@ const Layout = () => {
       }
     }
 
+    if (!startupProjectPath) {
+      const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
+      startupProjectPath = recents[0]?.path || '';
+    }
+
     if (startupProjectPath) {
-      const projectResult = ProjectController.openProject(startupProjectPath);
-      if (!projectResult.success) {
-        GLOBALS.updateRuntimeState({
-          workflow: {
-            status: 'error',
-            message: `启动项目无效: ${projectResult.error}`,
-            updatedAt: new Date().toISOString()
-          },
-          vehicle: {
-            status: 'error',
-            message: '自动启动项目失败',
-            updatedAt: new Date().toISOString()
-          }
-        });
-        log(`自动启动项目失败: ${projectResult.error}`, LOG_TYPES.ERROR);
-        return;
-      }
-      openProjectByPath(startupProjectPath);
-      return;
+      openProjectByPath(startupProjectPath, null, { runStartupSequence: true });
     }
-
-    const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
-    if (!recents.length || !recents[0]?.path) {
-      return;
-    }
-
-    openProjectByPath(recents[0].path);
-  }, [currentProjectPath]);
+  }, []);
 
   const handleTreeDataChange = () => {
     if (currentProjectPath) {

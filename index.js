@@ -13,7 +13,7 @@ const TOGGLE_WINDOW_SHORTCUT = 'CommandOrControl+Shift+F11';
 let shutdownCleanupStarted = false;
 
 function getAutostartHelper() {
-  return require('./system/ubuntuAutostart');
+  return require('./system/ubuntuAutostart.js');
 }
 
 function getConfigFilePath() {
@@ -329,5 +329,12 @@ setActuatorStateCallback(triggerActuatorStateFromRenderer);
 module.exports = {
   createWindow,
   setConfigRequestHandler: setConfigCallback,
-  syncUbuntuAutostart: (enabled) => getAutostartHelper().syncUbuntuAutostart(enabled, process.execPath)
+  syncUbuntuAutostart: (enabled) => {
+    if (process.platform !== 'linux') {
+      return Promise.resolve({ success: true, skipped: true, reason: 'not_linux' });
+    }
+    const startupConfig = readMainProcessConfig().startup || {};
+    const execPath = startupConfig.ui?.executablePath || process.execPath;
+    return getAutostartHelper().syncUbuntuAutostart(enabled, execPath);
+  }
 };

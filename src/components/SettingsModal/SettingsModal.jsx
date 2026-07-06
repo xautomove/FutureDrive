@@ -4,9 +4,9 @@ import './SettingsModal.css';
 import config from '../../assets/js/config';
 import RedisController from '../../controller/node/RedisController';
 import { useI18n } from '../../context/I18nContext';
-import GLOBALS from '../../assets/js/globals';
 import ProjectController from '../../controller/gui/ProjectController';
 import TemplateManager from '../../controller/gui/TemplateManager';
+const { ipcRenderer } = window.require('electron');
 
 const fs = window.require('fs');
 const path = window.require('path');
@@ -34,12 +34,12 @@ const SettingsModal = ({ visible, onClose }) => {
   const [startupProjectFile, setStartupProjectFile] = useState('');
   const [startupTemplates, setStartupTemplates] = useState([]);
   const [nodeForm] = Form.useForm();
+  const [generalForm] = Form.useForm();
   const [apiForm] = Form.useForm();
   const [redisForm] = Form.useForm();
   const [startupForm] = Form.useForm();
   const [otherForm] = Form.useForm();
   const [frameworkForm] = Form.useForm();
-  const [environmentForm] = Form.useForm();
   const { t, setLanguage } = useI18n();
 
   useEffect(() => {
@@ -52,10 +52,13 @@ const SettingsModal = ({ visible, onClose }) => {
           const startupConfig = config.get('startup') || {};
           const otherConfig = config.get('other') || {};
           const frameworkConfig = config.get('framework') || {};
-          const environmentConfig = config.get('environment') || {};
           const currentLanguage = config.get('language') || 'zh-CN';
 
           setTimeout(() => {
+            generalForm.setFieldsValue({
+              language: currentLanguage
+            });
+
             nodeForm.setFieldsValue({
               delay: nodeConfig.delay || 0,
               timeout: nodeConfig.timeout || 0,
@@ -106,11 +109,6 @@ const SettingsModal = ({ visible, onClose }) => {
             });
 
             setFrameworkPath(frameworkConfig.path || '');
-
-            environmentForm.setFieldsValue({
-              listUrl: environmentConfig.listUrl || 'https://future.api.automoves.cn/api/environments/list',
-              language: currentLanguage
-            });
           }, 0);
         } catch (error) {
           console.error('加载配置失败:', error);
@@ -167,7 +165,7 @@ const SettingsModal = ({ visible, onClose }) => {
       const startupValues = startupForm.getFieldsValue();
       const otherValues = otherForm.getFieldsValue();
       const frameworkValues = frameworkForm.getFieldsValue();
-      const environmentValues = environmentForm.getFieldsValue();
+      const generalValues = generalForm.getFieldsValue();
       
       await config.set('node', {
         ...nodeValues,
@@ -206,11 +204,17 @@ const SettingsModal = ({ visible, onClose }) => {
         }
       });
 
-      const autostartResult = await GLOBALS.syncUbuntuAutostart(Boolean(startupValues.autoLaunchFutureDrive));
-      if (autostartResult?.success === false && !autostartResult?.skipped) {
-        message.warning(`${t('settings.startup.autostartSyncFailed')}: ${autostartResult.error || 'unknown error'}`);
-      } else if (autostartResult?.verified === false) {
-        message.warning(t('settings.startup.autostartVerifyFailed'));
+      if (process.platform === 'linux') {
+        const autostartResult = await ipcRenderer.invoke(
+          'sync-ubuntu-autostart',
+          Boolean(startupValues.autoLaunchFutureDrive),
+          startupValues.uiExecutablePath || ''
+        );
+        if (autostartResult?.success === false && !autostartResult?.skipped) {
+          message.warning(`${t('settings.startup.autostartSyncFailed')}: ${autostartResult.error || 'unknown error'}`);
+        } else if (autostartResult?.verified === false) {
+          message.warning(t('settings.startup.autostartVerifyFailed'));
+        }
       }
 
       await config.set('other', {
@@ -223,13 +227,8 @@ const SettingsModal = ({ visible, onClose }) => {
         path: frameworkValues.path || ''
       });
 
-      await config.set('environment', {
-        ...environmentValues,
-        listUrl: environmentValues.listUrl || 'https://future.api.automoves.cn/api/environments/list'
-      });
-
-      await config.set('language', environmentValues.language || 'zh-CN');
-      setLanguage(environmentValues.language || 'zh-CN');
+      await config.set('language', generalValues.language || 'zh-CN');
+      setLanguage(generalValues.language || 'zh-CN');
       
       await new Promise(resolve => setTimeout(resolve, 500));
       onClose();
@@ -270,7 +269,7 @@ const SettingsModal = ({ visible, onClose }) => {
     switch (selectedKey) {
       case 'general':
         return (
-          <Form layout="vertical" className="settings-form" form={environmentForm}>
+          <Form layout="vertical" className="settings-form" form={generalForm}>
             <Form.Item name="language" label={t('settings.general.language')}>
               <Select
                 style={{ width: 200 }}
@@ -279,9 +278,6 @@ const SettingsModal = ({ visible, onClose }) => {
                   { value: 'en-US', label: 'English' }
                 ]}
               />
-            </Form.Item>
-            <Form.Item name="listUrl" label={t('settings.general.environmentListUrl')}>
-              <Input placeholder="https://future.api.automoves.cn/api/environments/list" style={{ width: 400 }} />
             </Form.Item>
           </Form>
         );

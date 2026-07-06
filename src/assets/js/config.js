@@ -50,9 +50,6 @@ class Config {
                 "description": "workflow description",
                 "nodes": []
             },
-            "environment": {
-                "listUrl": "https://future.api.automoves.cn/api/environments/list"
-            },
             "debug": false,
             "systemInfo": null,
             "redis": {
@@ -194,13 +191,14 @@ class Config {
 
     normalizeConfig(rawConfig = {}) {
         const defaultConfig = this.getDefaultConfig();
-        const startupConfig = rawConfig.startup || {};
+        const { environment, startup: rawStartup = {}, other: rawOther = {}, ...restConfig } = rawConfig;
+        const startupConfig = rawStartup || {};
         const legacyCarUi = startupConfig.carUi || {};
         const uiConfig = startupConfig.ui || {};
 
         return {
             ...defaultConfig,
-            ...rawConfig,
+            ...restConfig,
             startup: {
                 ...defaultConfig.startup,
                 ...startupConfig,
@@ -215,7 +213,7 @@ class Config {
             },
             other: {
                 ...defaultConfig.other,
-                ...(rawConfig.other || {})
+                ...rawOther
             }
         };
     }
