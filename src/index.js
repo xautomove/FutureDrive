@@ -7,7 +7,12 @@ import './styles/index.css';
 import config from './assets/js/config';
 import { I18nProvider } from './context/I18nContext';
 
-await config.init();
+try {
+  await config.init();
+} catch (error) {
+  console.error('[RendererBootstrap] 配置初始化失败:', error);
+  throw error;
+}
 
 try {
   const currentLang = config.get('language');
@@ -23,11 +28,23 @@ try {
     const autoLang = localeLower.startsWith('en') ? 'en-US' : 'zh-CN';
     await config.set('language', autoLang);
   }
-} catch (_) {}
+} catch (error) {
+  console.error('[RendererBootstrap] 语言初始化失败:', error);
+}
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <I18nProvider>
-    <App />
-  </I18nProvider>
-);
+try {
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    throw new Error('未找到根节点 #root');
+  }
+
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <I18nProvider>
+      <App />
+    </I18nProvider>
+  );
+} catch (error) {
+  console.error('[RendererBootstrap] React 挂载失败:', error);
+  throw error;
+}

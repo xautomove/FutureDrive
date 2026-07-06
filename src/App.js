@@ -67,7 +67,7 @@ function App() {
         try {
           await config.checkVersion();
         } catch (error) {
-          console.error('版本检查失败:', error);
+          console.error('[AppInit] 版本检查失败:', error);
         }
       };
       
@@ -76,11 +76,15 @@ function App() {
         const today = new Date();
         const todayStr = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
         if (!lastSysInfoDate || lastSysInfoDate !== todayStr) {
-          ipcRenderer.invoke('get-sys-info').then(info => {
-            puts('1', '启动程序', JSON.stringify(info));
-            config.set('lastSysInfoDate', todayStr);
-            config.set('systemInfo', info.os.release);
-          });
+          ipcRenderer.invoke('get-sys-info')
+            .then(info => {
+              puts('1', '启动程序', JSON.stringify(info));
+              config.set('lastSysInfoDate', todayStr);
+              config.set('systemInfo', info.os.release);
+            })
+            .catch(error => {
+              console.error('[AppInit] 获取系统信息失败:', error);
+            });
         }
       })();
     }
@@ -171,7 +175,12 @@ function App() {
           await GLOBALS.redisController.set('future_config', mergedFutureConfig);
         };
 
-        const { page, params } = await ipcRenderer.invoke('get-window-params');
+        const { page, params, launchContext } = await ipcRenderer.invoke('get-window-params');
+
+        window.launchContext = {
+          isAutostartLaunch: Boolean(launchContext?.isAutostartLaunch),
+          shouldStartHidden: Boolean(launchContext?.shouldStartHidden)
+        };
 
         window.isMainWindow = page == "" ? 1 : 0;
 
@@ -359,7 +368,7 @@ function App() {
               await syncFutureConfigRuntime(partialState);
               return result;
             } catch (error) {
-              console.error('更新运行状态失败:', error);
+              console.error('[AppInit] 更新运行状态失败:', error, partialState);
               return { success: false, error: error.message };
             }
           };
@@ -390,7 +399,7 @@ function App() {
             });
             console.log('服务器启动成功');
           } catch (error) {
-            console.error('启动服务器失败:', error);
+            console.error('[AppInit] 启动服务器失败:', error);
             message.error('启动服务器失败');
           }
 
@@ -427,19 +436,23 @@ function App() {
                 console.log('Redis 连接成功');
                 message.success('Redis 连接成功');
               } else {
-                console.error('Redis 连接失败');
+                console.error('[AppInit] Redis 连接失败:', {
+                  host: redisConfig.host,
+                  port: redisConfig.port,
+                  db: redisConfig.db
+                });
                 message.warning('Redis 连接失败，将使用默认缓存');
               }
             } else {
               console.log('Redis 未启用，跳过连接');
             }
           } catch (error) {
-            console.error('Redis 初始化失败:', error);
+            console.error('[AppInit] Redis 初始化失败:', error);
             message.warning('Redis 初始化失败，将使用默认缓存');
           }
         }
       } catch (error) {
-        console.error("获取窗口参数失败:", error);
+        console.error('[AppInit] 获取窗口参数失败:', error);
         setComponent(<Layout />);
       }
     };
@@ -449,7 +462,7 @@ function App() {
     return () => {
       if (window.isMainWindow) {
         ipcRenderer.invoke('stop-server').catch(error => {
-          console.error('停止服务器失败:', error);
+          console.error('[AppInit] 停止服务器失败:', error);
         });
       }
     };

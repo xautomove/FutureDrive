@@ -37,6 +37,10 @@ const Layout = () => {
   const [projectConfig, setProjectConfig] = useState(null);
   const [projectModalVisible, setProjectModalVisible] = useState(false);
   const [recentProjects, setRecentProjects] = useState([]);
+  const [launchContext, setLaunchContext] = useState({
+    isAutostartLaunch: Boolean(window.launchContext?.isAutostartLaunch),
+    shouldStartHidden: Boolean(window.launchContext?.shouldStartHidden)
+  });
   const startupAppliedRef = useRef(false);
   const startupLaunchHandledRef = useRef(false);
   
@@ -173,13 +177,13 @@ const Layout = () => {
   const applyStartupSequence = useCallback(async (projectPath) => {
     const startupConfig = config.get('startup') || {};
 
-    if (!projectPath || startupAppliedRef.current) {
+    if (!launchContext.isAutostartLaunch || !projectPath || startupAppliedRef.current) {
       return;
     }
 
     startupAppliedRef.current = true;
     try {
-      if (!GLOBALS.currentTaskContext) {
+      if (startupConfig.autoRunWorkflow && !GLOBALS.currentTaskContext) {
         GLOBALS.currentTaskContext = {
           mode: 'auto_start',
           modeLabel: '开机自启任务',
@@ -195,13 +199,17 @@ const Layout = () => {
         log(`自动运行工作流失败: ${error.message}`, LOG_TYPES.ERROR);
       }
     }
-  }, [applyStartupTemplateIfNeeded]);
+  }, [applyStartupTemplateIfNeeded, launchContext.isAutostartLaunch]);
 
   useEffect(() => {
     if (startupLaunchHandledRef.current) {
       return;
     }
     startupLaunchHandledRef.current = true;
+
+    if (!launchContext.isAutostartLaunch) {
+      return;
+    }
 
     const startupConfig = config.get('startup') || {};
     const startupProjectFile = startupConfig.projectFile || '';
@@ -218,13 +226,21 @@ const Layout = () => {
       }
     }
 
-    if (!startupProjectPath) {
-      const recents = JSON.parse(localStorage.getItem('recentProjects') || '[]');
-      startupProjectPath = recents[0]?.path || '';
-    }
-
     if (startupProjectPath) {
       openProjectByPath(startupProjectPath, null, { runStartupSequence: true });
+      return;
+    }
+
+    log('系统自启动未配置 startup 项目，保持空界面待命', LOG_TYPES.WARNING);
+  }, [launchContext.isAutostartLaunch]);
+
+  useEffect(() => {
+    const nextLaunchContext = window.launchContext;
+    if (nextLaunchContext && typeof nextLaunchContext === 'object') {
+      setLaunchContext({
+        isAutostartLaunch: Boolean(nextLaunchContext.isAutostartLaunch),
+        shouldStartHidden: Boolean(nextLaunchContext.shouldStartHidden)
+      });
     }
   }, []);
 

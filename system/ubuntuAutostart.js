@@ -7,6 +7,7 @@ const SERVICE_NAME = 'futuredrive.service';
 const SERVICE_DIR = path.join(os.homedir(), '.config', 'systemd', 'user');
 const SERVICE_PATH = path.join(SERVICE_DIR, SERVICE_NAME);
 const DEFAULT_APPIMAGE_NAME = 'FutureDrive-1.2.2.AppImage';
+const AUTOSTART_LAUNCH_ARG = '--autostart-launch';
 
 function resolveAppImagePath(execPath = '') {
   if (execPath && fs.existsSync(execPath)) {
@@ -32,7 +33,7 @@ function buildServiceContent(execPath) {
     '',
     '[Service]',
     'Type=simple',
-    `ExecStart="${escapedExec}"`,
+    `ExecStart="${escapedExec}" ${AUTOSTART_LAUNCH_ARG}`,
     'Restart=on-failure',
     'RestartSec=3',
     '',
@@ -91,6 +92,7 @@ async function syncUbuntuAutostart(enabled, execPath) {
 }
 
 module.exports = {
+  AUTOSTART_LAUNCH_ARG,
   SERVICE_NAME,
   SERVICE_PATH,
   resolveAppImagePath,

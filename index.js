@@ -11,6 +11,27 @@ let startHidden = false;
 let postWindowInitStarted = false;
 const TOGGLE_WINDOW_SHORTCUT = 'CommandOrControl+Shift+F11';
 let shutdownCleanupStarted = false;
+const AUTOSTART_LAUNCH_ARG = '--autostart-launch';
+const launchContext = {
+  isAutostartLaunch: process.argv.includes(AUTOSTART_LAUNCH_ARG),
+  shouldStartHidden: false
+};
+
+function logMainProcessError(context, error, extra = {}) {
+  if (error instanceof Error) {
+    console.error(`[MainProcess] ${context}:`, {
+      message: error.message,
+      stack: error.stack,
+      ...extra
+    });
+    return;
+  }
+
+  console.error(`[MainProcess] ${context}:`, {
+    error,
+    ...extra
+  });
+}
 
 function getAutostartHelper() {
   return require('./system/ubuntuAutostart.js');
@@ -32,6 +53,17 @@ function readMainProcessConfig() {
     console.warn('读取主进程配置失败:', error.message);
     return {};
   }
+}
+
+function resolveWindowLaunchContext() {
+  const mainConfig = readMainProcessConfig();
+  const otherConfig = mainConfig.other || {};
+
+  launchContext.shouldStartHidden = launchContext.isAutostartLaunch && Boolean(otherConfig?.noUi);
+
+  return {
+    ...launchContext
+  };
 }
 
 const createWindow = (width, height, page = '', params = []) => {
@@ -61,11 +93,53 @@ const createWindow = (width, height, page = '', params = []) => {
   }
 
   const winid = win.id;
-  setWindowParams(winid, { page, params });
+  setWindowParams(winid, {
+    page,
+    params,
+    launchContext: isMainWindow ? resolveWindowLaunchContext() : undefined
+  });
+
+  const windowTag = page || 'main';
   
   win.webContents.executeJavaScript(`
     localStorage.setItem('windowId', '${winid}');
   `);
+
+  win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    console.error('[WindowLoad] 页面加载失败:', {
+      windowId: winid,
+      page: windowTag,
+      errorCode,
+      errorDescription,
+      validatedURL,
+      isMainFrame
+    });
+  });
+
+  win.webContents.on('render-process-gone', (event, details) => {
+    console.error('[WindowRender] 渲染进程退出:', {
+      windowId: winid,
+      page: windowTag,
+      reason: details?.reason,
+      exitCode: details?.exitCode
+    });
+  });
+
+  win.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    if (level < 2) {
+      return;
+    }
+
+    const levelLabel = level >= 3 ? 'error' : 'warn';
+    console[levelLabel]('[RendererConsole] 渲染进程日志:', {
+      windowId: winid,
+      page: windowTag,
+      level: levelLabel,
+      message,
+      line,
+      sourceId
+    });
+  });
   
   win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -106,12 +180,27 @@ const createWindow = (width, height, page = '', params = []) => {
     }
   });
 
-  // win.webContents.on('before-input-event', (event, input) => {
-  //   if (input.key === 'F12') {
-  //     win.webContents.toggleDevTools();
-  //     event.preventDefault();
-  //   }
-  // });
+  win.on('unresponsive', () => {
+    console.warn('[WindowState] 窗口无响应:', {
+      windowId: winid,
+      page: windowTag
+    });
+  });
+
+  win.on('responsive', () => {
+    console.log('[WindowState] 窗口已恢复响应:', {
+      windowId: winid,
+      page: windowTag
+    });
+  });
+
+  // 保留手动调试入口，白屏排查时可以直接按 F12 打开开发者工具。
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' && input.type === 'keyDown') {
+      win.webContents.toggleDevTools();
+      event.preventDefault();
+    }
+  });
 
   Menu.setApplicationMenu(null);
   return win;
@@ -156,11 +245,10 @@ function registerGlobalShortcuts() {
 async function resolveStartupState() {
   const mainConfig = readMainProcessConfig();
   const startupConfig = mainConfig.startup || {};
-  const otherConfig = mainConfig.other || {};
+  const currentLaunchContext = resolveWindowLaunchContext();
   return {
     startupConfig,
-    otherConfig,
-    shouldStartHidden: Boolean(otherConfig?.noUi)
+    shouldStartHidden: currentLaunchContext.shouldStartHidden
   };
 }
 
@@ -248,6 +336,14 @@ app.on('before-quit', async (event) => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+});
+
+process.on('uncaughtException', (error) => {
+  logMainProcessError('未捕获异常', error);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logMainProcessError('未处理 Promise 拒绝', reason);
 });
 
 function requestConfigFromRenderer(key) {
