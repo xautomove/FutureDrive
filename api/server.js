@@ -60,12 +60,12 @@ function createDefaultRuntimeState() {
     },
     workflow: {
       status: 'idle',
-      message: '工作流待启动',
+      message: '等待任务中',
       updatedAt: new Date().toISOString()
     },
     vehicle: {
       status: 'service_connected',
-      message: '通讯已连接，等待工作流启动',
+      message: '通讯已连接，等待任务中',
       updatedAt: new Date().toISOString(),
       actuators: {
         ...DEFAULT_ACTUATOR_STATE
@@ -90,7 +90,7 @@ function createDefaultRuntimeState() {
       startedAt: '',
       resetToken: '',
       status: 'idle',
-      message: '等待任务选择',
+      message: '等待任务中',
       updatedAt: new Date().toISOString()
     }
   };
@@ -215,12 +215,12 @@ apiApp.post('/api/tasks/start', async (req, res) => {
   mergeRuntimeState({
     workflow: {
       status: 'completed',
-      message: `已切换到${modeLabel}，等待常驻节点响应`,
+      message: '任务执行中',
       updatedAt
     },
     vehicle: {
       status: 'vehicle_ready',
-      message: `任务模式已切换为${modeLabel}，常驻节点执行中`,
+      message: `${modeLabel}任务执行中`,
       updatedAt,
       telemetry: {
         travelDistanceM: 0,
@@ -236,7 +236,7 @@ apiApp.post('/api/tasks/start', async (req, res) => {
       startedAt: updatedAt,
       resetToken,
       status: 'pending',
-      message: `已确认开始${modeLabel}`,
+      message: '任务执行中',
       updatedAt
     }
   });
@@ -292,12 +292,10 @@ apiApp.post('/api/tasks/start', async (req, res) => {
 
 apiApp.post('/api/tasks/stop', async (req, res) => {
   const currentTask = runtimeState.task || {};
-  const mode = String(req.body?.mode ?? currentTask.mode ?? '').trim();
-  const modeLabel = String(req.body?.modeLabel ?? currentTask.modeLabel ?? '').trim() || '未选择任务';
-  const params = req.body?.params && typeof req.body.params === 'object'
-    ? req.body.params
-    : (currentTask.params && typeof currentTask.params === 'object' ? currentTask.params : {});
-  const taskType = String(req.body?.taskType || currentTask.type || resolveTaskType(mode)).trim();
+  const mode = '';
+  const modeLabel = '未选择任务';
+  const params = {};
+  const taskType = '';
   const updatedAt = new Date().toISOString();
 
   if (typeof triggerTaskStopCallback === 'function') {
@@ -345,12 +343,12 @@ apiApp.post('/api/tasks/stop', async (req, res) => {
   mergeRuntimeState({
     workflow: {
       status: 'stopped',
-      message: mode ? `${modeLabel}已停止` : '任务已停止',
+      message: '任务已停止',
       updatedAt
     },
     vehicle: {
       status: 'service_connected',
-      message: '任务已停止，常驻节点待命中',
+      message: '通讯已连接，等待任务中',
       updatedAt
     },
     task: {
@@ -360,7 +358,7 @@ apiApp.post('/api/tasks/stop', async (req, res) => {
       modeLabel,
       params,
       status: 'stopped',
-      message: mode ? `${modeLabel}已停止` : '任务已停止',
+      message: '任务已停止',
       updatedAt
     }
   });

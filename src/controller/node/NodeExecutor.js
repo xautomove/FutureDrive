@@ -393,7 +393,7 @@ class NodeExecutor {
                 await GLOBALS.updateRuntimeState({
                     workflow: {
                         status: 'idle',
-                        message: '没有可执行节点',
+                        message: '等待任务中',
                         updatedAt: new Date().toISOString()
                     }
                 });
@@ -631,17 +631,17 @@ class NodeExecutor {
                 await GLOBALS.updateRuntimeState({
                     workflow: {
                         status: 'completed',
-                        message: '工作流执行完成',
+                        message: '等待任务中',
                         updatedAt: new Date().toISOString()
                     },
                     vehicle: {
                         status: 'vehicle_ready',
-                        message: '车辆准备就绪',
+                        message: '通讯已连接，等待任务中',
                         updatedAt: new Date().toISOString()
                     },
                     task: {
-                        status: 'running',
-                        message: '任务链路已启动，车辆准备就绪',
+                        status: 'idle',
+                        message: '等待任务中',
                         updatedAt: new Date().toISOString()
                     }
                 });
@@ -754,17 +754,17 @@ class NodeExecutor {
         await GLOBALS.updateRuntimeState({
             workflow: {
                 status: 'stopped',
-                message: '工作流已停止',
+                message: '任务已停止',
                 updatedAt: new Date().toISOString()
             },
             vehicle: {
                 status: 'service_connected',
-                message: '通讯已连接，等待重新启动工作流',
+                message: '通讯已连接，等待任务中',
                 updatedAt: new Date().toISOString()
             },
             task: {
-                status: 'idle',
-                message: '任务已停止，等待重新下发',
+                status: 'stopped',
+                message: '任务已停止',
                 updatedAt: new Date().toISOString()
             }
         });

@@ -212,7 +212,7 @@ function App() {
               await GLOBALS.updateRuntimeState({
                 workflow: {
                   status: 'completed',
-                  message: `已切换到${payload?.modeLabel || '任务'}，等待常驻节点响应`,
+                  message: '任务执行中',
                   updatedAt
                 },
                 task: {
@@ -224,12 +224,12 @@ function App() {
                   startedAt: updatedAt,
                   resetToken,
                   status: 'pending',
-                  message: `FutureDrive 已下发${payload?.modeLabel || '任务'}控制信号`,
+                  message: '任务执行中',
                   updatedAt
                 },
                 vehicle: {
                   status: 'vehicle_ready',
-                  message: `任务模式已切换为${payload?.modeLabel || '任务'}，常驻节点执行中`,
+                  message: `${payload?.modeLabel || '任务'}任务执行中`,
                   updatedAt,
                   telemetry: {
                     travelDistanceM: 0,
@@ -264,28 +264,17 @@ function App() {
           ipcRenderer.on('stop-task', async (event, payload) => {
             try {
               const updatedAt = new Date().toISOString();
-              const activeContext = GLOBALS.currentTaskContext || {};
-              const mode = payload?.mode || activeContext.mode || '';
-              const modeLabel = payload?.modeLabel || activeContext.modeLabel || '未选择任务';
-              const params = payload?.params && typeof payload.params === 'object'
-                ? payload.params
-                : (activeContext.params && typeof activeContext.params === 'object' ? activeContext.params : {});
-              const taskType = payload?.taskType || activeContext.type || resolveTaskType(mode);
+              const mode = '';
+              const modeLabel = '未选择任务';
+              const params = {};
+              const taskType = '';
 
-              GLOBALS.currentTaskContext = {
-                ...activeContext,
-                mode,
-                type: taskType,
-                state: 'stop',
-                modeLabel,
-                params,
-                stoppedAt: updatedAt
-              };
+              GLOBALS.currentTaskContext = null;
 
               await GLOBALS.updateRuntimeState({
                 workflow: {
                   status: 'stopped',
-                  message: mode ? `${modeLabel}已停止` : '任务已停止',
+                  message: '任务已停止',
                   updatedAt
                 },
                 task: {
@@ -295,12 +284,12 @@ function App() {
                   modeLabel,
                   params,
                   status: 'stopped',
-                  message: mode ? `${modeLabel}已停止` : '任务已停止',
+                  message: '任务已停止',
                   updatedAt
                 },
                 vehicle: {
                   status: 'service_connected',
-                  message: '任务已停止，常驻节点待命中',
+                  message: '通讯已连接，等待任务中',
                   updatedAt
                 }
               });
@@ -390,12 +379,12 @@ function App() {
               },
               workflow: {
                 status: 'idle',
-                message: '工作流待启动',
+                message: '等待任务中',
                 updatedAt: new Date().toISOString()
               },
               vehicle: {
                 status: 'service_connected',
-                message: '通讯已连接，等待工作流启动',
+                message: '通讯已连接，等待任务中',
                 updatedAt: new Date().toISOString()
               }
             });
