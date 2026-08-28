@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { log, LOG_TYPES } from './utils';
 import path from 'path';
 import fs from 'fs';
@@ -178,7 +178,8 @@ class CommandExecutor {
         for (const { nodeId, process } of GLOBALS.activeProcesses) {
             try {
                 if (process && typeof process.kill === 'function') {
-                    process.kill('SIGKILL');
+                    // 按进程树终止（Linux 杀进程组 / Windows taskkill /T），确保 python 子进程一并结束
+                    this.killProcessTree(process.pid);
                 }
             } catch (e) {
                 log(`强制终止节点 ${nodeId} 的进程失败: ${e.message}`, LOG_TYPES.ERROR);
@@ -186,6 +187,64 @@ class CommandExecutor {
         }
         GLOBALS.clearProcesses();
         log('已强制终止所有进程', LOG_TYPES.WARNING);
+    }
+
+    /**
+     * 终止指定 pid 的整棵进程树，避免只杀掉 bash 包装进程而残留 python 子进程
+     * @param {number|string} pid - 进程 ID
+     * @returns {boolean} 是否执行了终止动作
+     */
+    killProcessTree(pid) {
+        const numericPid = Number(pid);
+        if (!Number.isInteger(numericPid) || numericPid <= 0) {
+            return false;
+        }
+        if (process.platform === 'win32') {
+            try {
+                const result = spawnSync('taskkill', ['/pid', String(numericPid), '/T', '/F'], { windowsHide: true });
+                return result.status === 0;
+            } catch (e) {
+                return false;
+            }
+        }
+        try {
+            process.kill(-numericPid, 'SIGKILL');
+            return true;
+        } catch (groupKillError) {
+            try {
+                process.kill(numericPid, 'SIGKILL');
+                return true;
+            } catch (pidKillError) {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * 探测指定 pid 的进程是否仍存活
+     * @param {number|string} pid - 进程 ID
+     * @returns {boolean} 进程是否存活
+     */
+    isProcessAlive(pid) {
+        const numericPid = Number(pid);
+        if (!Number.isInteger(numericPid) || numericPid <= 0) {
+            return false;
+        }
+        if (process.platform === 'win32') {
+            try {
+                const result = spawnSync('tasklist', ['/FI', `PID eq ${numericPid}`], { windowsHide: true, encoding: 'utf8' });
+                return result.status === 0 && result.stdout.includes(String(numericPid));
+            } catch (e) {
+                return false;
+            }
+        }
+        try {
+            process.kill(numericPid, 0);
+            return true;
+        } catch (e) {
+            // EPERM 表示进程存在但无信号权限
+            return e && e.code === 'EPERM';
+        }
     }
 
     /**

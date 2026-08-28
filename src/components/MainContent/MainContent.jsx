@@ -22,6 +22,7 @@ import TemplateManager from '../TemplateManager/TemplateManager';
 import templateManager from '../../controller/gui/TemplateManager';
 import FileController from '../../controller/gui/FileController';
 import config from '../../assets/js/config';
+import CommandExecutor from '../../assets/js/commandExecutor';
 import path from 'path';
 import { ChromePicker } from 'react-color';
 import ReactDOM from 'react-dom';
@@ -67,38 +68,23 @@ const CustomNode = ({ data, selected, id, uuid, onDelete, onOpenConfig, onColorC
         try {
           const pid = await GLOBALS.redisController.get(`task_pid:${uuid}`);
           if (pid) {
-            await GLOBALS.redisController.del(`task_pid:${uuid}`);
-            let pidList = [];
+            const pidList = String(pid).split(',').map(p => p.trim()).filter(p => p);
             
-            const pidStr = String(pid);
-            if (pidStr.includes(',')) {
-              pidList = pidStr.split(',').map(p => p.trim()).filter(p => p);
-            } else {
-              pidList = [pidStr];
-            }
-            
-            let killedCount = 0;
+            let killedAny = false;
             for (const singlePid of pidList) {
-              let isRunning = false;
-              try {
-                process.kill(Number(singlePid), 0); 
-                isRunning = true;
-              } catch (e) {
-                isRunning = false;
-              }
-              if (isRunning) {
-                try {
-                  process.kill(-Number(singlePid), 'SIGKILL');
-                  log(t('main.logs.killedPg', { pgid: singlePid }), LOG_TYPES.SUCCESS);
-                } catch (e) {
-                  process.kill(Number(singlePid), 'SIGKILL');
-                  log(t('main.logs.killedPid', { pid: singlePid }), LOG_TYPES.SUCCESS);
-                }
-                killedCount++;
+              if (CommandExecutor.isProcessAlive(singlePid)) {
+                killedAny = true;
+                CommandExecutor.killProcessTree(singlePid);
               }
             }
-            if (killedCount === 0) {
+            if (killedAny) {
+              log(t('main.logs.killedPid', { pid: pidList.join(',') }), LOG_TYPES.SUCCESS);
+            } else {
               log(t('main.logs.notFoundRunningPgids'), LOG_TYPES.INFO);
+            }
+            // 全部进程确认结束后才清理 pid 记录，仍有存活则保留供下次启动检测
+            if (!pidList.some(singlePid => CommandExecutor.isProcessAlive(singlePid))) {
+              await GLOBALS.redisController.del(`task_pid:${uuid}`);
             }
           } else {
             log(t('main.logs.notFoundPid'), LOG_TYPES.INFO);
@@ -449,27 +435,7 @@ const MainContent = ({ onTreeDataChange }) => {
             updatedAt: new Date().toISOString()
           }
         });
-        const keys = await GLOBALS.redisController.keys('task_pid*');
-        for (const key of keys) {
-          try {
-            const pid = await GLOBALS.redisController.get(key);
-            if (pid) {
-              try {
-                process.kill(Number(pid), 'SIGKILL');
-              } catch (killError) {
-              }
-            }
-          } catch (keyError) {
-          }
-        }
-
-        for (const key of keys) {
-          try {
-            await GLOBALS.redisController.del(key);
-          } catch (delError) {
-          }
-        }
-
+        // 统一由 forceStop 处理：进程树终止、task_pid 清理与 BG 状态复位，避免重复 kill 逻辑导致残留
         if (typeof GLOBALS.nodeController.forceStop === 'function') {
           await GLOBALS.nodeController.forceStop();
         } else {

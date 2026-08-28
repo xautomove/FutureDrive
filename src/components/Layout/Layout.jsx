@@ -24,6 +24,28 @@ import { runWorkflowFromAutoStart } from '../../assets/js/workflowRunner';
 import templateManager from '../../controller/gui/TemplateManager';
 
 const { ipcRenderer } = window.require('electron');
+const fs = window.require('fs');
+const path = window.require('path');
+
+const updateStartupFailureState = async (message) => {
+  await GLOBALS.updateRuntimeState({
+    workflow: {
+      status: 'error',
+      message,
+      updatedAt: new Date().toISOString()
+    },
+    vehicle: {
+      status: 'error',
+      message,
+      updatedAt: new Date().toISOString()
+    },
+    task: {
+      status: 'error',
+      message,
+      updatedAt: new Date().toISOString()
+    }
+  });
+};
 
 const Layout = () => {
   const { t } = useI18n();
@@ -170,6 +192,11 @@ const Layout = () => {
       return;
     }
 
+    const templatePath = path.join(projectPath, 'templates', startupConfig.templateFile);
+    if (!fs.existsSync(templatePath)) {
+      throw new Error(`自动启动模板不存在: ${startupConfig.templateFile}`);
+    }
+
     const templateData = await templateManager.loadTemplate(startupConfig.templateFile, projectPath);
     GLOBALS.applyStartupTemplate(templateData);
   }, []);
@@ -183,6 +210,10 @@ const Layout = () => {
 
     startupAppliedRef.current = true;
     try {
+      if (!fs.existsSync(projectPath)) {
+        throw new Error(`自动启动项目路径不存在: ${projectPath}`);
+      }
+
       if (startupConfig.autoRunWorkflow && !GLOBALS.currentTaskContext) {
         GLOBALS.currentTaskContext = {
           mode: 'auto_start',
@@ -195,6 +226,8 @@ const Layout = () => {
         await runWorkflowFromAutoStart();
       }
     } catch (error) {
+      await updateStartupFailureState(error.message || '自动运行工作流失败');
+      log(`自动启动失败: ${error.message}`, LOG_TYPES.ERROR);
       if (!['redis_disabled', 'redis_not_connected', 'no_nodes', 'no_autostart_node', 'multiple_autostart_nodes'].includes(error.message)) {
         log(`自动运行工作流失败: ${error.message}`, LOG_TYPES.ERROR);
       }
@@ -217,12 +250,12 @@ const Layout = () => {
 
     if (!startupProjectPath && startupProjectFile) {
       try {
-        const fs = window.require('fs');
         const projectContent = fs.readFileSync(startupProjectFile, 'utf8');
         const projectConfig = JSON.parse(projectContent);
         startupProjectPath = projectConfig.path || '';
       } catch (error) {
         log(`读取启动项目文件失败: ${error.message}`, LOG_TYPES.ERROR);
+        updateStartupFailureState(`读取启动项目文件失败: ${error.message}`);
       }
     }
 
@@ -232,6 +265,7 @@ const Layout = () => {
     }
 
     log('系统自启动未配置 startup 项目，保持空界面待命', LOG_TYPES.WARNING);
+    updateStartupFailureState('系统自启动未配置启动项目，无法自动运行工作流');
   }, [launchContext.isAutostartLaunch]);
 
   useEffect(() => {

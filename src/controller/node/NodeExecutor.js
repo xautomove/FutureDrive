@@ -1,6 +1,7 @@
 import PythonNodeExecutor from './PythonNodeExecutor';
 import { log, LOG_TYPES } from '../../assets/js/utils';
 import GLOBALS from '../../assets/js/globals';
+import commandExecutor from '../../assets/js/commandExecutor';
 
 function startDebugWatcher(uuid, node) {
     if (GLOBALS.debugWatchers.some(w => w.uuid === uuid)) return;
@@ -98,6 +99,15 @@ class NodeExecutor {
         }
 
         const node = this.nodes.find((item) => item.path === 'line_painter');
+        return node?.data?.uuid || null;
+    }
+
+    getLineTrackingNodeUuid() {
+        if (!this.nodes || !Array.isArray(this.nodes)) {
+            return null;
+        }
+
+        const node = this.nodes.find((item) => item.path === 'line_tracking');
         return node?.data?.uuid || null;
     }
 
@@ -235,6 +245,11 @@ class NodeExecutor {
             return;
         }
 
+        // 视觉循迹任务的距离由 line_tracking 提供，跳过 line_painter 避免其 0 值覆盖
+        if (GLOBALS.currentTaskContext?.type === 'see') {
+            return;
+        }
+
         try {
             const linePainterNodeUuid = this.getLinePainterNodeUuid();
             if (!linePainterNodeUuid) {
@@ -259,6 +274,48 @@ class NodeExecutor {
         }
     }
 
+    isLineTrackingPayload(payload) {
+        return Boolean(
+            payload &&
+            typeof payload === 'object' &&
+            Object.prototype.hasOwnProperty.call(payload, 'paint_distance_m')
+        );
+    }
+
+    async syncLineTrackingTelemetry() {
+        if (!GLOBALS.redisController || !GLOBALS.redisController.isConnected()) {
+            return;
+        }
+
+        // 仅视觉循迹任务读取 line_tracking 的绘线距离，与 line_painter 按任务类型互斥
+        if (GLOBALS.currentTaskContext?.type !== 'see') {
+            return;
+        }
+
+        try {
+            const lineTrackingNodeUuid = this.getLineTrackingNodeUuid();
+            if (!lineTrackingNodeUuid) {
+                return;
+            }
+
+            const lineTrackingPayload = await GLOBALS.redisController.get(`task_result:${lineTrackingNodeUuid}`);
+            if (!this.isLineTrackingPayload(lineTrackingPayload)) {
+                return;
+            }
+
+            await GLOBALS.updateRuntimeState({
+                vehicle: {
+                    telemetry: {
+                        travelDistanceM: Number(lineTrackingPayload.paint_distance_m || 0)
+                    },
+                    updatedAt: new Date().toISOString()
+                }
+            });
+        } catch (error) {
+            log(`sync line tracking telemetry failed: ${error.message}`, LOG_TYPES.ERROR);
+        }
+    }
+
     startTelemetryBridge() {
         if (this.telemetryInterval) {
             return;
@@ -269,6 +326,7 @@ class NodeExecutor {
             await this.syncObstacleStatus();
             await this.syncInfraredTemperature();
             await this.syncLinePainterTelemetry();
+            await this.syncLineTrackingTelemetry();
         }, 500);
     }
 
@@ -730,15 +788,16 @@ class NodeExecutor {
                             .split(',')
                             .map(item => item.trim())
                             .filter(Boolean);
+                        let anyAlive = false;
                         for (const singlePid of pidList) {
-                            try {
-                                process.kill(-Number(singlePid), 'SIGKILL');
-                            } catch (groupKillError) {
-                                try {
-                                    process.kill(Number(singlePid), 'SIGKILL');
-                                } catch (pidKillError) {
-                                }
+                            commandExecutor.killProcessTree(singlePid);
+                            if (commandExecutor.isProcessAlive(singlePid)) {
+                                anyAlive = true;
                             }
+                        }
+                        // 全部进程确认结束后才清理 pid 记录；仍有存活则保留 key，供下次启动前残留检测
+                        if (!anyAlive) {
+                            await GLOBALS.redisController.del(key);
                         }
                     } catch (pidKeyError) {
                     }
@@ -750,6 +809,10 @@ class NodeExecutor {
         this.pythonExecutor.killActiveProcess();
         GLOBALS.clearProcesses();
         GLOBALS.stopAllDebugWatchers();
+        // 同步清空节点日志中的后台进程标记，避免节点卡片 BG 残留
+        GLOBALS.nodeLogs.forEach(logEntry => {
+            logEntry.hasBackgroundProcess = false;
+        });
         GLOBALS.currentTaskContext = null;
         await GLOBALS.updateRuntimeState({
             workflow: {

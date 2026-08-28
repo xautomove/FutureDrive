@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, screen, globalShortcut } = require('electron/main')
 const path = require('path')
 const fs = require('fs')
+const { spawn } = require('child_process');
 const { startServer, setConfigCallback, setTaskStartCallback, setTaskStopCallback, setActuatorStateCallback, mergeRuntimeState } = require('./api/server');
 const { setWindowParams, setCreateWindowFunction } = require('./ipc/handlers');
 require('@electron/remote/main').initialize()
@@ -14,8 +15,11 @@ let shutdownCleanupStarted = false;
 const AUTOSTART_LAUNCH_ARG = '--autostart-launch';
 const launchContext = {
   isAutostartLaunch: process.argv.includes(AUTOSTART_LAUNCH_ARG),
-  shouldStartHidden: false
+  shouldStartHidden: false,
+  shouldLaunchExternalUi: false,
+  externalUiPath: ''
 };
+let externalUiProcess = null;
 
 function logMainProcessError(context, error, extra = {}) {
   if (error instanceof Error) {
@@ -35,6 +39,25 @@ function logMainProcessError(context, error, extra = {}) {
 
 function getAutostartHelper() {
   return require('./system/ubuntuAutostart.js');
+}
+
+function createMainProcessLogEntry(message, type = 'error') {
+  const now = new Date();
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const ms = String(now.getMilliseconds()).padStart(3, '0');
+  return {
+    type,
+    message,
+    timestamp: `${mm}${ss}${ms}`
+  };
+}
+
+function emitRendererLog(message, type = 'error') {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+  mainWindow.webContents.send('log-message', createMainProcessLogEntry(message, type));
 }
 
 function getConfigFilePath() {
@@ -57,13 +80,86 @@ function readMainProcessConfig() {
 
 function resolveWindowLaunchContext() {
   const mainConfig = readMainProcessConfig();
+  const startupConfig = mainConfig.startup || {};
   const otherConfig = mainConfig.other || {};
 
   launchContext.shouldStartHidden = launchContext.isAutostartLaunch && Boolean(otherConfig?.noUi);
+  launchContext.shouldLaunchExternalUi = Boolean(startupConfig?.ui?.enabled);
+  launchContext.externalUiPath = startupConfig?.ui?.executablePath || '';
 
   return {
     ...launchContext
   };
+}
+
+function isExecutableFile(filePath = '') {
+  if (!filePath) {
+    return false;
+  }
+
+  try {
+    const stat = fs.statSync(filePath);
+    return stat.isFile();
+  } catch (_) {
+    return false;
+  }
+}
+
+async function reportExternalUiLaunchState(message, status = 'error') {
+  try {
+    return mergeRuntimeState({
+      service: {
+        status,
+        message,
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.warn('写入外部 UI 启动状态失败:', error.message);
+  }
+}
+
+function launchExternalUiIfNeeded() {
+  const currentLaunchContext = resolveWindowLaunchContext();
+  if (!currentLaunchContext.isAutostartLaunch || !currentLaunchContext.shouldLaunchExternalUi) {
+    return;
+  }
+
+  if (externalUiProcess && !externalUiProcess.killed) {
+    return;
+  }
+
+  const externalUiPath = currentLaunchContext.externalUiPath;
+  if (!externalUiPath) {
+    const message = '已启用外部 UI 联启，但未配置可执行文件路径';
+    console.warn(message);
+    emitRendererLog(message, 'error');
+    reportExternalUiLaunchState(message);
+    return;
+  }
+
+  if (!isExecutableFile(externalUiPath)) {
+    const message = `外部 UI 可执行文件不存在或不可用: ${externalUiPath}`;
+    console.warn(message);
+    emitRendererLog(message, 'error');
+    reportExternalUiLaunchState(message);
+    return;
+  }
+
+  try {
+    externalUiProcess = spawn(externalUiPath, [], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    externalUiProcess.unref();
+    emitRendererLog(`FutureDrive 已联动启动外部 UI: ${externalUiPath}`, 'info');
+    reportExternalUiLaunchState('FutureDrive 已联动启动外部 UI', 'service_connected');
+  } catch (error) {
+    const message = `联动启动外部 UI 失败: ${error.message}`;
+    console.warn(message);
+    emitRendererLog(message, 'error');
+    reportExternalUiLaunchState(message);
+  }
 }
 
 const createWindow = (width, height, page = '', params = []) => {
@@ -167,7 +263,10 @@ const createWindow = (width, height, page = '', params = []) => {
   }
   
   win.webContents.on('did-finish-load', () => {
-    win.show();
+    const shouldShowWindow = !(isMainWindow && resolveWindowLaunchContext().shouldStartHidden);
+    if (shouldShowWindow) {
+      win.show();
+    }
 
     if (isMainWindow) {
       schedulePostWindowInitialization();
@@ -249,7 +348,9 @@ async function resolveStartupState() {
   const currentLaunchContext = resolveWindowLaunchContext();
   return {
     startupConfig,
-    shouldStartHidden: currentLaunchContext.shouldStartHidden
+    shouldStartHidden: currentLaunchContext.shouldStartHidden,
+    shouldLaunchExternalUi: currentLaunchContext.shouldLaunchExternalUi,
+    externalUiPath: currentLaunchContext.externalUiPath
   };
 }
 
@@ -271,6 +372,8 @@ function schedulePostWindowInitialization() {
       if (startHidden && mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.hide();
       }
+
+      launchExternalUiIfNeeded();
 
     } catch (error) {
       console.warn('后置初始化失败:', error.message);
@@ -430,8 +533,7 @@ module.exports = {
     if (process.platform !== 'linux') {
       return Promise.resolve({ success: true, skipped: true, reason: 'not_linux' });
     }
-    const startupConfig = readMainProcessConfig().startup || {};
-    const execPath = startupConfig.ui?.executablePath || process.execPath;
+    const execPath = process.execPath;
     return getAutostartHelper().syncUbuntuAutostart(enabled, execPath);
   }
 };

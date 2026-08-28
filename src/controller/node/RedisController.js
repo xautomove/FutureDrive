@@ -90,11 +90,14 @@ class RedisController {
         const keys = await this.client.keys('task_*');
         if (keys && keys.length > 0) {
             for (const key of keys) {
+                // task_pid 由 kill 流程管理（确认进程全死后才删），保留 key 供下次启动前残留检测
+                if (key.startsWith('task_pid:')) {
+                    continue;
+                }
                 await this.client.del(key);
                 deletedCount += 1;
             }
         }
-        this.del('future_config');
     
         return deletedCount;
     }

@@ -123,6 +123,23 @@ class NodeController {
                     runningBgTaskUuids.push(uuid);
                 }
             }
+
+            // 基于 task_pid 探测仍存活的残留进程，确保 kill 失败后再次运行也能提示结束
+            const pidKeys = await GLOBALS.redisController.keys('task_pid:*');
+            for (const key of pidKeys) {
+                const uuid = key.replace('task_pid:', '');
+                if (runningBgTaskUuids.includes(uuid)) {
+                    continue;
+                }
+                const pidValue = await GLOBALS.redisController.get(key);
+                const pidList = String(pidValue || '')
+                    .split(',')
+                    .map(item => item.trim())
+                    .filter(Boolean);
+                if (pidList.some(singlePid => CommandExecutor.isProcessAlive(singlePid))) {
+                    runningBgTaskUuids.push(uuid);
+                }
+            }
             
             return runningBgTaskUuids;
         } catch (error) {
@@ -244,16 +261,16 @@ class NodeController {
                         pidList = [pidStr];
                     }
                     
+                    let anyAlive = false;
                     for (const singlePid of pidList) {
-                        try {
-                            process.kill(-Number(singlePid), 'SIGKILL');
-                        } catch (e) {
-                            try {
-                                process.kill(Number(singlePid), 'SIGKILL');
-                            } catch (e2) {
-                                console.error('杀死进程失败:', e2);
-                            }
+                        CommandExecutor.killProcessTree(singlePid);
+                        if (CommandExecutor.isProcessAlive(singlePid)) {
+                            anyAlive = true;
                         }
+                    }
+                    // 全部进程确认结束后才清理 pid 记录；仍有存活则保留供下次启动检测
+                    if (!anyAlive) {
+                        await GLOBALS.redisController.del(`task_pid:${uuid}`);
                     }
                 }
             }

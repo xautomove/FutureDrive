@@ -45,6 +45,7 @@ class Config {
         const { app } = window.require('@electron/remote');
         return {
             "version": app.getVersion(),
+            "language": "zh-CN",
             "workflow": {
                 "name": "workflow",
                 "description": "workflow description",
@@ -52,6 +53,12 @@ class Config {
             },
             "debug": false,
             "systemInfo": null,
+            "node": {
+                "delay": 0,
+                "timeout": 0,
+                "reportUrl": "",
+                "pythonPath": ""
+            },
             "redis": {
                 "host": "localhost",
                 "port": 6379,
@@ -79,11 +86,42 @@ class Config {
             "other": {
                 "noUi": false
             },
+            "framework": {
+                "path": ""
+            },
             'api_server':{
                 "host": "https://future.api.automoves.cn",
                 "logs_add":"/api/logs/add"
             }
         };
+    }
+
+    migrateConfig(rawConfig = {}) {
+        const migratedConfig = rawConfig && typeof rawConfig === 'object'
+            ? { ...rawConfig }
+            : {};
+        const startupConfig = migratedConfig.startup && typeof migratedConfig.startup === 'object'
+            ? { ...migratedConfig.startup }
+            : {};
+        const legacyCarUi = startupConfig.carUi && typeof startupConfig.carUi === 'object'
+            ? startupConfig.carUi
+            : {};
+        const uiConfig = startupConfig.ui && typeof startupConfig.ui === 'object'
+            ? startupConfig.ui
+            : {};
+
+        startupConfig.ui = {
+            ...uiConfig,
+            enabled: Boolean(uiConfig.enabled ?? legacyCarUi.enabled ?? false),
+            executablePath: uiConfig.executablePath || legacyCarUi.command || ''
+        };
+
+        if ('carUi' in startupConfig) {
+            delete startupConfig.carUi;
+        }
+
+        migratedConfig.startup = startupConfig;
+        return migratedConfig;
     }
 
     async checkVersion() {
@@ -96,13 +134,22 @@ class Config {
         
         if (!currentVersion) {
             log(`首次运行，设置版本号为: ${newVersion}`, LOG_TYPES.INFO);
-            this.data.version = newVersion;
+            this.data = this.normalizeConfig({
+                ...(this.data || {}),
+                version: newVersion
+            });
+            this.cache.clear();
+            this.cache.set('workflow', this.data.workflow);
             await this.save();
         } else if (currentVersion !== newVersion) {
-            // 检测到版本升级
+            // 版本升级只做兼容迁移，保留用户现有设置，避免升级即清空配置。
             log(`检测到版本升级: ${currentVersion} -> ${newVersion}`, LOG_TYPES.INFO);
-            await this.reset();
-            this.data.version = newVersion;
+            this.data = this.normalizeConfig({
+                ...(this.data || {}),
+                version: newVersion
+            });
+            this.cache.clear();
+            this.cache.set('workflow', this.data.workflow);
             await this.save();
         } else {
             log(`版本未变化: ${newVersion}`, LOG_TYPES.INFO);
@@ -112,9 +159,15 @@ class Config {
     async load() {
         try {
             const data = await fs.promises.readFile(this.configPath, 'utf8');
-            this.data = this.normalizeConfig(JSON.parse(data));
+            const rawConfig = JSON.parse(data);
+            this.data = this.normalizeConfig(rawConfig);
             this.cache.clear();
             this.cache.set('workflow', this.data.workflow);
+
+            // 配置读取时立即完成字段迁移和默认值补齐，避免老配置只有内存态生效、磁盘仍旧残留旧结构。
+            if (JSON.stringify(rawConfig) !== JSON.stringify(this.data)) {
+                await this.save();
+            }
         } catch (error) {
             console.error('Error loading config:', error);
             this.data = this.getDefaultConfig();
@@ -191,9 +244,9 @@ class Config {
 
     normalizeConfig(rawConfig = {}) {
         const defaultConfig = this.getDefaultConfig();
-        const { environment, startup: rawStartup = {}, other: rawOther = {}, ...restConfig } = rawConfig;
+        const migratedConfig = this.migrateConfig(rawConfig);
+        const { startup: rawStartup = {}, other: rawOther = {}, ...restConfig } = migratedConfig;
         const startupConfig = rawStartup || {};
-        const legacyCarUi = startupConfig.carUi || {};
         const uiConfig = startupConfig.ui || {};
 
         return {
@@ -207,8 +260,8 @@ class Config {
                 templateFile: startupConfig.templateFile || '',
                 ui: {
                     ...defaultConfig.startup.ui,
-                    enabled: Boolean(uiConfig.enabled ?? legacyCarUi.enabled ?? false),
-                    executablePath: uiConfig.executablePath || legacyCarUi.command || ''
+                    enabled: Boolean(uiConfig.enabled ?? false),
+                    executablePath: uiConfig.executablePath || ''
                 }
             },
             other: {

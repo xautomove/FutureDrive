@@ -23,15 +23,9 @@ const settingsList = [
 
 const SettingsModal = ({ visible, onClose }) => {
   const [selectedKey, setSelectedKey] = useState('general');
-  const [apiTokenEnabled, setApiTokenEnabled] = useState(false);
-  const [apiToken, setApiToken] = useState('');
-  const [noUi, setNoUi] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [path,setFrameworkPath] = useState('');
-  const [redisEnabled, setRedisEnabled] = useState(false);
   const [testingRedis, setTestingRedis] = useState(false);
   const [startupProjectPath, setStartupProjectPath] = useState('');
-  const [startupProjectFile, setStartupProjectFile] = useState('');
   const [startupTemplates, setStartupTemplates] = useState([]);
   const [nodeForm] = Form.useForm();
   const [generalForm] = Form.useForm();
@@ -41,6 +35,8 @@ const SettingsModal = ({ visible, onClose }) => {
   const [otherForm] = Form.useForm();
   const [frameworkForm] = Form.useForm();
   const { t, setLanguage } = useI18n();
+  const apiTokenEnabled = Form.useWatch('tokenEnabled', apiForm);
+  const startupUiEnabled = Form.useWatch('uiEnabled', startupForm);
 
   useEffect(() => {
     if (visible) {
@@ -54,62 +50,56 @@ const SettingsModal = ({ visible, onClose }) => {
           const frameworkConfig = config.get('framework') || {};
           const currentLanguage = config.get('language') || 'zh-CN';
 
-          setTimeout(() => {
-            generalForm.setFieldsValue({
-              language: currentLanguage
-            });
+          generalForm.setFieldsValue({
+            language: currentLanguage
+          });
 
-            nodeForm.setFieldsValue({
-              delay: nodeConfig.delay || 0,
-              timeout: nodeConfig.timeout || 0,
-              reportUrl: nodeConfig.reportUrl || '',
-              pythonPath: nodeConfig.pythonPath || ''
-            });
+          nodeForm.setFieldsValue({
+            delay: nodeConfig.delay || 0,
+            timeout: nodeConfig.timeout || 0,
+            reportUrl: nodeConfig.reportUrl || '',
+            pythonPath: nodeConfig.pythonPath || ''
+          });
 
-            apiForm.setFieldsValue({
-              host: apiConfig.host || '127.0.0.1',
-              port: apiConfig.port || 2200
-            });
+          apiForm.setFieldsValue({
+            host: apiConfig.host || '127.0.0.1',
+            port: apiConfig.port || 2200,
+            tokenEnabled: Boolean(apiConfig.tokenEnabled),
+            token: apiConfig.token || ''
+          });
 
-            redisForm.setFieldsValue({
-              host: redisConfig.host || 'localhost',
-              port: redisConfig.port || 6379,
-              password: redisConfig.password || '',
-              db: redisConfig.db || 0
-            });
+          redisForm.setFieldsValue({
+            host: redisConfig.host || 'localhost',
+            port: redisConfig.port || 6379,
+            password: redisConfig.password || '',
+            db: redisConfig.db || 0,
+            enabled: Boolean(redisConfig.enabled)
+          });
 
-            setRedisEnabled(redisConfig.enabled || false);
+          startupForm.setFieldsValue({
+            autoLaunchFutureDrive: Boolean(startupConfig.autoLaunchFutureDrive),
+            autoRunWorkflow: Boolean(startupConfig.autoRunWorkflow),
+            projectPath: startupConfig.projectPath || '',
+            projectFile: startupConfig.projectFile || '',
+            templateFile: startupConfig.templateFile || '',
+            uiEnabled: Boolean(startupConfig.ui?.enabled),
+            uiExecutablePath: startupConfig.ui?.executablePath || ''
+          });
 
-            startupForm.setFieldsValue({
-              autoLaunchFutureDrive: startupConfig.autoLaunchFutureDrive || false,
-              autoRunWorkflow: startupConfig.autoRunWorkflow || false,
-              projectPath: startupConfig.projectPath || '',
-              projectFile: startupConfig.projectFile || '',
-              templateFile: startupConfig.templateFile || '',
-              uiEnabled: startupConfig.ui?.enabled || startupConfig.carUi?.enabled || false,
-              uiExecutablePath: startupConfig.ui?.executablePath || startupConfig.carUi?.command || ''
-            });
+          setStartupProjectPath(startupConfig.projectPath || '');
+          if (startupConfig.projectPath) {
+            setStartupTemplates(TemplateManager.getTemplateListByProject(startupConfig.projectPath));
+          } else {
+            setStartupTemplates([]);
+          }
 
-            setStartupProjectPath(startupConfig.projectPath || '');
-            setStartupProjectFile(startupConfig.projectFile || '');
-            if (startupConfig.projectPath) {
-              setStartupTemplates(TemplateManager.getTemplateListByProject(startupConfig.projectPath));
-            } else {
-              setStartupTemplates([]);
-            }
+          otherForm.setFieldsValue({
+            noUi: Boolean(otherConfig.noUi)
+          });
 
-            otherForm.setFieldsValue({
-              noUi: otherConfig.noUi || false
-            });
-
-            setNoUi(otherConfig.noUi || false);
-
-            frameworkForm.setFieldsValue({
-              path: frameworkConfig.path || '',
-            });
-
-            setFrameworkPath(frameworkConfig.path || '');
-          }, 0);
+          frameworkForm.setFieldsValue({
+            path: frameworkConfig.path || '',
+          });
         } catch (error) {
           console.error('加载配置失败:', error);
         }
@@ -179,8 +169,8 @@ const SettingsModal = ({ visible, onClose }) => {
         ...apiValues,
         host: apiValues.host || '127.0.0.1',
         port: apiValues.port || 2200,
-        tokenEnabled: apiTokenEnabled,
-        token: apiToken
+        tokenEnabled: Boolean(apiValues.tokenEnabled),
+        token: apiValues.token || ''
       });
 
       await config.set('redis', {
@@ -189,7 +179,7 @@ const SettingsModal = ({ visible, onClose }) => {
         port: redisValues.port || 6379,
         password: redisValues.password || null,
         db: redisValues.db || 0,
-        enabled: redisEnabled
+        enabled: Boolean(redisValues.enabled)
       });
 
       await config.set('startup', {
@@ -207,8 +197,7 @@ const SettingsModal = ({ visible, onClose }) => {
       if (process.platform === 'linux') {
         const autostartResult = await ipcRenderer.invoke(
           'sync-ubuntu-autostart',
-          Boolean(startupValues.autoLaunchFutureDrive),
-          startupValues.uiExecutablePath || ''
+          Boolean(startupValues.autoLaunchFutureDrive)
         );
         if (autostartResult?.success === false && !autostartResult?.skipped) {
           message.warning(`${t('settings.startup.autostartSyncFailed')}: ${autostartResult.error || 'unknown error'}`);
@@ -219,7 +208,7 @@ const SettingsModal = ({ visible, onClose }) => {
 
       await config.set('other', {
         ...otherValues,
-        noUi: noUi
+        noUi: Boolean(otherValues.noUi)
       });
 
       await config.set('framework', {
@@ -307,12 +296,15 @@ const SettingsModal = ({ visible, onClose }) => {
             <Form.Item name="port" label={t('settings.api.port')}>
               <InputNumber min={1} max={65535} placeholder="2200" style={{ width: 200 }} />
             </Form.Item>
-            <Form.Item label={t('settings.api.tokenEnabled')}>
-              <Switch checked={apiTokenEnabled} onChange={setApiTokenEnabled} />
+            <Form.Item name="tokenEnabled" label={t('settings.api.tokenEnabled')} valuePropName="checked">
+              <Switch />
             </Form.Item>
             {apiTokenEnabled && (
-              <Form.Item label={t('settings.api.token')}>
-                <Input placeholder={t('settings.api.tokenPlaceholder')} style={{ width: 400 }} value={apiToken} onChange={e => setApiToken(e.target.value)} />
+              <Form.Item name="token" label={t('settings.api.token')}>
+                <Input
+                  placeholder={t('settings.api.tokenPlaceholder')}
+                  style={{ width: 400 }}
+                />
               </Form.Item>
             )}
           </Form>
@@ -320,8 +312,8 @@ const SettingsModal = ({ visible, onClose }) => {
       case 'redis':
         return (
           <Form layout="vertical" className="settings-form" form={redisForm}>
-            <Form.Item label={t('settings.redis.enabled')}>
-              <Switch checked={redisEnabled} onChange={setRedisEnabled} />
+            <Form.Item name="enabled" label={t('settings.redis.enabled')} valuePropName="checked">
+              <Switch />
             </Form.Item>
             <Form.Item name="host" label={t('settings.redis.host')}>
               <Input placeholder="localhost" style={{ width: 200 }} />
@@ -387,13 +379,20 @@ const SettingsModal = ({ visible, onClose }) => {
             <Form.Item name="uiExecutablePath" label={t('settings.startup.uiExecutablePath')}>
               <Input placeholder={t('settings.startup.uiExecutablePathPlaceholder')} style={{ width: 400 }} />
             </Form.Item>
+            {startupUiEnabled && (
+              <div style={{ padding: 12 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#666' }}>
+                  外部 UI 仅在 Ubuntu 自启动 FutureDrive 后按此路径联动启动，不会替代 FutureDrive 自身启动命令。
+                </p>
+              </div>
+            )}
           </Form>
         );
       case 'other':
         return (
           <Form layout="vertical" className="settings-form" form={otherForm}>
-            <Form.Item label={t('settings.other.noUi')}>
-              <Switch checked={noUi} onChange={setNoUi} />
+            <Form.Item name="noUi" label={t('settings.other.noUi')} valuePropName="checked">
+              <Switch />
             </Form.Item>
             <div style={{ padding: 12 }}>
               <p style={{ margin: 0, fontSize: 12, color: '#666' }}>{t('settings.other.noUiDescription')}</p>
@@ -403,8 +402,8 @@ const SettingsModal = ({ visible, onClose }) => {
       case 'framework':
         return (
           <Form layout="vertical" className="settings-form" form={frameworkForm}>
-            <Form.Item label={t('settings.framework.path')}>
-              <Input placeholder={t('settings.framework.pathPlaceholder')} style={{ width: 400 }} value={path} onChange={e => setFrameworkPath(e.target.value)} />
+            <Form.Item name="path" label={t('settings.framework.path')}>
+              <Input placeholder={t('settings.framework.pathPlaceholder')} style={{ width: 400 }} />
             </Form.Item>
           </Form>
         );
